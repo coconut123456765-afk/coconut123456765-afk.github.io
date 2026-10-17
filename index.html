@@ -283,7 +283,7 @@ function charThumb(c){
   const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
   const initial = clean.charAt(0) || "?";
   const bg = c.color ? ` style="background:${esc(c.color)};color:${pickText(c.color)}"` : "";
-  if (c.illust) return `<span class="char-thumb"${bg}><img src="${esc(c.illust)}" alt=""></span>`;
+  if (c.thumb) return `<span class="char-thumb"${bg}><img src="${esc(c.thumb)}" alt=""></span>`;
   return `<span class="char-thumb"${bg}>${esc(initial)}</span>`;
 }
 function findCharById(id){
@@ -407,6 +407,12 @@ function renderTabInner(c){
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
       if (c.illust) h += `<button class="hdr-btn" id="illustClear" type="button">지우기</button>`;
       h += `</div>`;
+      h += `<div class="field" style="margin-top:10px"><label>썸네일 (목록용)</label>`;
+      if (c.thumb) h += `<img id="thumbPreview" src="${esc(c.thumb)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px">`;
+      h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="thumbFile" accept="image/*" style="display:none"></label>`;
+      if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
+      h += `</div></div>`;
     } else if (c.illust){
       h += `<img src="${esc(c.illust)}" alt="대표 일러스트" style="max-width:100%;border-radius:12px;display:block;">`;
     } else {
@@ -513,6 +519,21 @@ function bindEdit(c){
   };
   const sc = $("illustClear");
   if (sc) sc.onclick = ()=>{ c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = ""; };
+  const tf = $("thumbFile");
+  if (tf) tf.onchange = async ()=>{
+    const f = tf.files[0]; if (!f) return;
+    c.thumb = await fileToDataURL(f, 256, 0.8);
+    let pv = $("thumbPreview");
+    if (pv){ pv.src = c.thumb; }
+    else {
+      pv = document.createElement("img");
+      pv.id = "thumbPreview"; pv.src = c.thumb;
+      pv.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px";
+      tf.closest(".field").insertBefore(pv, tf.closest("div"));
+    }
+  };
+  const tc2 = $("thumbClear");
+  if (tc2) tc2.onclick = ()=>{ c.thumb = ""; const pv = $("thumbPreview"); if (pv) pv.remove(); tc2.remove(); };
   const mf = $("illustFiles");
   if (mf) mf.onchange = async ()=>{
     const ta = document.querySelector('#body [data-k="illust"]');
@@ -523,9 +544,10 @@ function bindEdit(c){
     if (ta) ta.value = c.illust;
   };
 }
-function fileToDataURL(file){
+function fileToDataURL(file, maxW, quality){
+  maxW = maxW || 1200; quality = quality || 0.85;
   return new Promise((resolve, reject)=>{
-    if (file.type==="image/png" && file.size < 800*1024){
+    if (file.type==="image/png" && file.size < 800*1024 && maxW >= 1200){
       const r = new FileReader();
       r.onload = ()=>resolve(r.result); r.onerror = reject;
       r.readAsDataURL(file); return;
@@ -533,13 +555,12 @@ function fileToDataURL(file){
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = ()=>{
-      const maxW = 1200;
       let w = img.width, h = img.height;
       if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
       const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
       cv.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve(cv.toDataURL("image/jpeg", 0.85));
+      resolve(cv.toDataURL("image/jpeg", quality));
     };
     img.onerror = reject;
     img.src = url;
@@ -548,7 +569,7 @@ function fileToDataURL(file){
 
 $("addChar").onclick = ()=>{
   const id = "c"+Date.now();
-  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", wardrobe:"", weapon:"", three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", wardrobe:"", weapon:"", three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
   curChar=id; render();
 };
 $("delChar").onclick = ()=>{
