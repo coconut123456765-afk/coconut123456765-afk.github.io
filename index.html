@@ -80,8 +80,6 @@
   .notebook::after { content:""; position:absolute; top:0; bottom:0; left:48px; width:2px; background:rgba(255,110,110,0.22); }
   @media (max-width:700px){ .notebook{padding:16px 14px 16px 46px;} .notebook::before{left:8px;} .notebook::after{left:38px;} }
 
-  #accentCode { width:92px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--txt); padding:8px 10px; font-size:13px; font-family:monospace; }
-  #accentPicker { width:38px; height:38px; padding:3px; border:1px solid var(--line); border-radius:10px; background:var(--panel); cursor:pointer; }
 
   .hdr-btn { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
   .modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:50; padding:20px; align-items:center; justify-content:center; }
@@ -103,6 +101,7 @@
 
   .worldrow { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
   .worldrow input[type="text"] { flex:1; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 10px; font-size:14px; }
+  .worldrow input[type="color"] { width:34px; height:34px; padding:2px; border:1px solid var(--line); border-radius:8px; background:var(--input-bg); cursor:pointer; flex-shrink:0; }
   .worldrow label { font-size:13px; color:var(--dim); white-space:nowrap; display:flex; align-items:center; gap:4px; }
   .worldrow .wdel { border:1px solid var(--line); background:none; color:#e06c75; border-radius:8px; padding:8px 10px; cursor:pointer; font-size:13px; white-space:nowrap; }
   .tab-editbar { display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
@@ -126,13 +125,6 @@
         <button id="themeDarkBtn">다크</button>
         <button id="themeLightBtn">라이트</button>
       </div>
-    </div>
-    <div class="setting-row"><label>강조 색상</label>
-      <div class="acc-row">
-        <input type="color" id="accentPicker" value="#7fb4ff" title="강조 색상 고르기">
-        <input type="text" id="accentCode" value="#7FB4FF" placeholder="#0C7BBB" title="색상 코드 입력 (HEX / RGB)" spellcheck="false">
-      </div>
-      <p class="hint">#0C7BBB · rgb(12,123,187) · 12,123,187 형식으로 입력할 수 있어요.</p>
     </div>
     <div class="setting-row"><label>데이터</label>
       <div class="seg">
@@ -196,37 +188,21 @@ const REL_KINDS = { family:"가족", friend:"지인" };
 let store = JSON.parse(JSON.stringify(WORLDS));
 let theme = "dark";
 const ACCENTS = { dark:"#7fb4ff", light:"#1a6fb5" };
-let accent = ACCENTS.dark, accentCustom = false;
 function pickText(hex){
   const c = String(hex||"#000000").replace("#","");
   const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
   return ((0.299*r + 0.587*g + 0.114*b)/255) > 0.6 ? "#101623" : "#ffffff";
 }
+function worldAccent(){
+  const w = store[curWorld];
+  return (w && w.accent) || ACCENTS[theme];
+}
 function applyAccent(){
-  document.documentElement.style.setProperty("--acc", accent);
-  document.documentElement.style.setProperty("--on-acc", pickText(accent));
-  const ap = document.getElementById("accentPicker");
-  if (ap) ap.value = accent;
-  const ac = document.getElementById("accentCode");
-  if (ac && document.activeElement!==ac) ac.value = accent;
+  const a = worldAccent();
+  document.documentElement.style.setProperty("--acc", a);
+  document.documentElement.style.setProperty("--on-acc", pickText(a));
 }
-function parseColor(s){
-  s = String(s||"").trim();
-  let m;
-  const toHex = (r,g,b)=>"#"+[r,g,b].map(v=>Number(v).toString(16).padStart(2,"0")).join("").toUpperCase();
-  const ok = (r,g,b)=>[r,g,b].every(v=>v>=0&&v<=255);
-  if ((m = s.match(/^#?([0-9a-fA-F]{6})$/))) return "#"+m[1].toUpperCase();
-  if ((m = s.match(/^#?([0-9a-fA-F]{3})$/))) return "#"+m[1].split("").map(x=>x+x).join("").toUpperCase();
-  if ((m = s.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/))){
-    const v = [m[1],m[2],m[3]].map(Number);
-    if (ok(...v)) return toHex(...v);
-  }
-  if ((m = s.match(/^(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})$/))){
-    const v = [m[1],m[2],m[3]].map(Number);
-    if (ok(...v)) return toHex(...v);
-  }
-  return null;
-}
+
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", theme);
   const db = document.getElementById("themeDarkBtn"), lb = document.getElementById("themeLightBtn");
@@ -234,7 +210,7 @@ function applyTheme(){
   if (lb) lb.classList.toggle("on", theme==="light");
 }
 function persist(){
-  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme, accent, accentCustom })); }
+  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
   catch(e){ alert("저장 공간이 부족해요. 이미지가 크면 내보내기로 백업하세요."); }
 }
 function deriveStarsign(birthday){
@@ -264,7 +240,7 @@ try {
     const st = JSON.parse(raw);
     if (st && st.store) store = st.store;
     if (st && st.theme) theme = st.theme;
-    if (st && st.accent){ accent = st.accent; accentCustom = !!st.accentCustom; }
+
   }
 } catch(e){}
 let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null;
@@ -369,6 +345,7 @@ function render(){
   if (ts) ts.onclick = ()=>{ persist(); editingTab = null; editBackup = null; render(); };
   const tc = $("tabCancel");
   if (tc) tc.onclick = ()=>{ cancelEdit(); render(); };
+  applyAccent();
 }
 
 function fieldRow(label, val, key, type, ed){
@@ -584,7 +561,6 @@ $("delChar").onclick = ()=>{
 
 const setTheme = (t)=>{
   theme = t;
-  if (!accentCustom) accent = ACCENTS[theme];
   applyTheme(); applyAccent(); persist();
 };
 document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
@@ -596,6 +572,7 @@ function renderWorldList(){
   if (!wl) return;
   wl.innerHTML = Object.entries(store).map(([wid,w])=>
     `<div class="worldrow"><input type="text" data-wname="${wid}" value="${esc(w.name)}">`+
+    `<input type="color" data-waccent="${wid}" value="${esc(w.accent||ACCENTS[theme])}" title="강조 색상">`+
     `<label><input type="checkbox" data-wweapon="${wid}" ${w.hasWeapon?"checked":""}> 무기 탭</label>`+
     `<button class="wdel" data-wdel="${wid}">삭제</button></div>`
   ).join("");
@@ -604,6 +581,9 @@ function renderWorldList(){
   });
   wl.querySelectorAll("[data-wweapon]").forEach(cb=>{
     cb.onchange = ()=>{ store[cb.dataset.wweapon].hasWeapon = cb.checked; render(); };
+  });
+  wl.querySelectorAll("[data-waccent]").forEach(inp=>{
+    inp.oninput = ()=>{ store[inp.dataset.waccent].accent = inp.value; applyAccent(); persist(); };
   });
   wl.querySelectorAll("[data-wdel]").forEach(btn=>{
     btn.onclick = ()=>{
@@ -618,7 +598,7 @@ function renderWorldList(){
 }
 document.getElementById("addWorldBtn").onclick = ()=>{
   const wid = "w"+Date.now();
-  store[wid] = { name:"새 세계관", hasWeapon:false, chars:[] };
+  store[wid] = { name:"새 세계관", hasWeapon:false, accent:null, chars:[] };
   curWorld = wid; curChar = null; curTab = "profile";
   render(); renderWorldList();
   const inp = document.querySelector('[data-wname="'+wid+'"]');
@@ -651,15 +631,6 @@ document.getElementById("importFile").onchange = (e)=>{
   r.readAsText(f); e.target.value = "";
 };
 modal.addEventListener("click", (e)=>{ if (e.target===modal) modal.style.display = "none"; });
-document.getElementById("accentPicker").oninput = (e)=>{
-  accent = e.target.value; accentCustom = true;
-  applyAccent(); persist();
-};
-document.getElementById("accentCode").addEventListener("change", (e)=>{
-  const c = parseColor(e.target.value);
-  if (c){ accent = c; accentCustom = true; applyAccent(); persist(); }
-  else e.target.value = accent;
-});
 applyTheme(); applyAccent();
 curChar = store[curWorld].chars[0]?.id || null;
 render();
