@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don의 캐릭터 위키</title>
+<style>
+  :root, html[data-theme="dark"] {
+    --bg:#1a1d26; --panel:#232836; --line:#343b4f; --txt:#e8eaf0; --dim:#9aa3b8; --acc:#7fb4ff; --warm:#ffc98a;
+    --input-bg:#141821; --plabel-bg:#1a2233; --paper:#111726; --ruled:rgba(140,170,220,0.07);
+    --hole-in:#05080f; --hole-ring:#46536e; --badge-bg:#5a3d1e; --on-acc:#101623;
+  }
+  html[data-theme="light"] {
+    --bg:#f5f2ec; --panel:#ffffff; --line:#ddd6c8; --txt:#2c2822; --dim:#8a8172; --acc:#1a6fb5; --warm:#8a5a1e;
+    --input-bg:#ffffff; --plabel-bg:#efe9db; --paper:#fffdf7; --ruled:rgba(120,100,70,0.10);
+    --hole-in:#e6dfcf; --hole-ring:#b3a88f; --badge-bg:#f0e2c8; --on-acc:#ffffff;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:"Pretendard","Apple SD Gothic Neo",sans-serif; line-height:1.6; }
+  header { padding:18px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:20px; margin:0; }
+  .demo-badge { background:var(--badge-bg); color:var(--warm); font-size:12px; padding:3px 10px; border-radius:20px; }
+  .worlds { display:flex; gap:8px; margin-left:auto; }
+  .worlds button, .tabs button, .chars button { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
+  .worlds button.on, .tabs button.on, .chars button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  main { display:flex; min-height:calc(100vh - 70px); }
+  aside { width:230px; border-right:1px solid var(--line); padding:14px; }
+  aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
+  .chars { display:flex; flex-direction:column; gap:6px; }
+  .chars button { text-align:left; }
+  #addChar { margin-top:10px; width:100%; border-style:dashed; color:var(--dim); }
+  #delChar { margin-top:6px; width:100%; border:1px dashed #e06c75; color:#e06c75; background:none; border-radius:10px; padding:8px 14px; cursor:pointer; font-size:14px; }
+  section { flex:1; padding:20px 26px; max-width:760px; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:13px; color:var(--dim); margin-bottom:5px; }
+  .field .val { font-size:16px; }
+  .field input, .field textarea, .field select { width:100%; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:15px; }
+  .field textarea { min-height:90px; resize:vertical; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .rel { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .rel select { flex:1; }
+  .rel button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:8px 10px; cursor:pointer; }
+
+  .val.overview { font-size:17px; border-left:3px solid var(--acc); padding-left:12px; }
+  .val.foldable { max-height:4.8em; overflow:hidden; }
+  .val.foldable.open { max-height:none; }
+  .foldbtn { background:none; border:1px solid var(--line); color:var(--acc); border-radius:8px; padding:8px 14px; margin-top:8px; cursor:pointer; font-size:14px; }
+  .navbox { margin-top:26px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .navbox-title { background:var(--plabel-bg); padding:10px 14px; font-weight:700; font-size:14px; }
+  .navbox-links { padding:12px 14px; display:flex; flex-wrap:wrap; gap:8px; }
+  .navbox-links button { background:var(--plabel-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 14px; cursor:pointer; font-size:14px; }
+  .navbox-links button:hover { border-color:var(--acc); }
+
+  .quotebanner { background:#1a6fb5; color:#fff; text-align:center; padding:12px 14px; border-radius:10px; font-weight:600; font-size:16px; }
+  .bigname { font-size:24px; font-weight:800; }
+  .ptable { width:100%; border-collapse:collapse; font-size:15px; margin-top:4px; table-layout:fixed; }
+  .ptable td { overflow-wrap:break-word; }
+  .ptable td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+  .ptable td.plabel { background:var(--plabel-bg); font-weight:700; width:24%; }
+  .ptable input { width:100%; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:7px 9px; font-size:15px; box-sizing:border-box; }
+  .colorchip { display:inline-block; max-width:100%; box-sizing:border-box; overflow:hidden; color:#fff; padding:3px 12px; border-radius:6px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .val.overview { font-size:16px; }
+  @media (max-width:700px){ .ptable{font-size:14px;} .ptable td{padding:7px 8px;} .bigname{font-size:21px;} .colorchip{padding:2px 8px;font-size:12px;} }
+
+  .notebook { position:relative; border:1px solid var(--line); border-radius:12px; padding:20px 20px 20px 58px;
+    background-color:var(--paper);
+    background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 30px, var(--ruled) 30px, var(--ruled) 31px); }
+  .notebook::before { content:""; position:absolute; left:12px; top:16px; bottom:16px; width:24px;
+    background-image:radial-gradient(circle, var(--hole-in) 0 5px, var(--hole-ring) 5px 6px, transparent 6.5px);
+    background-size:24px 38px; background-repeat:repeat-y; }
+  .notebook::after { content:""; position:absolute; top:0; bottom:0; left:48px; width:2px; background:rgba(255,110,110,0.22); }
+  @media (max-width:700px){ .notebook{padding:16px 14px 16px 46px;} .notebook::before{left:8px;} .notebook::after{left:38px;} }
+
+  #accentCode { width:92px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--txt); padding:8px 10px; font-size:13px; font-family:monospace; }
+  #accentPicker { width:38px; height:38px; padding:3px; border:1px solid var(--line); border-radius:10px; background:var(--panel); cursor:pointer; }
+
+  .hdr-btn { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:50; padding:20px; align-items:center; justify-content:center; }
+  .modal-panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; width:340px; max-width:100%; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .modal-head b { font-size:17px; }
+  .setting-row { margin-bottom:16px; }
+  .setting-row > label { display:block; font-size:13px; color:var(--dim); margin-bottom:8px; }
+  .seg { display:flex; gap:8px; }
+  .seg button { flex:1; cursor:pointer; border:1px solid var(--line); background:var(--bg); color:var(--txt); padding:10px; border-radius:10px; font-size:14px; }
+  .seg button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  .acc-row { display:flex; gap:8px; align-items:center; }
+  .hint { font-size:12px; color:var(--dim); margin:8px 0 0; }
+
+  .wikilink { color:var(--acc); text-decoration:underline; cursor:pointer; }
+  .field .val { white-space:pre-wrap; }
+  .topnav { margin-bottom:14px; font-size:13px; color:var(--dim); }
+  .topnav a { color:var(--acc); cursor:pointer; margin:0 6px; }
+
+  .worldrow { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .worldrow input[type="text"] { flex:1; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 10px; font-size:14px; }
+  .worldrow label { font-size:13px; color:var(--dim); white-space:nowrap; display:flex; align-items:center; gap:4px; }
+  .worldrow .wdel { border:1px solid var(--line); background:none; color:#e06c75; border-radius:8px; padding:8px 10px; cursor:pointer; font-size:13px; white-space:nowrap; }
+  #editBar { position:fixed; bottom:18px; right:18px; display:flex; gap:8px; }
+  #editBar button { padding:11px 18px; border-radius:12px; border:1px solid var(--line); background:var(--panel); color:var(--txt); font-size:14px; cursor:pointer; }
+  #editBar #saveBtn { background:var(--acc); color:#101623; font-weight:700; display:none; }
+  .sample-note { font-size:12px; color:var(--warm); margin-bottom:12px; }
+  .empty { color:var(--dim); }
+  @media (max-width:700px){ main{flex-direction:column;} aside{width:auto;border-right:0;border-bottom:1px solid var(--line);} section{padding:16px;} .row4{grid-template-columns:1fr 1fr;} .row3{grid-template-columns:1fr;} .field input, .field textarea, .field select{font-size:16px;} .worlds button, .tabs button, .chars button{padding:11px 16px;} header{padding:14px 16px;} header h1{font-size:18px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 Don의 캐릭터 위키</h1>
+  <div class="worlds" id="worlds"></div>
+  <button id="settingsBtn" class="hdr-btn">설정</button>
+</header>
+<div id="settingsModal" class="modal" style="display:none">
+  <div class="modal-panel">
+    <div class="modal-head"><b>설정</b><button id="settingsClose" class="hdr-btn">닫기</button></div>
+    <div class="setting-row"><label>테마</label>
+      <div class="seg">
+        <button id="themeDarkBtn">다크</button>
+        <button id="themeLightBtn">라이트</button>
+      </div>
+    </div>
+    <div class="setting-row"><label>강조 색상</label>
+      <div class="acc-row">
+        <input type="color" id="accentPicker" value="#7fb4ff" title="강조 색상 고르기">
+        <input type="text" id="accentCode" value="#7FB4FF" placeholder="#0C7BBB" title="색상 코드 입력 (HEX / RGB)" spellcheck="false">
+      </div>
+      <p class="hint">#0C7BBB · rgb(12,123,187) · 12,123,187 형식으로 입력할 수 있어요.</p>
+    </div>
+    <div class="setting-row"><label>데이터</label>
+      <div class="seg">
+        <button id="exportBtn">내보내기</button>
+        <button id="importBtn">가져오기</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
+    </div>
+    <div class="setting-row" id="worldMgmtRow" style="display:none"><label>세계관 관리</label>
+      <div id="worldList"></div>
+      <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
+    </div>
+  </div>
+</div>
+<main>
+  <aside>
+    <h3>캐릭터</h3>
+    <div class="chars" id="chars"></div>
+    <button id="addChar" style="display:none">＋ 캐릭터 추가</button>
+    <button id="delChar" style="display:none">－ 캐릭터 삭제</button>
+  </aside>
+  <section>
+    <div class="sample-note" id="sampleNote" style="display:none">※ 이 캐릭터는 구조 확인용 샘플이에요. 오늘 밤에 지우고 Don의 캐릭터로 채워요.</div>
+    <div class="tabs" id="tabs"></div>
+    <div id="body"></div>
+  </section>
+</main>
+<div id="editBar">
+  <button id="editBtn">🔒 편집하기</button>
+  <button id="saveBtn">💾 저장</button>
+</div>
+
+<script>
+/* ---------- 데모 데이터 (오늘 밤 세션에서 교체) ---------- */
+const WORLDS = {
+  hotel: { name:"🏨 판타지 호텔", hasWeapon:true, chars:[
+    { id:"h1", sample:true, profile:{name:"(샘플) 리아", age:"24", height:"168cm", birthday:"3월 14일"},
+      rels:[{to:"h2", kind:"family"}], illust:"", wardrobe:"낮: 프론트 유니폼(네이비)\n밤: 바텐더 복장",
+      weapon:"은빛 단검 — 호신용", three:"B88 / W60 / H89",
+      overview:"호텔 로비의 낮을 지키는 프론트 직원. 손님맞이 미소가 트레이드마크다. [[노아]]와는 남매 사이.",
+      quote:"(샘플) 어서 오세요. 최고의 밤을 준비했어요.", color:"#7B61FF",
+      blood:"A형", weight:"52kg", birthplace:"(샘플) 항구도시",
+      hand:"오른손", hobby:"칵테일 레시피 수집", specialty:"웃는 얼굴",
+      custom:"데모용 메모입니다. 여담이 길어지면 이렇게 접기 버튼이 생겨요. 나무위키처럼 긴 내용은 접어두고, 보고 싶을 때 펼쳐서 읽는 방식이에요. 캐릭터에 얽힌 비하인드나 설정 메모가 쌓이면 이 칸이 가장 먼저 길어질 거예요." },
+    { id:"h2", sample:true, profile:{name:"(샘플) 노아", age:"19", height:"175cm", birthday:"11월 2일"},
+      rels:[{to:"h1", kind:"family"}], illust:"", wardrobe:"벨보이 유니폼",
+      weapon:"(없음)", three:"", overview:"리아의 동생. 호기심 많은 말썽꾸러기.",
+      quote:"(샘플) 형! 나도 벨보이 할래!", color:"#FF9F43",
+      blood:"B형", weight:"60kg", birthplace:"(샘플) 항구도시",
+      hand:"오른손", hobby:"뒷골목 탐험", specialty:"빨리 달리기", custom:"" },
+  ]},
+  siblings:{ name:"🏠 6남매 일상 코미디", hasWeapon:false, chars:[
+    { id:"s1", sample:true, profile:{name:"(샘플) 첫째", age:"27", height:"180cm", birthday:"1월 5일"},
+      rels:[], illust:"", wardrobe:"평상복", weapon:"", three:"", overview:"6남매의 맏이. 동생들을 챙기느라 늘 바쁜 일상.",
+      quote:"(샘플) 밥은 챙겨 먹고 다니냐?", color:"#4CAF50",
+      blood:"O형", weight:"75kg", birthplace:"(샘플) 서울",
+      hand:"오른손", hobby:"요리", specialty:"빨래 개기", custom:"맏이. 요리 담당" },
+  ]},
+};
+const TABS = [
+  ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장·유니폼"],
+  ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
+];
+const REL_KINDS = { family:"가족", friend:"지인" };
+const DEMO_PW_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"; // "1234"의 SHA-256 (데모용)
+
+/* ---------- 상태 ---------- */
+let store = JSON.parse(JSON.stringify(WORLDS));
+let theme = "dark";
+const ACCENTS = { dark:"#7fb4ff", light:"#1a6fb5" };
+let accent = ACCENTS.dark, accentCustom = false;
+function pickText(hex){
+  const c = String(hex||"#000000").replace("#","");
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return ((0.299*r + 0.587*g + 0.114*b)/255) > 0.6 ? "#101623" : "#ffffff";
+}
+function applyAccent(){
+  document.documentElement.style.setProperty("--acc", accent);
+  document.documentElement.style.setProperty("--on-acc", pickText(accent));
+  const ap = document.getElementById("accentPicker");
+  if (ap) ap.value = accent;
+  const ac = document.getElementById("accentCode");
+  if (ac && document.activeElement!==ac) ac.value = accent;
+}
+function parseColor(s){
+  s = String(s||"").trim();
+  let m;
+  const toHex = (r,g,b)=>"#"+[r,g,b].map(v=>Number(v).toString(16).padStart(2,"0")).join("").toUpperCase();
+  const ok = (r,g,b)=>[r,g,b].every(v=>v>=0&&v<=255);
+  if ((m = s.match(/^#?([0-9a-fA-F]{6})$/))) return "#"+m[1].toUpperCase();
+  if ((m = s.match(/^#?([0-9a-fA-F]{3})$/))) return "#"+m[1].split("").map(x=>x+x).join("").toUpperCase();
+  if ((m = s.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/))){
+    const v = [m[1],m[2],m[3]].map(Number);
+    if (ok(...v)) return toHex(...v);
+  }
+  if ((m = s.match(/^(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})$/))){
+    const v = [m[1],m[2],m[3]].map(Number);
+    if (ok(...v)) return toHex(...v);
+  }
+  return null;
+}
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", theme);
+  const db = document.getElementById("themeDarkBtn"), lb = document.getElementById("themeLightBtn");
+  if (db) db.classList.toggle("on", theme==="dark");
+  if (lb) lb.classList.toggle("on", theme==="light");
+}
+function persist(){
+  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme, accent, accentCustom })); }
+  catch(e){ alert("저장 공간이 부족해요. 이미지가 크면 내보내기로 백업하세요."); }
+}
+function deriveStarsign(birthday){
+  const s = String(birthday||"");
+  let m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})/) || s.match(/(\d{1,2})[\/.\-](\d{1,2})/) || s.match(/^(\d{2})(\d{2})$/);
+  if (!m) return "";
+  const mo = +m[1], d = +m[2];
+  if (mo<1||mo>12||d<1||d>31) return "";
+  const t = mo*100+d;
+  if (t>=321&&t<=419) return "양자리";
+  if (t>=420&&t<=520) return "황소자리";
+  if (t>=521&&t<=621) return "쌍둥이자리";
+  if (t>=622&&t<=722) return "게자리";
+  if (t>=723&&t<=822) return "사자자리";
+  if (t>=823&&t<=923) return "처녀자리";
+  if (t>=924&&t<=1022) return "천칭자리";
+  if (t>=1023&&t<=1122) return "전갈자리";
+  if (t>=1123&&t<=1224) return "사수자리";
+  if (t>=1225||t<=119) return "염소자리";
+  if (t>=120&&t<=218) return "물병자리";
+  if (t>=219&&t<=320) return "물고기자리";
+  return "";
+}
+try {
+  const raw = localStorage.getItem("don_wiki");
+  if (raw){
+    const st = JSON.parse(raw);
+    if (st && st.store) store = st.store;
+    if (st && st.theme) theme = st.theme;
+    if (st && st.accent){ accent = st.accent; accentCustom = !!st.accentCustom; }
+  }
+} catch(e){}
+let curWorld = "hotel", curChar = null, curTab = "profile", editing = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cur = () => store[curWorld].chars.find(c=>c.id===curChar);
+const nameOf = id => { for (const w of Object.values(store)){ const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
+function findCharById(id){
+  for (const [wk,w] of Object.entries(store)) if (w.chars.some(c=>c.id===id)) return { id, world:wk };
+  return null;
+}
+function findCharByName(name){
+  const norm = s => String(s||"").replace(/^\(샘플\)\s*/,"").trim();
+  const n = norm(name);
+  if (!n) return null;
+  for (const [wk,w] of Object.entries(store)) for (const c of w.chars)
+    if (norm(c.profile.name)===n) return { id:c.id, world:wk };
+  for (const [wk,w] of Object.entries(store)) for (const c of w.chars)
+    if (norm(c.profile.name).includes(n)) return { id:c.id, world:wk };
+  return null;
+}
+function linkify(text){
+  return String(text||"").split(/(\[\[[^\]]+\]\])/g).map(part=>{
+    const m = part.match(/^\[\[([^\]]+)\]\]$/);
+    if (!m) return esc(part);
+    const name = m[1].trim();
+    const t = findCharByName(name);
+    if (t) return `<a class="wikilink" data-link="${t.id}">${esc(name)}</a>`;
+    return esc(name);
+  }).join("");
+}
+function gotoChar(id){
+  const t = findCharById(id);
+  if (!t) return;
+  if (t.world!==curWorld) curWorld = t.world;
+  curChar = t.id; curTab = "profile"; render(); window.scrollTo(0,0);
+}
+
+async function sha256(t){ const b=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+
+function render(){
+  // 세계관 버튼
+  $("worlds").innerHTML = Object.entries(store).map(([k,w])=>
+    `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
+  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
+  // 캐릭터 목록
+  $("chars").innerHTML = store[curWorld].chars.map(c=>
+    `<button class="${c.id===curChar?"on":""}" data-c="${c.id}">${esc(c.profile.name||"(이름 없음)")}</button>`).join("");
+  document.querySelectorAll("#chars button").forEach(b=>b.onclick=()=>{curChar=b.dataset.c; curTab="profile"; render();});
+  $("addChar").style.display = editing ? "" : "none";
+  $("delChar").style.display = editing ? "" : "none";
+  // 탭 (무기 탭은 판타지 호텔에만)
+  const tabs = TABS.filter(([k])=> k!=="weapon" || store[curWorld].hasWeapon);
+  if (!tabs.some(([k])=>k===curTab)) curTab = "profile";
+  $("tabs").innerHTML = tabs.map(([k,n])=>`<button class="${k===curTab?"on":""}" data-t="${k}">${n}</button>`).join("");
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{curTab=b.dataset.t; render();});
+  const c = cur();
+  $("sampleNote").style.display = (c && c.sample) ? "" : "none";
+  let bodyH = "";
+  if (c){
+    const others = store[curWorld].chars.filter(x=>x.id!==c.id);
+    if (others.length){
+      bodyH += `<div class="topnav">둘러보기:`;
+      others.forEach(o=>{ bodyH += `<a data-nav="${o.id}">${esc(o.profile.name||"(이름 없음)")}</a>`; });
+      bodyH += `</div>`;
+    }
+  }
+  bodyH += c ? renderTab(c) : `<p class="empty">캐릭터를 선택하세요.</p>`;
+  if (c){
+    const others = store[curWorld].chars.filter(x=>x.id!==c.id);
+    if (others.length){
+      bodyH += `<div class="navbox"><div class="navbox-title">둘러보기 — ${esc(store[curWorld].name)}</div><div class="navbox-links">`;
+      others.forEach(o=>{ bodyH += `<button data-nav="${o.id}">${esc(o.profile.name||"(이름 없음)")}</button>`; });
+      bodyH += `</div></div>`;
+    }
+  }
+  $("body").innerHTML = bodyH;
+  document.querySelectorAll("[data-link]").forEach(a=>{ a.onclick = ()=>gotoChar(a.dataset.link); });
+  const fb = $("foldBtn");
+  if (fb) fb.onclick = ()=>{
+    const v = $("foldCustom");
+    const open = v.classList.toggle("open");
+    fb.textContent = open ? "접기 ▴" : "펼치기 ▾";
+  };
+  document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
+  if (editing) bindEdit(c);
+  $("editBtn").textContent = editing ? "👁 보기 모드" : "🔒 편집하기";
+  $("saveBtn").style.display = editing ? "" : "none";
+  const wmr = $("worldMgmtRow"); if (wmr) wmr.style.display = editing ? "" : "none";
+}
+
+function fieldRow(label, val, key, type){
+  if (!editing){
+    return `<div class="field"><label>${label}</label><div class="val">${esc(val)||'<span class="empty">—</span>'}</div></div>`;
+  }
+  const input = type==="area"
+    ? `<textarea data-k="${key}">${esc(val)}</textarea>`
+    : `<input data-k="${key}" value="${esc(val)}">`;
+  return `<div class="field"><label>${label}</label>${input}</div>`;
+}
+
+function renderTab(c){
+  const p = c.profile;
+  if (curTab==="profile"){
+    const p = c.profile;
+    const tcell = (label,val,key)=>{
+      if (editing) return `<td class="plabel">${label}</td><td><input data-k="${key}" value="${esc(val||"")}"></td>`;
+      return `<td class="plabel">${label}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
+    };
+    const colorRow = ()=>{
+      if (editing) return `<tr><td class="plabel">이미지 컬러</td><td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
+      return `<tr><td class="plabel">이미지 컬러</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
+    };
+    let h = `<div class="field"><label>대표 일러스트</label>`;
+    if (editing){
+      h += `<input data-k="illust" value="${esc(c.illust||"")}" placeholder="이미지 링크 또는 파일 첨부">`;
+      h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
+      if (c.illust) h += `<button class="hdr-btn" id="illustClear">지우기</button>`;
+      h += `</div>`;
+      if (c.illust && String(c.illust).startsWith("data:")) h += `<p class="hint">첨부된 이미지예요 (브라우저에 저장됨).</p>`;
+    } else if (c.illust){
+      h += `<img src="${esc(c.illust)}" alt="대표 일러스트" style="max-width:100%;border-radius:12px;display:block;">`;
+    } else {
+      h += `<div class="val"><span class="empty">—</span></div>`;
+    }
+    h += `</div>`;
+    h += `<div class="field"><label>명대사</label>`;
+    if (editing){
+      h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
+    } else if (c.quote){
+      h += `<div class="quotebanner">${esc(c.quote)}</div>`;
+    } else {
+      h += `<div class="val"><span class="empty">—</span></div>`;
+    }
+    h += `</div>`;
+    h += `<div class="field"><label>이름</label>`;
+    h += editing
+      ? `<input data-k="profile.name" value="${esc(p.name||"")}">`
+      : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
+    h += `</div>`;
+    h += `<table class="ptable">`;
+    const starCell = ()=>{
+      const derived = deriveStarsign(p.birthday);
+      if (editing) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
+      const v = c.starsign || derived;
+      return `<td class="plabel">별자리</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
+    };
+    h += `<tr>${tcell("나이",p.age,"profile.age")}${tcell("혈액형",c.blood,"blood")}</tr>`;
+    h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
+    h += `<tr>${tcell("키",p.height,"profile.height")}${tcell("몸무게",c.weight,"weight")}</tr>`;
+    h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("쓰는 손",c.hand,"hand")}</tr>`;
+    h += colorRow();
+    const wide = (label,val,key)=>{
+      if (editing) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      return `<tr><td class="plabel">${label}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
+    };
+    h += wide("출신지",c.birthplace,"birthplace");
+    h += wide("취미",c.hobby,"hobby");
+    h += wide("특기",c.specialty,"specialty");
+    h += `</table>`;
+    h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
+    if (editing){
+      h += `<textarea data-k="overview" rows="2" placeholder="이 캐릭터를 한두 줄로 소개해주세요">${esc(c.overview||"")}</textarea>`;
+    } else {
+      h += `<div class="val overview">${c.overview?linkify(c.overview):'<span class="empty">—</span>'}</div>`;
+    }
+    h += `</div>`;
+    return `<div class="notebook">${h}</div>`;
+  }
+  if (curTab==="relations"){
+    let h = `<div class="field"><label>인간관계</label><div id="rels">`;
+    (c.rels||[]).forEach((r,i)=>{
+      const opts = Object.entries(REL_KINDS).map(([k,n])=>`<option value="${k}" ${r.kind===k?"selected":""}>${n}</option>`).join("");
+      const chars = Object.values(store).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
+        .map(x=>`<option value="${x.id}" ${r.to===x.id?"selected":""}>${esc(x.profile.name||"(이름 없음)")}</option>`).join("");
+      h += editing
+        ? `<div class="rel" data-i="${i}"><select class="rel-to">${chars}</select><select class="rel-kind">${opts}</select><button class="rel-del">✕</button></div>`
+        : `<div class="val">🔗 ${esc(nameOf(r.to))} — ${REL_KINDS[r.kind]||r.kind}</div>`;
+    });
+    if (editing) h += `<button class="rel" id="relAdd" style="border:1px dashed var(--line);background:none;color:var(--dim);padding:8px;border-radius:8px;cursor:pointer;width:100%">＋ 관계 추가</button>`;
+    if (!editing && !(c.rels||[]).length) h += `<div class="val"><span class="empty">—</span></div>`;
+    return h + `</div></div>`;
+  }
+  if (curTab==="illust"){
+    if (!editing){
+      const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+      if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
+      const parts = lines.map(ln =>
+        (/^https?:\/\//.test(ln)||ln.startsWith("data:image"))
+          ? `<img src="${esc(ln)}" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px">`
+          : `<div class="val">${esc(ln)}</div>`);
+      return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
+    }
+    return fieldRow("일러스트",""+c.illust,"illust","area")
+      + `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label> <span class="hint">이미지는 한 줄에 하나씩 추가돼요.</span></div>`;
+  }
+  if (curTab==="wardrobe") return fieldRow("옷장·유니폼",""+c.wardrobe,"wardrobe","area");
+  if (curTab==="weapon") return fieldRow("무기",""+c.weapon,"weapon","area");
+  if (editing) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
+  const t = ""+(c.custom||"");
+  if (t.length > 160){
+    return `<div class="field"><label>여담</label><div class="val foldable" id="foldCustom">${linkify(t)}</div>`
+      + `<button class="foldbtn" id="foldBtn">펼치기 ▾</button></div>`;
+  }
+  return `<div class="field"><label>여담</label><div class="val">${t?linkify(t):'<span class="empty">—</span>'}</div></div>`;
+}
+
+function bindEdit(c){
+  document.querySelectorAll("#body [data-k]").forEach(el=>{
+    el.oninput = ()=>{
+      const k = el.dataset.k, v = el.value;
+      if (k.startsWith("profile.")) c.profile[k.slice(8)] = v; else c[k] = v;
+    };
+  });
+  document.querySelectorAll(".rel-del").forEach(b=>b.onclick=()=>{ c.rels.splice(+b.closest(".rel").dataset.i,1); render(); });
+  document.querySelectorAll(".rel-to").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].to = s.value; });
+  document.querySelectorAll(".rel-kind").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].kind = s.value; });
+  const add = $("relAdd"); if (add) add.onclick = ()=>{ const other = Object.values(store).flatMap(w=>w.chars).find(x=>x.id!==c.id); if(other){ c.rels.push({to:other.id, kind:"friend"}); render(); } };
+  const sf = $("illustFile");
+  if (sf) sf.onchange = async ()=>{
+    const f = sf.files[0]; if (!f) return;
+    c.illust = await fileToDataURL(f);
+    const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
+    persist();
+  };
+  const sc = $("illustClear");
+  if (sc) sc.onclick = ()=>{ c.illust = ""; persist(); render(); };
+  const mf = $("illustFiles");
+  if (mf) mf.onchange = async ()=>{
+    const ta = document.querySelector('#body [data-k="illust"]');
+    for (const f of mf.files){
+      const url = await fileToDataURL(f);
+      c.illust = (c.illust ? c.illust + "\n" : "") + url;
+    }
+    if (ta) ta.value = c.illust;
+    persist();
+  };
+}
+function fileToDataURL(file){
+  return new Promise((resolve, reject)=>{
+    if (file.type==="image/png" && file.size < 800*1024){
+      const r = new FileReader();
+      r.onload = ()=>resolve(r.result); r.onerror = reject;
+      r.readAsDataURL(file); return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      const maxW = 1200;
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+$("editBtn").onclick = async ()=>{
+  if (editing){ editing=false; render(); return; }
+  const pw = prompt("편집 비밀번호");
+  if (pw===null) return;
+  if (await sha256(pw) === DEMO_PW_HASH){ editing=true; render(); }
+  else alert("비밀번호가 달라요.");
+};
+$("saveBtn").onclick = ()=>{
+  try{ persist(); alert("저장됐어요."); }
+  catch(e){ alert("저장 실패: "+e.message); }
+  editing=false; render();
+};
+$("addChar").onclick = ()=>{
+  const id = "c"+Date.now();
+  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", wardrobe:"", weapon:"", three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  curChar=id; render();
+};
+$("delChar").onclick = ()=>{
+  const w = store[curWorld], c = cur();
+  if (!c) return;
+  if (!confirm("\""+(c.profile.name||"(이름 없음)")+"\" 캐릭터를 삭제할까요?")) return;
+  w.chars = w.chars.filter(x=>x.id!==c.id);
+  Object.values(store).forEach(ww=>ww.chars.forEach(x=>{ x.rels = (x.rels||[]).filter(r=>r.to!==c.id); }));
+  curChar = w.chars[0]?.id || null; curTab = "profile";
+  render();
+};
+
+const setTheme = (t)=>{
+  theme = t;
+  if (!accentCustom) accent = ACCENTS[theme];
+  applyTheme(); applyAccent(); persist();
+};
+document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
+document.getElementById("themeLightBtn").onclick = ()=>setTheme("light");
+const modal = document.getElementById("settingsModal");
+document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); modal.style.display = "flex"; };
+function renderWorldList(){
+  const wl = document.getElementById("worldList");
+  if (!wl) return;
+  wl.innerHTML = Object.entries(store).map(([wid,w])=>
+    `<div class="worldrow"><input type="text" data-wname="${wid}" value="${esc(w.name)}">`+
+    `<label><input type="checkbox" data-wweapon="${wid}" ${w.hasWeapon?"checked":""}> 무기 탭</label>`+
+    `<button class="wdel" data-wdel="${wid}">삭제</button></div>`
+  ).join("");
+  wl.querySelectorAll("[data-wname]").forEach(inp=>{
+    inp.oninput = ()=>{ store[inp.dataset.wname].name = inp.value; render(); };
+  });
+  wl.querySelectorAll("[data-wweapon]").forEach(cb=>{
+    cb.onchange = ()=>{ store[cb.dataset.wweapon].hasWeapon = cb.checked; render(); };
+  });
+  wl.querySelectorAll("[data-wdel]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const wid = btn.dataset.wdel;
+      if (Object.keys(store).length<=1){ alert("세계관은 최소 1개 필요해요."); return; }
+      if (!confirm("\""+store[wid].name+"\" 세계관을 삭제할까요?\n캐릭터도 함께 지워져요.")) return;
+      delete store[wid];
+      if (curWorld===wid){ curWorld = Object.keys(store)[0]; curChar = store[curWorld].chars[0]?.id||null; }
+      render(); renderWorldList();
+    };
+  });
+}
+document.getElementById("addWorldBtn").onclick = ()=>{
+  const wid = "w"+Date.now();
+  store[wid] = { name:"새 세계관", hasWeapon:false, chars:[] };
+  curWorld = wid; curChar = null; curTab = "profile";
+  render(); renderWorldList();
+  const inp = document.querySelector('[data-wname="'+wid+'"]');
+  if (inp){ inp.focus(); inp.select(); }
+};
+document.getElementById("settingsClose").onclick = ()=>{ modal.style.display = "none"; };
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify({ tabs: TABS, worlds: store }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "wiki-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("importBtn").onclick = ()=>{ document.getElementById("importFile").click(); };
+document.getElementById("importFile").onchange = (e)=>{
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      if (!d.worlds) throw new Error("bad");
+      store = d.worlds;
+      curWorld = Object.keys(store)[0] || null;
+      curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
+      curTab = "profile";
+      persist(); render();
+    }catch(err){ alert("가져오기 실패: 올바른 백업 파일이 아니에요."); }
+  };
+  r.readAsText(f); e.target.value = "";
+};
+modal.addEventListener("click", (e)=>{ if (e.target===modal) modal.style.display = "none"; });
+document.getElementById("accentPicker").oninput = (e)=>{
+  accent = e.target.value; accentCustom = true;
+  applyAccent(); persist();
+};
+document.getElementById("accentCode").addEventListener("change", (e)=>{
+  const c = parseColor(e.target.value);
+  if (c){ accent = c; accentCustom = true; applyAccent(); persist(); }
+  else e.target.value = accent;
+});
+applyTheme(); applyAccent();
+curChar = store[curWorld].chars[0]?.id || null;
+render();
+</script>
+</body>
+</html>
