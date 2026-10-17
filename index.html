@@ -27,7 +27,9 @@
   aside { width:230px; border-right:1px solid var(--line); padding:14px; }
   aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
   .chars { display:flex; flex-direction:column; gap:6px; }
-  .chars button { text-align:left; }
+  .chars button { text-align:left; display:flex; align-items:center; gap:10px; }
+  .char-thumb { width:32px; height:32px; border-radius:50%; background:var(--plabel-bg); color:var(--dim); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; overflow:hidden; }
+  .char-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
   .chars-head { display:flex; align-items:center; justify-content:space-between; margin:4px 0 10px; }
   .chars-head h3 { font-size:13px; color:var(--dim); margin:0; }
   .chars-tools { display:flex; gap:6px; }
@@ -277,6 +279,13 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cur = () => store[curWorld].chars.find(c=>c.id===curChar);
 const nameOf = id => { for (const w of Object.values(store)){ const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
+function charThumb(c){
+  const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
+  const initial = clean.charAt(0) || "?";
+  const bg = c.color ? ` style="background:${esc(c.color)};color:${pickText(c.color)}"` : "";
+  if (c.illust) return `<span class="char-thumb"${bg}><img src="${esc(c.illust)}" alt=""></span>`;
+  return `<span class="char-thumb"${bg}>${esc(initial)}</span>`;
+}
 function findCharById(id){
   for (const [wk,w] of Object.entries(store)) if (w.chars.some(c=>c.id===id)) return { id, world:wk };
   return null;
@@ -316,7 +325,7 @@ function render(){
   document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{cancelEdit(); curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
   // 캐릭터 목록
   $("chars").innerHTML = store[curWorld].chars.map(c=>
-    `<button class="${c.id===curChar?"on":""}" data-c="${c.id}">${esc(c.profile.name||"(이름 없음)")}</button>`).join("");
+    `<button class="${c.id===curChar?"on":""}" data-c="${c.id}">${charThumb(c)}<span>${esc(c.profile.name||"(이름 없음)")}</span></button>`).join("");
   document.querySelectorAll("#chars button").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
 
   // 탭 (무기 탭은 판타지 호텔에만)
