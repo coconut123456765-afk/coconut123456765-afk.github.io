@@ -99,9 +99,8 @@
   .worldrow input[type="text"] { flex:1; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 10px; font-size:14px; }
   .worldrow label { font-size:13px; color:var(--dim); white-space:nowrap; display:flex; align-items:center; gap:4px; }
   .worldrow .wdel { border:1px solid var(--line); background:none; color:#e06c75; border-radius:8px; padding:8px 10px; cursor:pointer; font-size:13px; white-space:nowrap; }
-  #editBar { position:fixed; bottom:18px; right:18px; display:flex; gap:8px; }
-  #editBar button { padding:11px 18px; border-radius:12px; border:1px solid var(--line); background:var(--panel); color:var(--txt); font-size:14px; cursor:pointer; }
-  #editBar #saveBtn { background:var(--acc); color:#101623; font-weight:700; display:none; }
+  .tab-editbar { display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
+  .tab-editbar .acc { background:var(--acc); color:var(--on-acc); font-weight:700; border-color:var(--acc); }
   .sample-note { font-size:12px; color:var(--warm); margin-bottom:12px; }
   .empty { color:var(--dim); }
   @media (max-width:700px){ main{flex-direction:column;} aside{width:auto;border-right:0;border-bottom:1px solid var(--line);} section{padding:16px;} .row4{grid-template-columns:1fr 1fr;} .row3{grid-template-columns:1fr;} .field input, .field textarea, .field select{font-size:16px;} .worlds button, .tabs button, .chars button{padding:11px 16px;} header{padding:14px 16px;} header h1{font-size:18px;} }
@@ -137,7 +136,7 @@
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
     </div>
-    <div class="setting-row" id="worldMgmtRow" style="display:none"><label>세계관 관리</label>
+    <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
       <div id="worldList"></div>
       <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
     </div>
@@ -147,8 +146,8 @@
   <aside>
     <h3>캐릭터</h3>
     <div class="chars" id="chars"></div>
-    <button id="addChar" style="display:none">＋ 캐릭터 추가</button>
-    <button id="delChar" style="display:none">－ 캐릭터 삭제</button>
+    <button id="addChar">＋ 캐릭터 추가</button>
+    <button id="delChar">－ 캐릭터 삭제</button>
   </aside>
   <section>
     <div class="sample-note" id="sampleNote" style="display:none">※ 이 캐릭터는 구조 확인용 샘플이에요. 오늘 밤에 지우고 Don의 캐릭터로 채워요.</div>
@@ -156,11 +155,6 @@
     <div id="body"></div>
   </section>
 </main>
-<div id="editBar">
-  <button id="editBtn">🔒 편집하기</button>
-  <button id="saveBtn">💾 저장</button>
-</div>
-
 <script>
 /* ---------- 데모 데이터 (오늘 밤 세션에서 교체) ---------- */
 const WORLDS = {
@@ -193,7 +187,6 @@ const TABS = [
   ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
 ];
 const REL_KINDS = { family:"가족", friend:"지인" };
-const DEMO_PW_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"; // "1234"의 SHA-256 (데모용)
 
 /* ---------- 상태 ---------- */
 let store = JSON.parse(JSON.stringify(WORLDS));
@@ -270,7 +263,14 @@ try {
     if (st && st.accent){ accent = st.accent; accentCustom = !!st.accentCustom; }
   }
 } catch(e){}
-let curWorld = "hotel", curChar = null, curTab = "profile", editing = false;
+let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null;
+function cancelEdit(){
+  if (editingTab && editBackup){
+    const w = store[curWorld];
+    if (w){ const i = w.chars.findIndex(x=>x.id===editBackup.id); if (i>=0) w.chars[i] = editBackup; }
+  }
+  editingTab = null; editBackup = null;
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cur = () => store[curWorld].chars.find(c=>c.id===curChar);
@@ -306,24 +306,22 @@ function gotoChar(id){
   curChar = t.id; curTab = "profile"; render(); window.scrollTo(0,0);
 }
 
-async function sha256(t){ const b=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
 
 function render(){
   // 세계관 버튼
   $("worlds").innerHTML = Object.entries(store).map(([k,w])=>
     `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
-  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
+  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{cancelEdit(); curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
   // 캐릭터 목록
   $("chars").innerHTML = store[curWorld].chars.map(c=>
     `<button class="${c.id===curChar?"on":""}" data-c="${c.id}">${esc(c.profile.name||"(이름 없음)")}</button>`).join("");
-  document.querySelectorAll("#chars button").forEach(b=>b.onclick=()=>{curChar=b.dataset.c; curTab="profile"; render();});
-  $("addChar").style.display = editing ? "" : "none";
-  $("delChar").style.display = editing ? "" : "none";
+  document.querySelectorAll("#chars button").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
+
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || store[curWorld].hasWeapon);
   if (!tabs.some(([k])=>k===curTab)) curTab = "profile";
   $("tabs").innerHTML = tabs.map(([k,n])=>`<button class="${k===curTab?"on":""}" data-t="${k}">${n}</button>`).join("");
-  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{curTab=b.dataset.t; render();});
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{cancelEdit(); curTab=b.dataset.t; render();});
   const c = cur();
   $("sampleNote").style.display = (c && c.sample) ? "" : "none";
   let bodyH = "";
@@ -353,14 +351,17 @@ function render(){
     fb.textContent = open ? "접기 ▴" : "펼치기 ▾";
   };
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
-  if (editing) bindEdit(c);
-  $("editBtn").textContent = editing ? "👁 보기 모드" : "🔒 편집하기";
-  $("saveBtn").style.display = editing ? "" : "none";
-  const wmr = $("worldMgmtRow"); if (wmr) wmr.style.display = editing ? "" : "none";
+  if (editingTab) bindEdit(c);
+  const te = $("tabEdit");
+  if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
+  const ts = $("tabSave");
+  if (ts) ts.onclick = ()=>{ persist(); editingTab = null; editBackup = null; render(); };
+  const tc = $("tabCancel");
+  if (tc) tc.onclick = ()=>{ cancelEdit(); render(); };
 }
 
-function fieldRow(label, val, key, type){
-  if (!editing){
+function fieldRow(label, val, key, type, ed){
+  if (!ed){
     return `<div class="field"><label>${label}</label><div class="val">${esc(val)||'<span class="empty">—</span>'}</div></div>`;
   }
   const input = type==="area"
@@ -370,25 +371,31 @@ function fieldRow(label, val, key, type){
 }
 
 function renderTab(c){
+  const bar = editingTab === curTab
+    ? `<div class="tab-editbar"><button class="hdr-btn acc" id="tabSave">저장</button><button class="hdr-btn" id="tabCancel">취소</button></div>`
+    : `<div class="tab-editbar"><button class="hdr-btn" id="tabEdit">수정</button></div>`;
+  return bar + renderTabInner(c);
+}
+function renderTabInner(c){
+  const ed = (editingTab === curTab);
   const p = c.profile;
   if (curTab==="profile"){
     const p = c.profile;
     const tcell = (label,val,key)=>{
-      if (editing) return `<td class="plabel">${label}</td><td><input data-k="${key}" value="${esc(val||"")}"></td>`;
+      if (ed) return `<td class="plabel">${label}</td><td><input data-k="${key}" value="${esc(val||"")}"></td>`;
       return `<td class="plabel">${label}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
     };
     const colorRow = ()=>{
-      if (editing) return `<tr><td class="plabel">이미지 컬러</td><td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
+      if (ed) return `<tr><td class="plabel">이미지 컬러</td><td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
       return `<tr><td class="plabel">이미지 컬러</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
     };
     let h = `<div class="field"><label>대표 일러스트</label>`;
-    if (editing){
+    if (ed){
       h += `<input data-k="illust" value="${esc(c.illust||"")}" placeholder="이미지 링크 또는 파일 첨부">`;
       h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
-      if (c.illust) h += `<button class="hdr-btn" id="illustClear">지우기</button>`;
+      if (c.illust) h += `<button class="hdr-btn" id="illustClear" type="button">지우기</button>`;
       h += `</div>`;
-      if (c.illust && String(c.illust).startsWith("data:")) h += `<p class="hint">첨부된 이미지예요 (브라우저에 저장됨).</p>`;
     } else if (c.illust){
       h += `<img src="${esc(c.illust)}" alt="대표 일러스트" style="max-width:100%;border-radius:12px;display:block;">`;
     } else {
@@ -396,7 +403,7 @@ function renderTab(c){
     }
     h += `</div>`;
     h += `<div class="field"><label>명대사</label>`;
-    if (editing){
+    if (ed){
       h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
     } else if (c.quote){
       h += `<div class="quotebanner">${esc(c.quote)}</div>`;
@@ -405,14 +412,14 @@ function renderTab(c){
     }
     h += `</div>`;
     h += `<div class="field"><label>이름</label>`;
-    h += editing
+    h += ed
       ? `<input data-k="profile.name" value="${esc(p.name||"")}">`
       : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
     h += `</div>`;
     h += `<table class="ptable">`;
     const starCell = ()=>{
       const derived = deriveStarsign(p.birthday);
-      if (editing) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
+      if (ed) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
       const v = c.starsign || derived;
       return `<td class="plabel">별자리</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
     };
@@ -422,7 +429,7 @@ function renderTab(c){
     h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("쓰는 손",c.hand,"hand")}</tr>`;
     h += colorRow();
     const wide = (label,val,key)=>{
-      if (editing) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      if (ed) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
       return `<tr><td class="plabel">${label}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
     h += wide("출신지",c.birthplace,"birthplace");
@@ -430,7 +437,7 @@ function renderTab(c){
     h += wide("특기",c.specialty,"specialty");
     h += `</table>`;
     h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
-    if (editing){
+    if (ed){
       h += `<textarea data-k="overview" rows="2" placeholder="이 캐릭터를 한두 줄로 소개해주세요">${esc(c.overview||"")}</textarea>`;
     } else {
       h += `<div class="val overview">${c.overview?linkify(c.overview):'<span class="empty">—</span>'}</div>`;
@@ -444,16 +451,16 @@ function renderTab(c){
       const opts = Object.entries(REL_KINDS).map(([k,n])=>`<option value="${k}" ${r.kind===k?"selected":""}>${n}</option>`).join("");
       const chars = Object.values(store).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
         .map(x=>`<option value="${x.id}" ${r.to===x.id?"selected":""}>${esc(x.profile.name||"(이름 없음)")}</option>`).join("");
-      h += editing
+      h += ed
         ? `<div class="rel" data-i="${i}"><select class="rel-to">${chars}</select><select class="rel-kind">${opts}</select><button class="rel-del">✕</button></div>`
         : `<div class="val">🔗 ${esc(nameOf(r.to))} — ${REL_KINDS[r.kind]||r.kind}</div>`;
     });
-    if (editing) h += `<button class="rel" id="relAdd" style="border:1px dashed var(--line);background:none;color:var(--dim);padding:8px;border-radius:8px;cursor:pointer;width:100%">＋ 관계 추가</button>`;
-    if (!editing && !(c.rels||[]).length) h += `<div class="val"><span class="empty">—</span></div>`;
+    if (ed) h += `<button class="rel" id="relAdd" style="border:1px dashed var(--line);background:none;color:var(--dim);padding:8px;border-radius:8px;cursor:pointer;width:100%">＋ 관계 추가</button>`;
+    if (!ed && !(c.rels||[]).length) h += `<div class="val"><span class="empty">—</span></div>`;
     return h + `</div></div>`;
   }
   if (curTab==="illust"){
-    if (!editing){
+    if (!ed){
       const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
       if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
       const parts = lines.map(ln =>
@@ -462,12 +469,12 @@ function renderTab(c){
           : `<div class="val">${esc(ln)}</div>`);
       return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
     }
-    return fieldRow("일러스트",""+c.illust,"illust","area")
+    return fieldRow("일러스트",""+c.illust,"illust","area",ed)
       + `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label> <span class="hint">이미지는 한 줄에 하나씩 추가돼요.</span></div>`;
   }
-  if (curTab==="wardrobe") return fieldRow("옷장·유니폼",""+c.wardrobe,"wardrobe","area");
-  if (curTab==="weapon") return fieldRow("무기",""+c.weapon,"weapon","area");
-  if (editing) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
+  if (curTab==="wardrobe") return fieldRow("옷장·유니폼",""+c.wardrobe,"wardrobe","area",ed);
+  if (curTab==="weapon") return fieldRow("무기",""+c.weapon,"weapon","area",ed);
+  if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
   if (t.length > 160){
     return `<div class="field"><label>여담</label><div class="val foldable" id="foldCustom">${linkify(t)}</div>`
@@ -492,10 +499,9 @@ function bindEdit(c){
     const f = sf.files[0]; if (!f) return;
     c.illust = await fileToDataURL(f);
     const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
-    persist();
   };
   const sc = $("illustClear");
-  if (sc) sc.onclick = ()=>{ c.illust = ""; persist(); render(); };
+  if (sc) sc.onclick = ()=>{ c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = ""; };
   const mf = $("illustFiles");
   if (mf) mf.onchange = async ()=>{
     const ta = document.querySelector('#body [data-k="illust"]');
@@ -504,7 +510,6 @@ function bindEdit(c){
       c.illust = (c.illust ? c.illust + "\n" : "") + url;
     }
     if (ta) ta.value = c.illust;
-    persist();
   };
 }
 function fileToDataURL(file){
@@ -530,18 +535,6 @@ function fileToDataURL(file){
   });
 }
 
-$("editBtn").onclick = async ()=>{
-  if (editing){ editing=false; render(); return; }
-  const pw = prompt("편집 비밀번호");
-  if (pw===null) return;
-  if (await sha256(pw) === DEMO_PW_HASH){ editing=true; render(); }
-  else alert("비밀번호가 달라요.");
-};
-$("saveBtn").onclick = ()=>{
-  try{ persist(); alert("저장됐어요."); }
-  catch(e){ alert("저장 실패: "+e.message); }
-  editing=false; render();
-};
 $("addChar").onclick = ()=>{
   const id = "c"+Date.now();
   store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", wardrobe:"", weapon:"", three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
@@ -615,6 +608,7 @@ document.getElementById("importFile").onchange = (e)=>{
     try{
       const d = JSON.parse(r.result);
       if (!d.worlds) throw new Error("bad");
+      cancelEdit();
       store = d.worlds;
       curWorld = Object.keys(store)[0] || null;
       curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
