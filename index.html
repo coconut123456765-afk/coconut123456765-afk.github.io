@@ -741,10 +741,20 @@ function bindEdit(c){
   });
   document.querySelectorAll(".gal-item img, img.zoomable, .gal-edimg").forEach(img=>{
     img.style.cursor = "zoom-in";
-    img.onclick = e=>{ e.stopPropagation(); $("lightboxImg").src = img.src; $("lightbox").style.display = "flex"; };
   });
   const lb = $("lightbox");
   if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
+  if (!window._lbBound){
+    window._lbBound = true;
+    document.addEventListener("click", e=>{
+      const t = e.target.closest(".gal-item img, img.zoomable, .gal-edimg");
+      if (t){
+        e.stopPropagation();
+        $("lightboxImg").src = t.src;
+        $("lightbox").style.display = "flex";
+      }
+    });
+  }
 }
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
