@@ -739,8 +739,9 @@ function bindEdit(c){
     if (c[key]) c[key].splice(i,1);
     render();
   });
-  document.querySelectorAll(".gal-item img, img.zoomable").forEach(img=>{
-    img.onclick = ()=>{ $("lightboxImg").src = img.src; $("lightbox").style.display = "flex"; };
+  document.querySelectorAll(".gal-item img, img.zoomable, .gal-edimg").forEach(img=>{
+    img.style.cursor = "zoom-in";
+    img.onclick = e=>{ e.stopPropagation(); $("lightboxImg").src = img.src; $("lightbox").style.display = "flex"; };
   });
   const lb = $("lightbox");
   if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
