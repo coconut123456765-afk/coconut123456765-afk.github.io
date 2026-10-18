@@ -571,6 +571,7 @@ function renderTabInner(c){
       : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
     h += `</div>`;
     h += `<table class="ptable">`;
+    h += `<tr>${tcell("별명",p.nickname,"profile.nickname")}${tcell("영문명",p.ename,"profile.ename")}</tr>`;
     const starCell = ()=>{
       const derived = deriveStarsign(p.birthday);
       if (ed) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
@@ -580,7 +581,8 @@ function renderTabInner(c){
     h += `<tr>${tcell("나이",p.age,"profile.age")}${tcell("혈액형",c.blood,"blood")}</tr>`;
     h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
     h += `<tr>${tcell("키",p.height,"profile.height")}${tcell("몸무게",c.weight,"weight")}</tr>`;
-    h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("쓰는 손",c.hand,"hand")}</tr>`;
+    h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("브라사이즈",c.bra,"bra")}</tr>`;
+    h += `<tr>${tcell("쓰는 손",c.hand,"hand")}<td class="plabel"></td><td></td></tr>`;
     h += colorRow();
     const wide = (label,val,key)=>{
       if (ed) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
