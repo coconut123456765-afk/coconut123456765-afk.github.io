@@ -151,6 +151,9 @@
     <div id="body"></div>
   </section>
 </main>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 /* ---------- 데모 데이터 (오늘 밤 세션에서 교체) ---------- */
 const WORLDS = {
@@ -209,9 +212,67 @@ function applyTheme(){
   if (db) db.classList.toggle("on", theme==="dark");
   if (lb) lb.classList.toggle("on", theme==="light");
 }
-function persist(){
+/* ---- 저장: 로컬 캐시 + 클라우드 실시간 동기화 ---- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+let cloudRef = null, cloudReady = false, cloudCache = "";
+function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
-  catch(e){ alert("저장 공간이 부족해요. 이미지가 크면 내보내기로 백업하세요."); }
+  catch(e){}
+}
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem("don_wiki");
+    if (raw){
+      const st = JSON.parse(raw);
+      if (st && st.store) store = st.store;
+      if (st && st.theme) theme = st.theme;
+    }
+  }catch(e){}
+}
+function cloudPush(){
+  if (!cloudReady || !cloudRef) return;
+  const data = JSON.stringify({ store, theme });
+  cloudCache = data;
+  try{ cloudRef.set(JSON.parse(data)); }catch(e){}
+}
+function persist(){
+  saveLocal();
+  cloudPush();
+}
+function initCloud(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    cloudRef = firebase.database().ref("wiki");
+    firebase.auth().signInAnonymously().then(()=>{
+      cloudRef.once("value").then(snap=>{
+        if (!snap.exists()) cloudPush();
+      });
+      cloudRef.on("value", snap=>{
+        const v = snap.val();
+        if (!v || !v.store) return;
+        const data = JSON.stringify({ store: v.store, theme: v.theme });
+        if (data === cloudCache) return;
+        cloudCache = data;
+        if (editingTab) return; // 편집 중이면 덮어쓰지 않음
+        store = v.store;
+        if (v.theme) theme = v.theme;
+        if (!store[curWorld]) curWorld = Object.keys(store)[0];
+        const chars = store[curWorld] ? store[curWorld].chars : [];
+        if (curChar && !chars.some(c=>c.id===curChar)) curChar = chars.length ? chars[0].id : null;
+        saveLocal();
+        applyTheme(); render();
+      });
+      cloudReady = true;
+    }).catch(()=>{});
+  }catch(e){}
 }
 function deriveStarsign(birthday){
   const s = String(birthday||"");
@@ -234,15 +295,8 @@ function deriveStarsign(birthday){
   if (t>=219&&t<=320) return "물고기자리";
   return "";
 }
-try {
-  const raw = localStorage.getItem("don_wiki");
-  if (raw){
-    const st = JSON.parse(raw);
-    if (st && st.store) store = st.store;
-    if (st && st.theme) theme = st.theme;
-
-  }
-} catch(e){}
+loadLocal();
+initCloud();
 let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null;
 function cancelEdit(){
   if (editingTab && editBackup){
