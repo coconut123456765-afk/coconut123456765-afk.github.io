@@ -478,6 +478,44 @@ function galleryField(c, label, textKey, imgKey, ed){
   h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-'+imgKey+'" accept="image/*" style="display:none"></label></div>';
   return h;
 }
+function relMindmap(c){
+  const rels = c.rels||[];
+  if (!rels.length) return "";
+  const W=400, H=300, cx=200, cy=145, R=105;
+  const nodeImg = (ch, x, y, r, id)=>{
+    const img = (ch.thumb || (ch.illust||"").split("\n").find(s=>s.trim()) || "");
+    const name = esc(ch.profile.name||"(이름 없음)");
+    let inner = "";
+    if (img){
+      inner = `<clipPath id="mc-${id}"><circle cx="${x}" cy="${y}" r="${r}"/></clipPath>`
+        + `<image href="${esc(img)}" x="${x-r}" y="${y-r}" width="${r*2}" height="${r*2}" clip-path="url(#mc-${id})" preserveAspectRatio="xMidYMid slice"/>`;
+    } else {
+      const initial = esc((ch.profile.name||"?").replace(/^\(샘플\)\s*/,"").charAt(0));
+      inner = `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--plabel-bg)"/><text x="${x}" y="${y+6}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--dim)">${initial}</text>`;
+    }
+    return `<g class="mm-node" data-nav="${id}" style="cursor:pointer">${inner}`
+      + `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="var(--acc)" stroke-width="2"/>`
+      + `<text x="${x}" y="${y+r+16}" text-anchor="middle" font-size="12" fill="var(--txt)">${name}</text></g>`;
+  };
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="mm-svg" style="width:100%;max-width:440px;display:block;margin:0 auto 10px">`;
+  rels.forEach((r,i)=>{
+    const ch = findCharById(r.to);
+    if (!ch) return;
+    const target = store[ch.world].chars.find(x=>x.id===ch.id);
+    if (!target) return;
+    const ang = (2*Math.PI*i/rels.length) - Math.PI/2;
+    const x = cx + R*Math.cos(ang), y = cy + (R*0.85)*Math.sin(ang);
+    const kind = REL_KINDS[r.kind]||r.kind;
+    const mx = (cx+x)/2, my = (cy+y)/2;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1.5"/>`;
+    svg += `<rect x="${mx-24}" y="${my-10}" width="48" height="20" rx="10" fill="var(--panel)" stroke="var(--line)"/>`;
+    svg += `<text x="${mx}" y="${my+4}" text-anchor="middle" font-size="11" fill="var(--dim)">${esc(kind)}</text>`;
+    svg += nodeImg(target, x, y, 26, r.to);
+  });
+  svg += nodeImg(c, cx, cy, 32, c.id);
+  svg += `</svg>`;
+  return svg;
+}
 function renderTabInner(c){
   const ed = (editingTab === curTab);
   const p = c.profile;
@@ -556,6 +594,9 @@ function renderTabInner(c){
   }
   if (curTab==="relations"){
     let h = `<div class="field"><label>인간관계</label><div id="rels">`;
+    if (!ed && (c.rels||[]).length){
+      h += relMindmap(c);
+    }
     (c.rels||[]).forEach((r,i)=>{
       const opts = Object.entries(REL_KINDS).map(([k,n])=>`<option value="${k}" ${r.kind===k?"selected":""}>${n}</option>`).join("");
       const chars = Object.values(store).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
