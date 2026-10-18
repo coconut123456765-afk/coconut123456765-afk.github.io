@@ -541,12 +541,21 @@ function renderTabInner(c){
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="thumbFile" accept="image/*" style="display:none"></label>`;
       if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
       h += `</div></div>`;
+      h += `<div class="field" style="margin-top:10px"><label>로고</label>`;
+      if (c.logo) h += `<img id="logoPreview" src="${esc(c.logo)}" style="max-width:220px;border-radius:8px;display:block;margin-bottom:8px">`;
+      h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
+      if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
+      h += `</div></div>`;
     } else if (c.illust){
       h += `<img src="${esc(c.illust)}" alt="대표 일러스트" style="max-width:100%;border-radius:12px;display:block;">`;
     } else {
       h += `<div class="val"><span class="empty">—</span></div>`;
     }
     h += `</div>`;
+    if (c.logo && !ed){
+      h += `<div class="field"><label>로고</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;"></div>`;
+    }
     h += `<div class="field"><label>명대사</label>`;
     if (ed){
       h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
@@ -609,8 +618,8 @@ function renderTabInner(c){
     return h + `</div></div>`;
   }
   if (curTab==="illust"){
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if (!ed){
-      const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
       if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
       const parts = lines.map(ln =>
         (/^https?:\/\//.test(ln)||ln.startsWith("data:image"))
@@ -618,8 +627,12 @@ function renderTabInner(c){
           : `<div class="val">${esc(ln)}</div>`);
       return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
     }
-    return fieldRow("일러스트",""+c.illust,"illust","area",ed)
-      + `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label> <span class="hint">이미지는 한 줄에 하나씩 추가돼요.</span></div>`;
+    return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
+      lines.map((ln,i)=>
+        `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="">`+
+        `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`
+      ).join("")+
+      `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return galleryField(c, "옷장·유니폼", "wardrobe", "wardrobeImgs", ed);
   if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
@@ -666,15 +679,35 @@ function bindEdit(c){
   };
   const tc2 = $("thumbClear");
   if (tc2) tc2.onclick = ()=>{ c.thumb = ""; const pv = $("thumbPreview"); if (pv) pv.remove(); tc2.remove(); };
+  const lf = $("logoFile");
+  if (lf) lf.onchange = async ()=>{
+    const f = lf.files[0]; if (!f) return;
+    c.logo = await fileToDataURL(f, 800, 0.85);
+    let pv = $("logoPreview");
+    if (pv){ pv.src = c.logo; }
+    else {
+      pv = document.createElement("img");
+      pv.id = "logoPreview"; pv.src = c.logo;
+      pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin-bottom:8px";
+      lf.closest(".field").insertBefore(pv, lf.closest("div"));
+    }
+  };
+  const lc2 = $("logoClear");
+  if (lc2) lc2.onclick = ()=>{ c.logo = ""; const pv = $("logoPreview"); if (pv) pv.remove(); lc2.remove(); };
   const mf = $("illustFiles");
   if (mf) mf.onchange = async ()=>{
-    const ta = document.querySelector('#body [data-k="illust"]');
     for (const f of mf.files){
       const url = await fileToDataURL(f);
       c.illust = (c.illust ? c.illust + "\n" : "") + url;
     }
-    if (ta) ta.value = c.illust;
+    render();
   };
+  document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    lines.splice(+b.dataset.ildel,1);
+    c.illust = lines.join("\n");
+    render();
+  });
   ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
     if (gf) gf.onchange = async ()=>{
@@ -724,7 +757,7 @@ function fileToDataURL(file, maxW, quality){
 
 $("addChar").onclick = ()=>{
   const id = "c"+Date.now();
-  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
   curChar=id; render();
 };
 $("delChar").onclick = ()=>{
