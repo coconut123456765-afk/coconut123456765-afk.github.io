@@ -40,9 +40,9 @@
   .char-item-img { margin:2px 0 8px; border-radius:10px; overflow:hidden; border:1px solid var(--line); aspect-ratio:1/1; max-height:280px; }
   .char-item-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .char-thumb { cursor:pointer; }
-  .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:10px; }
+  .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:10px; }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
-  .gal-item img { width:100%; height:140px; object-fit:cover; display:block; }
+  .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
   .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
   .gal-edrow { display:flex; align-items:center; gap:8px; margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:10px; }
   .gal-edimg { width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; }
@@ -630,7 +630,7 @@ function renderTabInner(c){
       if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
       const parts = lines.map(ln =>
         (/^https?:\/\//.test(ln)||ln.startsWith("data:image"))
-          ? `<img src="${esc(ln)}" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px">`
+          ? `<img src="${esc(ln)}" class="zoomable" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px;cursor:zoom-in">`
           : `<div class="val">${esc(ln)}</div>`);
       return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
     }
@@ -739,6 +739,11 @@ function bindEdit(c){
     if (c[key]) c[key].splice(i,1);
     render();
   });
+  document.querySelectorAll(".gal-item img, img.zoomable").forEach(img=>{
+    img.onclick = ()=>{ $("lightboxImg").src = img.src; $("lightbox").style.display = "flex"; };
+  });
+  const lb = $("lightbox");
+  if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
 }
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
@@ -854,5 +859,6 @@ applyTheme(); applyAccent();
 curChar = store[curWorld].chars[0]?.id || null;
 render();
 </script>
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
 </body>
 </html>
