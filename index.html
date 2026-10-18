@@ -28,6 +28,17 @@
   aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
   .chars { display:flex; flex-direction:column; gap:6px; }
   .chars button { text-align:left; display:flex; align-items:center; gap:10px; }
+  .char-row { display:flex; align-items:center; gap:4px; }
+  .char-row .char-sel { flex:1; min-width:0; }
+  .char-order { display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
+  .char-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .char-order button:hover:not(:disabled) { color:var(--acc); border-color:var(--acc); }
+  .char-order button:disabled { opacity:0.2; cursor:default; }
+  .char-hero { margin-bottom:14px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); }
+  .char-hero > button { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; background:none; border:none; cursor:pointer; color:var(--txt); font-size:15px; }
+  .char-hero-name { font-weight:700; flex:1; text-align:left; }
+  .char-hero-arrow { color:var(--dim); font-size:11px; }
+  .char-hero-img img { width:100%; max-height:420px; object-fit:contain; display:block; }
   .char-thumb { width:32px; height:32px; border-radius:50%; background:var(--plabel-bg); color:var(--dim); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; overflow:hidden; }
   .char-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
   .chars-head { display:flex; align-items:center; justify-content:space-between; margin:4px 0 10px; }
@@ -297,7 +308,7 @@ function deriveStarsign(birthday){
 }
 loadLocal();
 initCloud();
-let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null;
+let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null, heroOpen = false;
 function cancelEdit(){
   if (editingTab && editBackup){
     const w = store[curWorld];
@@ -348,15 +359,26 @@ function gotoChar(id){
 }
 
 
+function moveChar(id, dir){
+  const chars = store[curWorld].chars;
+  const i = chars.findIndex(c=>c.id===id);
+  const j = i + dir;
+  if (i<0 || j<0 || j>=chars.length) return;
+  const t = chars[i]; chars[i] = chars[j]; chars[j] = t;
+  persist(); render();
+}
 function render(){
   // 세계관 버튼
   $("worlds").innerHTML = Object.entries(store).map(([k,w])=>
     `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
-  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{cancelEdit(); curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
+  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{cancelEdit(); curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; heroOpen=false; render();});
   // 캐릭터 목록
-  $("chars").innerHTML = store[curWorld].chars.map(c=>
-    `<button class="${c.id===curChar?"on":""}" data-c="${c.id}">${charThumb(c)}<span>${esc(c.profile.name||"(이름 없음)")}</span></button>`).join("");
-  document.querySelectorAll("#chars button").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
+  $("chars").innerHTML = store[curWorld].chars.map((c,i,arr)=>
+    `<div class="char-row"><button class="char-sel ${c.id===curChar?"on":""}" data-c="${c.id}">${charThumb(c)}<span>${esc(c.profile.name||"(이름 없음)")}</span></button>`+
+    `<span class="char-order"><button data-up="${c.id}" title="위로"${i===0?" disabled":""}>▲</button><button data-down="${c.id}" title="아래로"${i===arr.length-1?" disabled":""}>▼</button></span></div>`).join("");
+  document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile"; heroOpen=false; render();});
+  document.querySelectorAll("#chars [data-up]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.up,-1);});
+  document.querySelectorAll("#chars [data-down]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.down,1);});
 
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || store[curWorld].hasWeapon);
@@ -366,6 +388,13 @@ function render(){
   const c = cur();
   $("sampleNote").style.display = (c && c.sample) ? "" : "none";
   let bodyH = "";
+  if (c){
+    const heroImg = c.illust || c.thumb;
+    const heroArrow = heroImg ? '<span class="char-hero-arrow">' + (heroOpen?'▲':'▼') + '</span>' : '';
+    bodyH += `<div class=\"char-hero\"><button id=\"heroToggle\">${charThumb(c)}<span class=\"char-hero-name\">${esc(c.profile.name||"(이름 없음)")}</span>${heroArrow}</button>`;
+    if (heroOpen && heroImg) bodyH += `<div class="char-hero-img"><img src="${esc(heroImg)}" alt=""></div>`;
+    bodyH += `</div>`;
+  }
   if (c){
     const others = store[curWorld].chars.filter(x=>x.id!==c.id);
     if (others.length){
@@ -393,6 +422,8 @@ function render(){
   };
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
   if (editingTab) bindEdit(c);
+  const ht = $("heroToggle");
+  if (ht) ht.onclick = ()=>{ heroOpen = !heroOpen; render(); };
   const te = $("tabEdit");
   if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
   const ts = $("tabSave");
