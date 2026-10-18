@@ -864,6 +864,6 @@ applyTheme(); applyAccent();
 curChar = store[curWorld].chars[0]?.id || null;
 render();
 </script>
-<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
+<div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" onclick="event.stopPropagation();this.parentElement.style.display='none'" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
 </body>
 </html>
