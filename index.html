@@ -40,6 +40,13 @@
   .char-item-img { margin:2px 0 8px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
   .char-item-img img { width:100%; max-height:220px; object-fit:cover; display:block; }
   .char-thumb { cursor:pointer; }
+  .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:10px; }
+  .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
+  .gal-item img { width:100%; height:140px; object-fit:cover; display:block; }
+  .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
+  .gal-edrow { display:flex; align-items:center; gap:8px; margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:10px; }
+  .gal-edimg { width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+  .gal-edtitle { flex:1; }
   .char-thumb { width:32px; height:32px; border-radius:50%; background:var(--plabel-bg); color:var(--dim); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; overflow:hidden; }
   .char-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
   .chars-head { display:flex; align-items:center; justify-content:space-between; margin:4px 0 10px; }
@@ -377,7 +384,7 @@ function render(){
   $("chars").innerHTML = store[curWorld].chars.map((c,i,arr)=>{
     const relNames = (c.rels||[]).map(r=>nameOf(r.to)).filter(n=>n&&n!=="?");
     const sub = [c.position||"", relNames.length?"→ "+relNames.join(", "):""].filter(Boolean).join(" · ");
-    const img = c.illust || c.thumb;
+    const img = (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
     const subHtml = sub ? '<span class="char-sub">'+esc(sub)+'</span>' : "";
     const imgHtml = (expandedImg===c.id && img) ? '<div class="char-item-img"><img src="'+esc(img)+'" alt=""></div>' : "";
     const selOn = c.id===curChar ? "on" : "";
@@ -443,6 +450,33 @@ function renderTab(c){
     ? `<div class="tab-editbar"><button class="hdr-btn acc" id="tabSave">저장</button><button class="hdr-btn" id="tabCancel">취소</button></div>`
     : `<div class="tab-editbar"><button class="hdr-btn" id="tabEdit">수정</button></div>`;
   return bar + renderTabInner(c);
+}
+function galleryField(c, label, textKey, imgKey, ed){
+  const imgs = c[imgKey] || [];
+  let h = fieldRow(label, ""+c[textKey], textKey, "area", ed);
+  if (!ed){
+    if (imgs.length){
+      h += '<div class="gal-grid">';
+      imgs.forEach(g=>{
+        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="">';
+        if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+    return h;
+  }
+  h += '<div class="gal-edit" id="gal-'+imgKey+'">';
+  imgs.forEach((g,i)=>{
+    h += '<div class="gal-edrow" data-i="'+i+'">';
+    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="">';
+    h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
+    h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-'+imgKey+'" accept="image/*" style="display:none"></label></div>';
+  return h;
 }
 function renderTabInner(c){
   const ed = (editingTab === curTab);
@@ -547,8 +581,8 @@ function renderTabInner(c){
     return fieldRow("일러스트",""+c.illust,"illust","area",ed)
       + `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label> <span class="hint">이미지는 한 줄에 하나씩 추가돼요.</span></div>`;
   }
-  if (curTab==="wardrobe") return fieldRow("옷장·유니폼",""+c.wardrobe,"wardrobe","area",ed);
-  if (curTab==="weapon") return fieldRow("무기",""+c.weapon,"weapon","area",ed);
+  if (curTab==="wardrobe") return galleryField(c, "옷장·유니폼", "wardrobe", "wardrobeImgs", ed);
+  if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
   if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
   if (t.length > 160){
@@ -601,6 +635,29 @@ function bindEdit(c){
     }
     if (ta) ta.value = c.illust;
   };
+  ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
+    const gf = $("gal-file-"+imgKey);
+    if (gf) gf.onchange = async ()=>{
+      const f = gf.files[0]; if (!f) return;
+      const url = await fileToDataURL(f);
+      if (!c[imgKey]) c[imgKey] = [];
+      c[imgKey].push({img:url, title:""});
+      render();
+    };
+  });
+  document.querySelectorAll(".gal-edtitle").forEach(inp=>inp.onchange=()=>{
+    const row = inp.closest(".gal-edrow"); if (!row) return;
+    const key = inp.closest(".gal-edit").id.replace("gal-","");
+    const i = +inp.dataset.gi;
+    if (c[key] && c[key][i]) c[key][i].title = inp.value;
+  });
+  document.querySelectorAll("[data-gdel]").forEach(b=>b.onclick=()=>{
+    const row = b.closest(".gal-edrow"); if (!row) return;
+    const key = b.closest(".gal-edit").id.replace("gal-","");
+    const i = +b.dataset.gdel;
+    if (c[key]) c[key].splice(i,1);
+    render();
+  });
 }
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
@@ -627,7 +684,7 @@ function fileToDataURL(file, maxW, quality){
 
 $("addChar").onclick = ()=>{
   const id = "c"+Date.now();
-  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", position:"", wardrobe:"", weapon:"", three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
   curChar=id; render();
 };
 $("delChar").onclick = ()=>{
