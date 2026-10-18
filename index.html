@@ -581,8 +581,13 @@ function renderTabInner(c){
     h += `<tr>${tcell("나이",p.age,"profile.age")}${tcell("혈액형",c.blood,"blood")}</tr>`;
     h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
     h += `<tr>${tcell("키",p.height,"profile.height")}${tcell("몸무게",c.weight,"weight")}</tr>`;
-    h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("브라사이즈",c.bra,"bra")}</tr>`;
-    h += `<tr>${tcell("쓰는 손",c.hand,"hand")}<td class="plabel"></td><td></td></tr>`;
+    if (!c.hideSizes || ed){
+      h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("브라사이즈",c.bra,"bra")}</tr>`;
+    }
+    h += `<tr>${tcell("쓰는 손",c.hand,"hand")}${tcell("성별",c.gender,"gender")}</tr>`;
+    if (ed){
+      h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·브라사이즈 숨기기</label></td></tr>`;
+    }
     h += colorRow();
     const wide = (label,val,key)=>{
       if (ed) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
@@ -650,7 +655,8 @@ function renderTabInner(c){
 function bindEdit(c){
   document.querySelectorAll("#body [data-k]").forEach(el=>{
     el.oninput = ()=>{
-      const k = el.dataset.k, v = el.value;
+      const k = el.dataset.k;
+      const v = el.type==="checkbox" ? el.checked : el.value;
       if (k.startsWith("profile.")) c.profile[k.slice(8)] = v; else c[k] = v;
     };
   });
