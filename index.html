@@ -457,7 +457,7 @@ function galleryField(c, label, textKey, imgKey, ed){
     if (imgs.length){
       h += '<div class="gal-grid">';
       imgs.forEach(g=>{
-        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="">';
+        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
         if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
         h += '</div>';
       });
@@ -468,7 +468,7 @@ function galleryField(c, label, textKey, imgKey, ed){
   h += '<div class="gal-edit" id="gal-'+imgKey+'">';
   imgs.forEach((g,i)=>{
     h += '<div class="gal-edrow" data-i="'+i+'">';
-    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="">';
+    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
     h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
     h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
     h += '</div>';
@@ -630,13 +630,13 @@ function renderTabInner(c){
       if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
       const parts = lines.map(ln =>
         (/^https?:\/\//.test(ln)||ln.startsWith("data:image"))
-          ? `<img src="${esc(ln)}" class="zoomable" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px;cursor:zoom-in">`
+          ? `<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px;cursor:zoom-in">`
           : `<div class="val">${esc(ln)}</div>`);
       return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
     }
     return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
       lines.map((ln,i)=>
-        `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="">`+
+        `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
         `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`
       ).join("")+
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
@@ -744,17 +744,11 @@ function bindEdit(c){
   });
   const lb = $("lightbox");
   if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
-  if (!window._lbBound){
-    window._lbBound = true;
-    document.addEventListener("click", e=>{
-      const t = e.target.closest(".gal-item img, img.zoomable, .gal-edimg");
-      if (t){
-        e.stopPropagation();
-        $("lightboxImg").src = t.src;
-        $("lightbox").style.display = "flex";
-      }
-    });
-  }
+}
+function openLightbox(src){
+  const lb = document.getElementById("lightbox");
+  const im = document.getElementById("lightboxImg");
+  if (lb && im){ im.src = src; lb.style.display = "flex"; }
 }
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
