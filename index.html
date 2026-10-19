@@ -581,7 +581,7 @@ function renderTabInner(c){
       if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
       h += `</div></div>`;
       h += `<div class="field" style="margin-top:10px"><label>로고</label>`;
-      if (c.logo) h += `<img id="logoPreview" src="${esc(c.logo)}" style="max-width:220px;border-radius:8px;display:block;margin-bottom:8px">`;
+      if (c.logo) h += `<img id="logoPreview" src="${esc(c.logo)}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
       h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
       if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
@@ -593,7 +593,7 @@ function renderTabInner(c){
     }
     h += `</div>`;
     if (c.logo && !ed){
-      h += `<div class="field"><label>로고</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;"></div>`;
+      h += `<div class="field"><label>로고</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
     }
     h += `<div class="field"><label>명대사</label>`;
     if (ed){
@@ -735,7 +735,7 @@ function bindEdit(c){
     else {
       pv = document.createElement("img");
       pv.id = "logoPreview"; pv.src = c.logo;
-      pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin-bottom:8px";
+      pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
       lf.closest(".field").insertBefore(pv, lf.closest("div"));
     }
   };
@@ -799,13 +799,14 @@ function fileToDataURL(file, maxW, quality){
     }
     const img = new Image();
     const url = URL.createObjectURL(file);
+    const keepPng = file.type==="image/png";
     img.onload = ()=>{
       let w = img.width, h = img.height;
       if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
       const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
       cv.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve(cv.toDataURL("image/jpeg", quality));
+      resolve(cv.toDataURL(keepPng ? "image/png" : "image/jpeg", quality));
     };
     img.onerror = reject;
     img.src = url;
