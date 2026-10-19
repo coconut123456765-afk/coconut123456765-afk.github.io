@@ -587,7 +587,8 @@ function renderTabInner(c){
       if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
       h += `</div></div>`;
     } else if (c.illust){
-      h += `<div class="polaroid"><img src="${esc(c.illust)}" alt="대표 일러스트"></div>`;
+      const firstIllust = String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+      h += `<div class="polaroid"><img src="${esc(firstIllust)}" alt="대표 일러스트"></div>`;
     } else {
       h += `<div class="val"><span class="empty">—</span></div>`;
     }
