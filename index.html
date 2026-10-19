@@ -15,12 +15,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <style>
   :root, html[data-theme="dark"] {
-    --bg:#1a1d26; --panel:#232836; --line:#343b4f; --txt:#e8eaf0; --dim:#9aa3b8; --acc:#7fb4ff; --warm:#ffc98a;
-    --input-bg:#141821; --plabel-bg:#1a2233; --paper:#111726; --ruled:rgba(140,170,220,0.07);
+    --bg:#101218; --panel:#232836; --line:#343b4f; --txt:#e8eaf0; --dim:#9aa3b8; --acc:#7fb4ff; --warm:#ffc98a;
+    --input-bg:#141821; --plabel-bg:#1a2233; --paper:#1a2030; --ruled:rgba(140,170,220,0.09);
     --hole-in:#05080f; --hole-ring:#46536e; --badge-bg:#5a3d1e; --on-acc:#101623;
   }
   html[data-theme="light"] {
-    --bg:#f5f2ec; --panel:#ffffff; --line:#ddd6c8; --txt:#2c2822; --dim:#8a8172; --acc:#1a6fb5; --warm:#8a5a1e;
+    --bg:#e6dfd0; --panel:#ffffff; --line:#ddd6c8; --txt:#2c2822; --dim:#8a8172; --acc:#1a6fb5; --warm:#8a5a1e;
     --input-bg:#ffffff; --plabel-bg:#efe9db; --paper:#fffdf7; --ruled:rgba(120,100,70,0.10);
     --hole-in:#e6dfcf; --hole-ring:#b3a88f; --badge-bg:#f0e2c8; --on-acc:#ffffff;
   }
@@ -91,7 +91,19 @@
   .navbox-links button { background:var(--plabel-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 14px; cursor:pointer; font-size:14px; }
   .navbox-links button:hover { border-color:var(--acc); }
 
-  .quotebanner { background:#1a6fb5; color:#fff; text-align:center; padding:12px 14px; border-radius:10px; font-weight:600; font-size:16px; }
+  .quotebanner {
+    background:linear-gradient(180deg,#ffe87a 0%,#ffefa0 12%,#fff3ad 100%);
+    color:#4a3d1a; text-align:center; padding:14px 16px; border-radius:3px;
+    font-weight:600; font-size:16px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);
+    position:relative;
+  }
+  .quotebanner::before {
+    content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:74px; height:20px; background:rgba(255,255,255,0.45);
+    border:1px solid rgba(0,0,0,0.06); border-radius:2px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  }
   .bigname { font-size:24px; font-weight:800; }
   .ptable { width:100%; border-collapse:collapse; font-size:15px; margin-top:4px; table-layout:fixed; }
   .ptable td { overflow-wrap:break-word; }
