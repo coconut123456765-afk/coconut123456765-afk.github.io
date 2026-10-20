@@ -190,8 +190,12 @@
         <button id="exportBtn">내보내기</button>
         <button id="importBtn">가져오기</button>
       </div>
+      <div class="seg" style="margin-top:6px">
+        <button id="optimizeBtn">이미지 용량 줄이기</button>
+      </div>
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
+      <p class="hint">이미지가 많아 저장이 안 될 땐 '이미지 용량 줄이기'를 눌러보세요.</p>
     </div>
     <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
       <div id="worldList"></div>
@@ -284,10 +288,7 @@ const firebaseConfig = {
 let cloudRef = null, cloudReady = false, cloudCache = "";
 function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
-  catch(e){
-    console.warn("로컬 저장 실패 (용량 초과 가능):", e);
-    setSyncStatus("로컬 저장 실패 (용량 초과?)", "#f44336");
-  }
+  catch(e){ /* 용량 초과 시 조용히 무시 - Firebase가 진짜 저장소 */ }
 }
 function loadLocal(){
   try{
@@ -820,7 +821,7 @@ function openLightbox(src){
   if (lb && im){ im.src = src; lb.style.display = "flex"; }
 }
 function fileToDataURL(file, maxW, quality){
-  maxW = maxW || 1200; quality = quality || 0.85;
+  maxW = maxW || 800; quality = quality || 0.72;
   return new Promise((resolve, reject)=>{
     if (file.type==="image/png" && file.size < 800*1024 && maxW >= 1200){
       const r = new FileReader();
@@ -912,6 +913,63 @@ document.getElementById("exportBtn").onclick = ()=>{
   a.click(); URL.revokeObjectURL(a.href);
 };
 document.getElementById("importBtn").onclick = ()=>{ document.getElementById("importFile").click(); };
+function recompressDataURL(dataUrl, maxW, quality){
+  return new Promise((resolve)=>{
+    if (!dataUrl || !dataUrl.startsWith("data:image/")){ resolve(dataUrl); return; }
+    // PNG 투명도는 유지
+    const keepPng = dataUrl.startsWith("data:image/png");
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      // 이미 충분히 작으면 그대로
+      if (img.width <= maxW && dataUrl.length < 300*1024){ resolve(dataUrl); return; }
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL(keepPng ? "image/png" : "image/jpeg", quality));
+    };
+    img.onerror = ()=>resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+document.getElementById("optimizeBtn").onclick = async ()=>{
+  const btn = document.getElementById("optimizeBtn");
+  btn.disabled = true; btn.textContent = "줄이는 중…";
+  try{
+    let count = 0;
+    for (const wid of Object.keys(store)){
+      const chars = store[wid].chars || [];
+      for (const c of chars){
+        // 대표 일러스트 (줄바꿈 구분 여러 장)
+        if (c.illust){
+          const lines = String(c.illust).split("\n");
+          const out = [];
+          for (const ln of lines){
+            const t = ln.trim(); if (!t){ continue; }
+            out.push(await recompressDataURL(t, 800, 0.72)); count++;
+          }
+          c.illust = out.join("\n");
+        }
+        if (c.thumb){ c.thumb = await recompressDataURL(c.thumb, 256, 0.72); count++; }
+        if (c.logo){ c.logo = await recompressDataURL(c.logo, 800, 0.8); count++; }
+        for (const k of ["wardrobeImgs","weaponImgs"]){
+          const arr = c[k];
+          if (Array.isArray(arr)){
+            for (const it of arr){
+              if (it && it.img){ it.img = await recompressDataURL(it.img, 800, 0.72); count++; }
+            }
+          }
+        }
+      }
+    }
+    persist(); render();
+    btn.textContent = "완료! (" + count + "장)";
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = "이미지 용량 줄이기"; }, 3000);
+  }catch(e){
+    btn.disabled = false; btn.textContent = "이미지 용량 줄이기";
+    alert("오류: " + (e.message || e));
+  }
+};
 document.getElementById("importFile").onchange = (e)=>{
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
