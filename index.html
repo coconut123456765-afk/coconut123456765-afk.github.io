@@ -340,15 +340,6 @@ function cloudPush(){
     setTimeout(()=>{ if (cloudReady && cloudRef) cloudPush(); }, 5000);
   });
 }
-// 일러스트 폴더 그룹을 c.illust 문자열로 동기화 (대표 일러스트 호환용)
-function syncIllustFromGroups(c){
-  if (!c.illustGroups) return;
-  const all = [];
-  for (const g of c.illustGroups){
-    if (g.images) for (const img of g.images){ if (img && img.trim()) all.push(img.trim()); }
-  }
-  c.illust = all.join("\n");
-}
 function persist(){
   storeUpdatedAt = Date.now();
   saveLocal();
@@ -727,47 +718,26 @@ function renderTabInner(c){
     return h + `</div></div>`;
   }
   if (curTab==="illust"){
-    // 폴더 그룹 마이그레이션: 기존 c.illust 문자열을 기본 폴더로
-    if (!c.illustGroups){
-      const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
-      c.illustGroups = lines.length ? [{ id: "g"+Date.now(), name: "", images: lines }] : [];
-      // c.illust는 유지 (하위 호환)
-    }
-    const groups = c.illustGroups || [];
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if (!ed){
-      if (!groups.length || !groups.some(g=>g.images && g.images.length))
-        return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
-      return `<div class="field"><label>일러스트</label>`+
-        groups.filter(g=>g.images && g.images.length).map(g=>{
-          const imgs = g.images.filter(ln => (/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
-          const txts = g.images.filter(ln => !(/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
-          const grid = imgs.length
-            ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:6px">`+
-              imgs.map(ln=>`<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
-              `</div>`
-            : "";
-          const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
-          const title = g.name ? `<div style="font-weight:700;margin-top:10px">📁 ${esc(g.name)}</div>` : "";
-          return title + grid + tparts;
-        }).join("")+`</div>`;
+      if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
+      const imgs = lines.filter(ln => (/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
+      const txts = lines.filter(ln => !(/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
+      const grid = imgs.length
+        ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px">`+
+          imgs.map(ln=>`<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
+          `</div>`
+        : "";
+      const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
+      return `<div class="field"><label>일러스트</label>${grid}${tparts}</div>`;
     }
-    // 수정 모드: 폴더별 그룹
-    return `<div class="field"><label>일러스트</label><div id="illustGroups">`+
-      groups.map((g,gi)=>
-        `<div class="gal-folder" data-gi="${gi}" style="border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px">`+
-        `<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">`+
-        `<input data-gname="${gi}" value="${esc(g.name||"")}" placeholder="폴더 이름 (비워두면 없음)" style="flex:1">`+
-        `<button class="hdr-btn" data-gdel="${gi}">폴더 삭제</button></div>`+
-        `<div class="gal-edit">`+
-        (g.images||[]).map((ln,i)=>
-          `<div class="gal-edrow" data-gi="${gi}" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
-          `<button class="hdr-btn" data-gilup="${gi}:${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-gildown="${gi}:${i}" ${(i===(g.images||[]).length-1)?"disabled":""}>▼</button>`+
-          `<button class="hdr-btn" data-gildel="${gi}:${i}">삭제</button></div>`
-        ).join("")+
-        `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" data-gfile="${gi}" accept="image/*" multiple style="display:none"></label></div>`+
-        `</div>`
+    return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
+      lines.map((ln,i)=>
+        `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
+        `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
+        `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`
       ).join("")+
-      `</div><div style="margin-top:8px"><button class="hdr-btn" id="addIllustGroup">＋ 폴더 추가</button></div></div>`;
+      `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return galleryField(c, "옷장·유니폼", "wardrobe", "wardrobeImgs", ed);
   if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
@@ -842,66 +812,38 @@ function bindEdit(c){
   };
   const lc2 = $("logoClear");
   if (lc2) lc2.onclick = ()=>{ c.logo = ""; const pv = $("logoPreview"); if (pv) pv.remove(); lc2.remove(); };
-  // 일러스트 폴더 그룹 핸들러
-  if (!c.illustGroups) c.illustGroups = [];
-  document.querySelectorAll("[data-gname]").forEach(inp=>{
-    inp.onchange = ()=>{
-      const gi = +inp.dataset.gname;
-      if (c.illustGroups[gi]){ c.illustGroups[gi].name = inp.value; persist(); }
-    };
-  });
-  const addG = $("addIllustGroup");
-  if (addG) addG.onclick = ()=>{
-    c.illustGroups.push({ id: "g"+Date.now(), name: "", images: [] });
-    persist(); render();
+  const mf = $("illustFiles");
+  if (mf) mf.onchange = async ()=>{
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      for (const f of mf.files){
+        const url = await uploadToCloudinary(f);
+        c.illust = (c.illust ? c.illust + "\n" : "") + url;
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+      persist();
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+    render();
   };
-  document.querySelectorAll("[data-gdel]").forEach(b=>b.onclick=()=>{
-    if (!confirm("이 폴더를 삭제할까요? (안의 이미지도 함께 삭제됨)")) return;
-    c.illustGroups.splice(+b.dataset.gdel, 1);
-    syncIllustFromGroups(c);
+  document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    lines.splice(+b.dataset.ildel,1);
+    c.illust = lines.join("\n");
     persist(); render();
   });
-  document.querySelectorAll("[data-gildel]").forEach(b=>b.onclick=()=>{
-    const [gi, i] = b.dataset.gildel.split(":").map(Number);
-    if (c.illustGroups[gi] && c.illustGroups[gi].images){
-      c.illustGroups[gi].images.splice(i, 1);
-      syncIllustFromGroups(c);
-      persist(); render();
-    }
-  });
-  document.querySelectorAll("[data-gilup]").forEach(b=>b.onclick=()=>{
-    const [gi, i] = b.dataset.gilup.split(":").map(Number);
-    if (i<=0) return;
-    const imgs = c.illustGroups[gi] && c.illustGroups[gi].images;
-    if (!imgs) return;
-    [imgs[i-1], imgs[i]] = [imgs[i], imgs[i-1]];
-    syncIllustFromGroups(c);
+  document.querySelectorAll("[data-ilup]").forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.ilup; if (i<=0) return;
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    [lines[i-1], lines[i]] = [lines[i], lines[i-1]];
+    c.illust = lines.join("\n");
     persist(); render();
   });
-  document.querySelectorAll("[data-gildown]").forEach(b=>b.onclick=()=>{
-    const [gi, i] = b.dataset.gildown.split(":").map(Number);
-    const imgs = c.illustGroups[gi] && c.illustGroups[gi].images;
-    if (!imgs || i>=imgs.length-1) return;
-    [imgs[i], imgs[i+1]] = [imgs[i+1], imgs[i]];
-    syncIllustFromGroups(c);
+  document.querySelectorAll("[data-ildown]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    const i = +b.dataset.ildown; if (i>=lines.length-1) return;
+    [lines[i], lines[i+1]] = [lines[i+1], lines[i]];
+    c.illust = lines.join("\n");
     persist(); render();
-  });
-  document.querySelectorAll("[data-gfile]").forEach(inp=>{
-    inp.onchange = async ()=>{
-      const gi = +inp.dataset.gfile;
-      if (!c.illustGroups[gi]) return;
-      setSyncStatus("이미지 업로드 중…", "var(--warm)");
-      try{
-        for (const f of inp.files){
-          const url = await uploadToCloudinary(f);
-          c.illustGroups[gi].images.push(url);
-        }
-        setSyncStatus("동기화됨", "#4CAF50");
-        syncIllustFromGroups(c);
-        persist();
-      }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
-      render();
-    };
   });
   ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
