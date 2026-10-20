@@ -17,6 +17,7 @@ button { padding: 12px 24px; font-size: 16px; margin: 8px; cursor: pointer; }
 <h1>마이베이비 캐릭터 추가</h1>
 <p>아래 버튼을 누르면 "마이베이비" 세계관에 아나스타샤와 돈키호테가 추가됩니다.</p>
 <button id="addBtn">캐릭터 추가하기</button>
+<button id="updateBtn">나무위키 정보로 채우기</button>
 <div id="log"></div>
 <script>
 const firebaseConfig = {
@@ -105,6 +106,67 @@ document.getElementById("addBtn").onclick = async () => {
       log("저장 완료! (" + added + "명 추가)");
     } else {
       log("추가할 캐릭터가 없어요.");
+    }
+  } catch(e) {
+    log("오류: " + (e.message || e));
+  }
+  btn.disabled = false;
+};
+
+document.getElementById("updateBtn").onclick = async () => {
+  const btn = document.getElementById("updateBtn");
+  btn.disabled = true;
+  try {
+    log("로그인 중...");
+    await firebase.auth().signInAnonymously();
+    log("데이터 가져오는 중...");
+    const snap = await firebase.database().ref("wiki").once("value");
+    const data = snap.val();
+    if (!data || !data.store) { log("데이터가 없어요."); return; }
+    const store = data.store;
+    let wid = null;
+    for (const [k, w] of Object.entries(store)) {
+      if (w && w.name && w.name.includes("마이베이비")) { wid = k; break; }
+    }
+    if (!wid) { log("'마이베이비' 세계관을 찾을 수 없어요."); return; }
+    const chars = store[wid].chars || [];
+    let updated = 0;
+    for (const c of chars) {
+      const name = c.profile && c.profile.name;
+      if (name === "아나스타샤") {
+        c.profile.age = "15";
+        c.profile.height = "165cm";
+        c.profile.birthday = "9월 19일";
+        c.blood = "O형";
+        c.weight = "43kg";
+        c.three = "B80 / W54 / H80";
+        c.birthplace = "홋카이도";
+        c.starsign = "처녀자리";
+        c.hobby = "홈파티, 천체관측";
+        c.hand = "양손잡이";
+        c.position = "아이돌";
+        c.overview = "아이돌마스터 신데렐라 걸즈의 아이돌. 러시아인 아버지와 일본인 어머니 사이의 혼혈로, 10세까지 러시아에서 살았다. 별을 좋아해 천체관측을 즐긴다.";
+        c.quote = "저는 아냐… 아나스타샤입니다";
+        c.color = "#a0c8e8";
+        updated++;
+        log("아나스타샤 업데이트됨");
+      } else if (name === "돈키호테") {
+        c.profile.height = "150cm 후반";
+        c.profile.birthday = "3월 3일";
+        c.position = "림버스 컴퍼니 LCB 3번 수감자";
+        c.overview = "Limbus Company의 수감자. 소설 『돈키호테』가 모티브. 과도한 열정으로 기사도와 정의를 외치는 개그 캐릭터.";
+        c.quote = "닿을 수 없는 별에 도달하기 위하여!";
+        c.color = "#ffef23";
+        updated++;
+        log("돈키호테 업데이트됨");
+      }
+    }
+    if (updated > 0) {
+      data.storeUpdatedAt = Date.now();
+      await firebase.database().ref("wiki").set(data);
+      log("저장 완료! (" + updated + "명 업데이트)");
+    } else {
+      log("업데이트할 캐릭터가 없어요.");
     }
   } catch(e) {
     log("오류: " + (e.message || e));
