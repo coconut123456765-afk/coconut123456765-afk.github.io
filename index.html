@@ -927,8 +927,8 @@ function renderWorldList(){
     `<button class="wdel" data-wdel="${wid}">삭제</button></div>`
   ).join("");
   wl.querySelectorAll("[data-wname]").forEach(inp=>{
-    inp.oninput = ()=>{ store[inp.dataset.wname].name = inp.value; render(); };
-    inp.onchange = ()=>{ persist(); };
+    inp.oninput = ()=>{ store[inp.dataset.wname].name = inp.value; };
+    inp.onchange = ()=>{ persist(); render(); renderWorldList(); };
   });
   wl.querySelectorAll("[data-wweapon]").forEach(cb=>{
     cb.onchange = ()=>{ store[cb.dataset.wweapon].hasWeapon = cb.checked; render(); };
