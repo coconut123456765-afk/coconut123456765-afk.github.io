@@ -1044,8 +1044,6 @@ document.getElementById("migrateBtn").onclick = async ()=>{
             }
           }
         }
-        // 중간중간 저장 (너무 크면 실패할 수 있으니)
-        if (count % 5 === 0) persist();
       }
     }
     persist(); render();
