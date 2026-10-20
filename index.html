@@ -721,15 +721,20 @@ function renderTabInner(c){
     const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if (!ed){
       if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
-      const parts = lines.map(ln =>
-        (/^https?:\/\//.test(ln)||ln.startsWith("data:image"))
-          ? `<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:12px;display:block;margin-bottom:10px;cursor:zoom-in">`
-          : `<div class="val">${esc(ln)}</div>`);
-      return `<div class="field"><label>일러스트</label>${parts.join("")}</div>`;
+      const imgs = lines.filter(ln => (/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
+      const txts = lines.filter(ln => !(/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
+      const grid = imgs.length
+        ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:6px">`+
+          imgs.map(ln=>`<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
+          `</div>`
+        : "";
+      const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
+      return `<div class="field"><label>일러스트</label>${grid}${tparts}</div>`;
     }
     return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
       lines.map((ln,i)=>
         `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
+        `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
         `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`
       ).join("")+
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
@@ -824,6 +829,20 @@ function bindEdit(c){
     lines.splice(+b.dataset.ildel,1);
     c.illust = lines.join("\n");
     render();
+  });
+  document.querySelectorAll("[data-ilup]").forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.ilup; if (i<=0) return;
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    [lines[i-1], lines[i]] = [lines[i], lines[i-1]];
+    c.illust = lines.join("\n");
+    persist(); render();
+  });
+  document.querySelectorAll("[data-ildown]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    const i = +b.dataset.ildown; if (i>=lines.length-1) return;
+    [lines[i], lines[i+1]] = [lines[i+1], lines[i]];
+    c.illust = lines.join("\n");
+    persist(); render();
   });
   ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
