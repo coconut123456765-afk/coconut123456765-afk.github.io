@@ -468,12 +468,27 @@ function moveChar(id, dir){
   persist(); render();
 }
 function render(){
-  // 세계관 버튼
-  $("worlds").innerHTML = Object.entries(store).map(([k,w])=>
+  // 세계관 버튼 (유효한 세계관만)
+  const validWorlds = Object.entries(store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+  // curWorld가 유효하지 않으면 첫 번째 유효 세계관으로
+  if (!store[curWorld] || typeof store[curWorld] !== "object"){
+    curWorld = validWorlds.length ? validWorlds[0][0] : null;
+    curChar = null;
+  }
+  $("worlds").innerHTML = validWorlds.map(([k,w])=>
     `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
-  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{cancelEdit(); curWorld=b.dataset.w; curChar=store[curWorld].chars[0]?.id||null; curTab="profile"; render();});
+  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{
+    cancelEdit();
+    curWorld=b.dataset.w;
+    const w = store[curWorld];
+    curChar=(w && w.chars && w.chars[0]?.id)||null;
+    curTab="profile";
+    render();
+  });
   // 캐릭터 목록
-  $("chars").innerHTML = store[curWorld].chars.map((c,i,arr)=>{
+  const cw = store[curWorld];
+  if (!cw || !cw.chars){ $("chars").innerHTML = ""; return; }
+  $("chars").innerHTML = cw.chars.map((c,i,arr)=>{
     const relNames = (c.rels||[]).map(r=>nameOf(r.to)).filter(n=>n&&n!=="?");
     const sub = [c.position||"", relNames.length?"→ "+relNames.join(", "):""].filter(Boolean).join(" · ");
     const img = (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
