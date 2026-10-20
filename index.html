@@ -418,7 +418,7 @@ function cancelEdit(){
 }
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const cur = () => store[curWorld].chars.find(c=>c.id===curChar);
+const cur = () => { const w = store[curWorld]; return (w && w.chars) ? w.chars.find(c=>c.id===curChar) : null; };
 const nameOf = id => { for (const w of Object.values(store)){ const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
 function charThumb(c){
   const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
@@ -487,8 +487,8 @@ function render(){
   });
   // 캐릭터 목록
   const cw = store[curWorld];
-  if (!cw || !cw.chars){ $("chars").innerHTML = ""; return; }
-  $("chars").innerHTML = cw.chars.map((c,i,arr)=>{
+  const charList = (cw && cw.chars) ? cw.chars : [];
+  $("chars").innerHTML = charList.map((c,i,arr)=>{
     const relNames = (c.rels||[]).map(r=>nameOf(r.to)).filter(n=>n&&n!=="?");
     const sub = [c.position||"", relNames.length?"→ "+relNames.join(", "):""].filter(Boolean).join(" · ");
     const img = (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
@@ -506,7 +506,7 @@ function render(){
   document.querySelectorAll("#chars [data-down]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.down,1);});
 
   // 탭 (무기 탭은 판타지 호텔에만)
-  const tabs = TABS.filter(([k])=> k!=="weapon" || store[curWorld].hasWeapon);
+  const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
   if (!tabs.some(([k])=>k===curTab)) curTab = "profile";
   $("tabs").innerHTML = tabs.map(([k,n])=>`<button class="${k===curTab?"on":""}" data-t="${k}">${n}</button>`).join("");
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{cancelEdit(); curTab=b.dataset.t; render();});
@@ -514,10 +514,10 @@ function render(){
   $("sampleNote").style.display = (c && c.sample) ? "" : "none";
   let bodyH = "";
   bodyH += c ? renderTab(c) : `<p class="empty">캐릭터를 선택하세요.</p>`;
-  if (c){
-    const others = store[curWorld].chars.filter(x=>x.id!==c.id);
+  if (c && cw && cw.chars){
+    const others = cw.chars.filter(x=>x.id!==c.id);
     if (others.length){
-      bodyH += `<div class="navbox"><div class="navbox-title">둘러보기 — ${esc(store[curWorld].name)}</div><div class="navbox-links">`;
+      bodyH += `<div class="navbox"><div class="navbox-title">둘러보기 — ${esc(cw.name)}</div><div class="navbox-links">`;
       others.forEach(o=>{ bodyH += `<button data-nav="${o.id}">${esc(o.profile.name||"(이름 없음)")}</button>`; });
       bodyH += `</div></div>`;
     }
