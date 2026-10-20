@@ -191,11 +191,11 @@
         <button id="importBtn">가져오기</button>
       </div>
       <div class="seg" style="margin-top:6px">
-        <button id="optimizeBtn">이미지 용량 줄이기</button>
+        <button id="migrateBtn">기존 이미지 Cloudinary로 옮기기</button>
       </div>
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
-      <p class="hint">이미지가 많아 저장이 안 될 땐 '이미지 용량 줄이기'를 눌러보세요.</p>
+      <p class="hint">이미지가 base64로 저장돼 무거우면 'Cloudinary로 옮기기'를 눌러보세요.</p>
     </div>
     <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
       <div id="worldList"></div>
@@ -285,6 +285,36 @@ const firebaseConfig = {
   messagingSenderId: "146328839370",
   appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
 };
+const CLOUDINARY_CLOUD = "x4eukv2d";
+const CLOUDINARY_PRESET = "Unsigned";
+async function uploadToCloudinary(file){
+  // 원본이 너무 크면 가볍게 압축 (PNG 투명도는 유지)
+  const dataUrl = await fileToDataURL(file, 1600, 0.85);
+  const blob = await (await fetch(dataUrl)).blob();
+  const fd = new FormData();
+  fd.append("file", blob, file.type === "image/png" ? "image.png" : "image.jpg");
+  fd.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD + "/image/upload", {
+    method: "POST", body: fd
+  });
+  if (!res.ok) throw new Error("Cloudinary 업로드 실패 (" + res.status + ")");
+  const j = await res.json();
+  if (!j.secure_url) throw new Error("Cloudinary 응답 오류");
+  return j.secure_url;
+}
+async function migrateDataUrlToCloudinary(dataUrl){
+  if (!dataUrl || !dataUrl.startsWith("data:image/")) return dataUrl;
+  const blob = await (await fetch(dataUrl)).blob();
+  const fd = new FormData();
+  fd.append("file", blob, dataUrl.startsWith("data:image/png") ? "image.png" : "image.jpg");
+  fd.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD + "/image/upload", {
+    method: "POST", body: fd
+  });
+  if (!res.ok) throw new Error("Cloudinary 업로드 실패 (" + res.status + ")");
+  const j = await res.json();
+  return j.secure_url || dataUrl;
+}
 let cloudRef = null, cloudReady = false, cloudCache = "";
 function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
@@ -737,47 +767,63 @@ function bindEdit(c){
   const sf = $("illustFile");
   if (sf) sf.onchange = async ()=>{
     const f = sf.files[0]; if (!f) return;
-    c.illust = await fileToDataURL(f);
-    const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.illust = await uploadToCloudinary(f);
+      const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   };
   const sc = $("illustClear");
   if (sc) sc.onclick = ()=>{ c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = ""; };
   const tf = $("thumbFile");
   if (tf) tf.onchange = async ()=>{
     const f = tf.files[0]; if (!f) return;
-    c.thumb = await fileToDataURL(f, 256, 0.8);
-    let pv = $("thumbPreview");
-    if (pv){ pv.src = c.thumb; }
-    else {
-      pv = document.createElement("img");
-      pv.id = "thumbPreview"; pv.src = c.thumb;
-      pv.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px";
-      tf.closest(".field").insertBefore(pv, tf.closest("div"));
-    }
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.thumb = await uploadToCloudinary(f);
+      let pv = $("thumbPreview");
+      if (pv){ pv.src = c.thumb; }
+      else {
+        pv = document.createElement("img");
+        pv.id = "thumbPreview"; pv.src = c.thumb;
+        pv.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px";
+        tf.closest(".field").insertBefore(pv, tf.closest("div"));
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   };
   const tc2 = $("thumbClear");
   if (tc2) tc2.onclick = ()=>{ c.thumb = ""; const pv = $("thumbPreview"); if (pv) pv.remove(); tc2.remove(); };
   const lf = $("logoFile");
   if (lf) lf.onchange = async ()=>{
     const f = lf.files[0]; if (!f) return;
-    c.logo = await fileToDataURL(f, 800, 0.85);
-    let pv = $("logoPreview");
-    if (pv){ pv.src = c.logo; }
-    else {
-      pv = document.createElement("img");
-      pv.id = "logoPreview"; pv.src = c.logo;
-      pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
-      lf.closest(".field").insertBefore(pv, lf.closest("div"));
-    }
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.logo = await uploadToCloudinary(f);
+      let pv = $("logoPreview");
+      if (pv){ pv.src = c.logo; }
+      else {
+        pv = document.createElement("img");
+        pv.id = "logoPreview"; pv.src = c.logo;
+        pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
+        lf.closest(".field").insertBefore(pv, lf.closest("div"));
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   };
   const lc2 = $("logoClear");
   if (lc2) lc2.onclick = ()=>{ c.logo = ""; const pv = $("logoPreview"); if (pv) pv.remove(); lc2.remove(); };
   const mf = $("illustFiles");
   if (mf) mf.onchange = async ()=>{
-    for (const f of mf.files){
-      const url = await fileToDataURL(f);
-      c.illust = (c.illust ? c.illust + "\n" : "") + url;
-    }
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      for (const f of mf.files){
+        const url = await uploadToCloudinary(f);
+        c.illust = (c.illust ? c.illust + "\n" : "") + url;
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
     render();
   };
   document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
@@ -790,9 +836,13 @@ function bindEdit(c){
     const gf = $("gal-file-"+imgKey);
     if (gf) gf.onchange = async ()=>{
       const f = gf.files[0]; if (!f) return;
-      const url = await fileToDataURL(f);
-      if (!c[imgKey]) c[imgKey] = [];
-      c[imgKey].push({img:url, title:""});
+      setSyncStatus("이미지 업로드 중…", "var(--warm)");
+      try{
+        const url = await uploadToCloudinary(f);
+        if (!c[imgKey]) c[imgKey] = [];
+        c[imgKey].push({img:url, title:""});
+        setSyncStatus("동기화됨", "#4CAF50");
+      }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
       render();
     };
   });
@@ -932,41 +982,65 @@ function recompressDataURL(dataUrl, maxW, quality){
     img.src = dataUrl;
   });
 }
-document.getElementById("optimizeBtn").onclick = async ()=>{
-  const btn = document.getElementById("optimizeBtn");
-  btn.disabled = true; btn.textContent = "줄이는 중…";
+document.getElementById("migrateBtn").onclick = async ()=>{
+  const btn = document.getElementById("migrateBtn");
+  if (!confirm("기존 base64 이미지를 Cloudinary로 옮길까요? 시간이 걸릴 수 있어요.")) return;
+  btn.disabled = true; btn.textContent = "옮기는 중…";
   try{
-    let count = 0;
+    let count = 0, total = 0;
+    // 먼저 개수 세기
     for (const wid of Object.keys(store)){
-      const chars = store[wid].chars || [];
-      for (const c of chars){
-        // 대표 일러스트 (줄바꿈 구분 여러 장)
+      for (const c of (store[wid].chars || [])){
+        if (c.illust) total += String(c.illust).split("\n").filter(s=>s.trim().startsWith("data:image/")).length;
+        if (c.thumb && String(c.thumb).startsWith("data:image/")) total++;
+        if (c.logo && String(c.logo).startsWith("data:image/")) total++;
+        for (const k of ["wardrobeImgs","weaponImgs"]){
+          for (const it of (c[k] || [])){
+            if (it && it.img && String(it.img).startsWith("data:image/")) total++;
+          }
+        }
+      }
+    }
+    if (!total){ btn.textContent = "옮길 이미지 없음"; setTimeout(()=>{ btn.disabled=false; btn.textContent="기존 이미지 Cloudinary로 옮기기"; }, 2000); return; }
+    for (const wid of Object.keys(store)){
+      for (const c of (store[wid].chars || [])){
         if (c.illust){
           const lines = String(c.illust).split("\n");
           const out = [];
           for (const ln of lines){
             const t = ln.trim(); if (!t){ continue; }
-            out.push(await recompressDataURL(t, 800, 0.72)); count++;
+            if (t.startsWith("data:image/")){
+              out.push(await migrateDataUrlToCloudinary(t)); count++;
+              btn.textContent = `옮기는 중… ${count}/${total}`;
+            } else out.push(t);
           }
           c.illust = out.join("\n");
         }
-        if (c.thumb){ c.thumb = await recompressDataURL(c.thumb, 256, 0.72); count++; }
-        if (c.logo){ c.logo = await recompressDataURL(c.logo, 800, 0.8); count++; }
+        if (c.thumb && String(c.thumb).startsWith("data:image/")){
+          c.thumb = await migrateDataUrlToCloudinary(c.thumb); count++;
+          btn.textContent = `옮기는 중… ${count}/${total}`;
+        }
+        if (c.logo && String(c.logo).startsWith("data:image/")){
+          c.logo = await migrateDataUrlToCloudinary(c.logo); count++;
+          btn.textContent = `옮기는 중… ${count}/${total}`;
+        }
         for (const k of ["wardrobeImgs","weaponImgs"]){
-          const arr = c[k];
-          if (Array.isArray(arr)){
-            for (const it of arr){
-              if (it && it.img){ it.img = await recompressDataURL(it.img, 800, 0.72); count++; }
+          for (const it of (c[k] || [])){
+            if (it && it.img && String(it.img).startsWith("data:image/")){
+              it.img = await migrateDataUrlToCloudinary(it.img); count++;
+              btn.textContent = `옮기는 중… ${count}/${total}`;
             }
           }
         }
+        // 중간중간 저장 (너무 크면 실패할 수 있으니)
+        if (count % 5 === 0) persist();
       }
     }
     persist(); render();
     btn.textContent = "완료! (" + count + "장)";
-    setTimeout(()=>{ btn.disabled = false; btn.textContent = "이미지 용량 줄이기"; }, 3000);
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = "기존 이미지 Cloudinary로 옮기기"; }, 3000);
   }catch(e){
-    btn.disabled = false; btn.textContent = "이미지 용량 줄이기";
+    btn.disabled = false; btn.textContent = "기존 이미지 Cloudinary로 옮기기";
     alert("오류: " + (e.message || e));
   }
 };
