@@ -80,7 +80,7 @@ document.getElementById("addBtn").onclick = async () => {
     log("로그인 중...");
     await firebase.auth().signInAnonymously();
     log("데이터 가져오는 중...");
-    const snap = await firebase.database().ref("data").once("value");
+    const snap = await firebase.database().ref("wiki").once("value");
     const data = snap.val();
     if (!data || !data.store) { log("데이터가 없어요."); return; }
     const store = data.store;
@@ -101,7 +101,7 @@ document.getElementById("addBtn").onclick = async () => {
     else log("돈키호테는 이미 있음");
     if (added > 0) {
       data.storeUpdatedAt = Date.now();
-      await firebase.database().ref("data").set(data);
+      await firebase.database().ref("wiki").set(data);
       log("저장 완료! (" + added + "명 추가)");
     } else {
       log("추가할 캐릭터가 없어요.");
