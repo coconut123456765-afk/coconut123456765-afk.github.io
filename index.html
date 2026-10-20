@@ -289,11 +289,9 @@ const firebaseConfig = {
 const CLOUDINARY_CLOUD = "x4eukv2d";
 const CLOUDINARY_PRESET = "Unsigned";
 async function uploadToCloudinary(file){
-  // 원본이 너무 크면 가볍게 압축 (PNG 투명도는 유지)
-  const dataUrl = await fileToDataURL(file, 1600, 0.85);
-  const blob = await (await fetch(dataUrl)).blob();
+  // 원본 그대로 업로드 (압축 없음)
   const fd = new FormData();
-  fd.append("file", blob, file.type === "image/png" ? "image.png" : "image.jpg");
+  fd.append("file", file, file.name || (file.type === "image/png" ? "image.png" : "image.jpg"));
   fd.append("upload_preset", CLOUDINARY_PRESET);
   const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD + "/image/upload", {
     method: "POST", body: fd
