@@ -200,6 +200,7 @@
     <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
       <div id="worldList"></div>
       <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
+      <button id="repairWorldsBtn" class="hdr-btn" style="width:100%;margin-top:4px">⚠ 문제 세계관 강제 삭제 (이름 없는 것)</button>
     </div>
   </div>
 </div>
@@ -954,6 +955,21 @@ document.getElementById("addWorldBtn").onclick = ()=>{
   persist(); render(); renderWorldList();
   const inp = document.querySelector('[data-wname="'+wid+'"]');
   if (inp){ inp.focus(); inp.select(); }
+};
+document.getElementById("repairWorldsBtn").onclick = ()=>{
+  const bad = Object.keys(store).filter(wid=>{
+    const w = store[wid];
+    return !w || typeof w.name !== "string" || !w.name.trim();
+  });
+  if (!bad.length){ alert("문제 있는 세계관이 없어요."); return; }
+  if (!confirm("이름 없는 세계관 " + bad.length + "개를 강제 삭제할까요?\nID: " + bad.join(", "))) return;
+  for (const wid of bad){ delete store[wid]; }
+  if (!store[curWorld] || bad.includes(curWorld)){
+    curWorld = Object.keys(store)[0] || null;
+    curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
+  }
+  persist(); render(); renderWorldList();
+  alert(bad.length + "개 삭제했어요.");
 };
 document.getElementById("settingsClose").onclick = ()=>{ modal.style.display = "none"; };
 document.getElementById("exportBtn").onclick = ()=>{
