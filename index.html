@@ -923,8 +923,11 @@ function fileToDataURL(file, maxW, quality){
 }
 
 $("addChar").onclick = ()=>{
+  const w = store[curWorld];
+  if (!w){ alert("세계관을 먼저 선택하세요."); return; }
+  if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
