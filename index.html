@@ -173,6 +173,7 @@
 <header>
   <h1 class="brand">Dossier<span class="b-colon">:</span><span class="b-don">Don</span></h1>
   <div class="worlds" id="worlds"></div>
+  <span id="syncStatus" style="font-size:12px;color:var(--dim);margin-right:8px;">동기화 확인 중…</span>
   <button id="settingsBtn" class="hdr-btn">설정</button>
 </header>
 <div id="settingsModal" class="modal" style="display:none">
@@ -283,7 +284,10 @@ const firebaseConfig = {
 let cloudRef = null, cloudReady = false, cloudCache = "";
 function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
-  catch(e){ console.warn("로컬 저장 실패 (용량 초과 가능):", e); }
+  catch(e){
+    console.warn("로컬 저장 실패 (용량 초과 가능):", e);
+    setSyncStatus("로컬 저장 실패 (용량 초과?)", "#f44336");
+  }
 }
 function loadLocal(){
   try{
@@ -295,15 +299,23 @@ function loadLocal(){
     }
   }catch(e){}
 }
+function setSyncStatus(txt, color){
+  const el = document.getElementById("syncStatus");
+  if (el){ el.textContent = txt; el.style.color = color || "var(--dim)"; }
+}
 function cloudPush(){
   if (!cloudReady || !cloudRef) return;
   const data = JSON.stringify({ store, theme });
   let payload;
   try{ payload = JSON.parse(data); }catch(e){ return; }
+  const sizeKB = Math.round(data.length / 1024);
+  setSyncStatus("저장 중… (" + sizeKB + "KB)", "var(--warm)");
   cloudRef.set(payload).then(()=>{
     cloudCache = data;
+    setSyncStatus("동기화됨", "#4CAF50");
   }).catch((e)=>{
     console.warn("Firebase 저장 실패, 5초 후 재시도:", e);
+    setSyncStatus("저장 실패! 재시도 중… (" + (e.message || e) + ")", "#f44336");
     setTimeout(()=>{ if (cloudReady && cloudRef) cloudPush(); }, 5000);
   });
 }
@@ -343,7 +355,10 @@ function initCloud(){
         applyTheme(); render();
       });
       cloudReady = true;
-    }).catch(()=>{});
+      setSyncStatus("동기화됨", "#4CAF50");
+    }).catch(()=>{
+      setSyncStatus("클라우드 연결 실패", "#f44336");
+    });
   }catch(e){}
 }
 function deriveStarsign(birthday){
