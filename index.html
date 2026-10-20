@@ -897,7 +897,7 @@ function fileToDataURL(file, maxW, quality){
 $("addChar").onclick = ()=>{
   const id = "c"+Date.now();
   store[curWorld].chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
-  curChar=id; render();
+  curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
   const w = store[curWorld], c = cur();
@@ -906,7 +906,7 @@ $("delChar").onclick = ()=>{
   w.chars = w.chars.filter(x=>x.id!==c.id);
   Object.values(store).forEach(ww=>ww.chars.forEach(x=>{ x.rels = (x.rels||[]).filter(r=>r.to!==c.id); }));
   curChar = w.chars[0]?.id || null; curTab = "profile";
-  render();
+  persist(); render();
 };
 
 const setTheme = (t)=>{
@@ -928,6 +928,7 @@ function renderWorldList(){
   ).join("");
   wl.querySelectorAll("[data-wname]").forEach(inp=>{
     inp.oninput = ()=>{ store[inp.dataset.wname].name = inp.value; render(); };
+    inp.onchange = ()=>{ persist(); };
   });
   wl.querySelectorAll("[data-wweapon]").forEach(cb=>{
     cb.onchange = ()=>{ store[cb.dataset.wweapon].hasWeapon = cb.checked; render(); };
@@ -942,7 +943,7 @@ function renderWorldList(){
       if (!confirm("\""+store[wid].name+"\" 세계관을 삭제할까요?\n캐릭터도 함께 지워져요.")) return;
       delete store[wid];
       if (curWorld===wid){ curWorld = Object.keys(store)[0]; curChar = store[curWorld].chars[0]?.id||null; }
-      render(); renderWorldList();
+      persist(); render(); renderWorldList();
     };
   });
 }
@@ -950,7 +951,7 @@ document.getElementById("addWorldBtn").onclick = ()=>{
   const wid = "w"+Date.now();
   store[wid] = { name:"새 세계관", hasWeapon:false, accent:null, chars:[] };
   curWorld = wid; curChar = null; curTab = "profile";
-  render(); renderWorldList();
+  persist(); render(); renderWorldList();
   const inp = document.querySelector('[data-wname="'+wid+'"]');
   if (inp){ inp.focus(); inp.select(); }
 };
