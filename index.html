@@ -690,11 +690,11 @@ function renderTabInner(c){
     h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
     h += `<tr>${tcell("키",p.height,"profile.height")}${tcell("몸무게",c.weight,"weight")}</tr>`;
     if (!c.hideSizes || ed){
-      h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("브라사이즈",c.bra,"bra")}</tr>`;
+      h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("속옷 사이즈",c.bra,"bra")}</tr>`;
     }
     h += `<tr>${tcell("쓰는 손",c.hand,"hand")}${tcell("성별",c.gender,"gender")}</tr>`;
     if (ed){
-      h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·브라사이즈 숨기기</label></td></tr>`;
+      h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
     }
     h += colorRow();
     const wide = (label,val,key)=>{
