@@ -317,8 +317,9 @@ async function migrateDataUrlToCloudinary(dataUrl){
   return j.secure_url || dataUrl;
 }
 let cloudRef = null, cloudReady = false, cloudCache = "";
+let storeUpdatedAt = 0;
 function saveLocal(){
-  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
+  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme, storeUpdatedAt })); }
   catch(e){ /* 용량 초과 시 조용히 무시 - Firebase가 진짜 저장소 */ }
 }
 function loadLocal(){
@@ -326,8 +327,13 @@ function loadLocal(){
     const raw = localStorage.getItem("don_wiki");
     if (raw){
       const st = JSON.parse(raw);
-      if (st && st.store) store = st.store;
+      if (st && st.store){
+        // 구버전 데이터에 섞인 _updatedAt 제거
+        if (st.store._updatedAt) delete st.store._updatedAt;
+        store = st.store;
+      }
       if (st && st.theme) theme = st.theme;
+      if (st && st.storeUpdatedAt) storeUpdatedAt = st.storeUpdatedAt;
     }
   }catch(e){}
 }
@@ -337,7 +343,9 @@ function setSyncStatus(txt, color){
 }
 function cloudPush(){
   if (!cloudReady || !cloudRef) return;
-  const data = JSON.stringify({ store, theme });
+  // store 안에 _updatedAt이 섞여 있으면 제거 (구버전 잔재)
+  if (store._updatedAt) delete store._updatedAt;
+  const data = JSON.stringify({ store, theme, storeUpdatedAt });
   let payload;
   try{ payload = JSON.parse(data); }catch(e){ return; }
   const sizeKB = Math.round(data.length / 1024);
@@ -352,7 +360,7 @@ function cloudPush(){
   });
 }
 function persist(){
-  store._updatedAt = Date.now();
+  storeUpdatedAt = Date.now();
   saveLocal();
   cloudPush();
 }
@@ -367,11 +375,13 @@ function initCloud(){
       cloudRef.on("value", snap=>{
         const v = snap.val();
         if (!v || !v.store) return;
-        const data = JSON.stringify({ store: v.store, theme: v.theme });
+        // 구버전 잔재 _updatedAt이 store 안에 있으면 제거
+        if (v.store._updatedAt) delete v.store._updatedAt;
+        const data = JSON.stringify({ store: v.store, theme: v.theme, storeUpdatedAt: v.storeUpdatedAt || 0 });
         if (data === cloudCache) return;
         // 로컬이 더 새로우면 클라우드가 오래된 것. 덮어쓰지 말고 로컬을 푸시.
-        const localTime = (store && store._updatedAt) || 0;
-        const cloudTime = (v.store && v.store._updatedAt) || 0;
+        const localTime = storeUpdatedAt || 0;
+        const cloudTime = v.storeUpdatedAt || 0;
         if (cloudTime < localTime){
           cloudPush();
           return;
@@ -380,6 +390,7 @@ function initCloud(){
         if (editingTab) return; // 편집 중이면 덮어쓰지 않음
         store = v.store;
         if (v.theme) theme = v.theme;
+        if (v.storeUpdatedAt) storeUpdatedAt = v.storeUpdatedAt;
         if (!store[curWorld]) curWorld = Object.keys(store)[0];
         const chars = store[curWorld] ? store[curWorld].chars : [];
         if (curChar && !chars.some(c=>c.id===curChar)) curChar = chars.length ? chars[0].id : null;
@@ -957,9 +968,11 @@ document.getElementById("addWorldBtn").onclick = ()=>{
   if (inp){ inp.focus(); inp.select(); }
 };
 document.getElementById("repairWorldsBtn").onclick = ()=>{
+  // 구버전 잔재 _updatedAt 제거 (세계관으로 오인되는 버그)
+  if (store._updatedAt) delete store._updatedAt;
   const bad = Object.keys(store).filter(wid=>{
     const w = store[wid];
-    return !w || typeof w.name !== "string" || !w.name.trim();
+    return !w || typeof w !== "object" || typeof w.name !== "string" || !w.name.trim();
   });
   if (!bad.length){ alert("문제 있는 세계관이 없어요."); return; }
   if (!confirm("이름 없는 세계관 " + bad.length + "개를 강제 삭제할까요?\nID: " + bad.join(", "))) return;
