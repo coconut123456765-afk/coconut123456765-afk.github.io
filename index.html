@@ -192,6 +192,7 @@
       </div>
       <div class="seg" style="margin-top:6px">
         <button id="migrateBtn">기존 이미지 Cloudinary로 옮기기</button>
+        <button id="clearBase64Btn" style="margin-top:4px">🗑 base64 이미지 전부 비우기</button>
       </div>
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
@@ -1053,6 +1054,38 @@ document.getElementById("migrateBtn").onclick = async ()=>{
     btn.disabled = false; btn.textContent = "기존 이미지 Cloudinary로 옮기기";
     alert("오류: " + (e.message || e));
   }
+};
+document.getElementById("clearBase64Btn").onclick = ()=>{
+  if (!confirm("base64 이미지를 전부 비울까요? (URL 이미지는 유지됨)")) return;
+  let count = 0;
+  for (const wid of Object.keys(store)){
+    const w = store[wid];
+    if (!w || typeof w !== "object" || !w.chars) continue;
+    for (const c of w.chars){
+      // illust: base64 줄만 제거, URL 줄은 유지
+      if (c.illust){
+        const lines = String(c.illust).split("\n");
+        const kept = lines.filter(ln=>{
+          const t = ln.trim();
+          return t && !t.startsWith("data:image/");
+        });
+        const removed = lines.length - kept.length - lines.filter(ln=>!ln.trim()).length;
+        if (removed > 0){ count += removed; }
+        c.illust = kept.join("\n");
+      }
+      if (c.thumb && String(c.thumb).startsWith("data:image/")){ c.thumb = ""; count++; }
+      if (c.logo && String(c.logo).startsWith("data:image/")){ c.logo = ""; count++; }
+      for (const k of ["wardrobeImgs","weaponImgs"]){
+        if (c[k]){
+          for (const it of c[k]){
+            if (it && it.img && String(it.img).startsWith("data:image/")){ it.img = ""; count++; }
+          }
+        }
+      }
+    }
+  }
+  persist(); render();
+  alert(count + "장의 base64 이미지를 비웠어요.");
 };
 document.getElementById("importFile").onchange = (e)=>{
   const f = e.target.files[0]; if (!f) return;
