@@ -283,7 +283,7 @@ const firebaseConfig = {
 let cloudRef = null, cloudReady = false, cloudCache = "";
 function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme })); }
-  catch(e){}
+  catch(e){ console.warn("로컬 저장 실패 (용량 초과 가능):", e); }
 }
 function loadLocal(){
   try{
@@ -298,10 +298,17 @@ function loadLocal(){
 function cloudPush(){
   if (!cloudReady || !cloudRef) return;
   const data = JSON.stringify({ store, theme });
-  cloudCache = data;
-  try{ cloudRef.set(JSON.parse(data)); }catch(e){}
+  let payload;
+  try{ payload = JSON.parse(data); }catch(e){ return; }
+  cloudRef.set(payload).then(()=>{
+    cloudCache = data;
+  }).catch((e)=>{
+    console.warn("Firebase 저장 실패, 5초 후 재시도:", e);
+    setTimeout(()=>{ if (cloudReady && cloudRef) cloudPush(); }, 5000);
+  });
 }
 function persist(){
+  store._updatedAt = Date.now();
   saveLocal();
   cloudPush();
 }
@@ -318,6 +325,13 @@ function initCloud(){
         if (!v || !v.store) return;
         const data = JSON.stringify({ store: v.store, theme: v.theme });
         if (data === cloudCache) return;
+        // 로컬이 더 새로우면 클라우드가 오래된 것. 덮어쓰지 말고 로컬을 푸시.
+        const localTime = (store && store._updatedAt) || 0;
+        const cloudTime = (v.store && v.store._updatedAt) || 0;
+        if (cloudTime < localTime){
+          cloudPush();
+          return;
+        }
         cloudCache = data;
         if (editingTab) return; // 편집 중이면 덮어쓰지 않음
         store = v.store;
