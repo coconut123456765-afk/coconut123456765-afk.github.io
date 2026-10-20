@@ -871,7 +871,7 @@ function openLightbox(src){
   if (lb && im){ im.src = src; lb.style.display = "flex"; }
 }
 function fileToDataURL(file, maxW, quality){
-  maxW = maxW || 800; quality = quality || 0.72;
+  maxW = maxW || 1200; quality = quality || 0.85;
   return new Promise((resolve, reject)=>{
     if (file.type==="image/png" && file.size < 800*1024 && maxW >= 1200){
       const r = new FileReader();
