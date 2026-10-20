@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이베이비 캐릭터 추가</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+button { padding: 12px 24px; font-size: 16px; margin: 8px; cursor: pointer; }
+#log { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>마이베이비 캐릭터 추가</h1>
+<p>아래 버튼을 누르면 "마이베이비" 세계관에 아나스타샤와 돈키호테가 추가됩니다.</p>
+<button id="addBtn">캐릭터 추가하기</button>
+<button id="updateBtn">나무위키 정보로 채우기</button>
+<div id="log"></div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const log = (msg) => { document.getElementById("log").textContent += msg + "\n"; };
+
+const anya = {
+  id: "c-anya-" + Date.now(),
+  profile: { name: "아나스타샤", age: "15", height: "165cm", birthday: "2월 9일" },
+  rels: [],
+  illust: "", thumb: "", logo: "",
+  position: "아이돌",
+  wardrobe: "", wardrobeImgs: [],
+  weapon: "", weaponImgs: [],
+  three: "B83 / W57 / H80",
+  overview: "아이돌마스터 신데렐라 걸즈의 아이돌. 러시아인 아버지와 일본인(홋카이도) 어머니 사이의 혼혈로, 10세까지 러시아에서 살았다. 차분하고 신비로운 외형이지만 내면은 따뜻하고 호기심이 많다.",
+  quote: "아냐는... 아냐예요. 러시아에서 온 아냐예요!",
+  color: "#a0c8e8",
+  blood: "B형",
+  weight: "49kg",
+  birthplace: "홋카이도",
+  starsign: "물병자리",
+  hand: "오른손",
+  hobby: "별 관측, 노래, 요리, 여행",
+  specialty: "러시아어, 천체관측",
+  custom: "Don의 최애 캐릭터 1순위. 담당 성우는 우에사카 스미레."
+};
+
+const donki = {
+  id: "c-donki-" + Date.now(),
+  profile: { name: "돈키호테", age: "", height: "", birthday: "" },
+  rels: [],
+  illust: "", thumb: "", logo: "",
+  position: "수감자",
+  wardrobe: "", wardrobeImgs: [],
+  weapon: "", weaponImgs: [],
+  three: "",
+  overview: "Limbus Company의 수감자. 세르반테스의 소설 『돈키호테』에서 모티브를 얻은 캐릭터. Don이 아냐 다음으로 좋아하는 캐릭터.",
+  quote: "",
+  color: "#e8a0a0",
+  blood: "",
+  weight: "",
+  birthplace: "",
+  starsign: "",
+  hand: "",
+  hobby: "",
+  specialty: "",
+  custom: "Don의 최애 캐릭터 2순위. 림버스는 Don이 유일하게 하는 모바일게임."
+};
+
+document.getElementById("addBtn").onclick = async () => {
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+  try {
+    log("로그인 중...");
+    await firebase.auth().signInAnonymously();
+    log("데이터 가져오는 중...");
+    const snap = await firebase.database().ref("wiki").once("value");
+    const data = snap.val();
+    if (!data || !data.store) { log("데이터가 없어요."); return; }
+    const store = data.store;
+    // 마이베이비 세계관 찾기
+    let wid = null;
+    for (const [k, w] of Object.entries(store)) {
+      if (w && w.name && w.name.includes("마이베이비")) { wid = k; break; }
+    }
+    if (!wid) { log("'마이베이비' 세계관을 찾을 수 없어요."); return; }
+    log("세계관 찾음: " + store[wid].name);
+    if (!store[wid].chars) store[wid].chars = [];
+    // 중복 체크
+    const exists = (name) => store[wid].chars.some(c => c.profile && c.profile.name === name);
+    let added = 0;
+    if (!exists("아나스타샤")) { store[wid].chars.push(anya); added++; log("아나스타샤 추가됨"); }
+    else log("아나스타샤는 이미 있음");
+    if (!exists("돈키호테")) { store[wid].chars.push(donki); added++; log("돈키호테 추가됨"); }
+    else log("돈키호테는 이미 있음");
+    if (added > 0) {
+      data.storeUpdatedAt = Date.now();
+      await firebase.database().ref("wiki").set(data);
+      log("저장 완료! (" + added + "명 추가)");
+    } else {
+      log("추가할 캐릭터가 없어요.");
+    }
+  } catch(e) {
+    log("오류: " + (e.message || e));
+  }
+  btn.disabled = false;
+};
+
+document.getElementById("updateBtn").onclick = async () => {
+  const btn = document.getElementById("updateBtn");
+  btn.disabled = true;
+  try {
+    log("로그인 중...");
+    await firebase.auth().signInAnonymously();
+    log("데이터 가져오는 중...");
+    const snap = await firebase.database().ref("wiki").once("value");
+    const data = snap.val();
+    if (!data || !data.store) { log("데이터가 없어요."); return; }
+    const store = data.store;
+    let wid = null;
+    for (const [k, w] of Object.entries(store)) {
+      if (w && w.name && w.name.includes("마이베이비")) { wid = k; break; }
+    }
+    if (!wid) { log("'마이베이비' 세계관을 찾을 수 없어요."); return; }
+    const chars = store[wid].chars || [];
+    let updated = 0;
+    for (const c of chars) {
+      const name = c.profile && c.profile.name;
+      if (name === "아나스타샤") {
+        c.profile.age = "15";
+        c.profile.height = "165cm";
+        c.profile.birthday = "9월 19일";
+        c.blood = "O형";
+        c.weight = "43kg";
+        c.three = "B80 / W54 / H80";
+        c.birthplace = "홋카이도";
+        c.starsign = "처녀자리";
+        c.hobby = "홈파티, 천체관측";
+        c.hand = "양손잡이";
+        c.position = "아이돌";
+        c.overview = "아이돌마스터 신데렐라 걸즈의 아이돌. 러시아인 아버지와 일본인 어머니 사이의 혼혈로, 10세까지 러시아에서 살았다. 별을 좋아해 천체관측을 즐긴다.";
+        c.quote = "저는 아냐… 아나스타샤입니다";
+        c.color = "#a0c8e8";
+        updated++;
+        log("아나스타샤 업데이트됨");
+      } else if (name === "돈키호테") {
+        c.profile.height = "150cm 후반";
+        c.profile.birthday = "3월 3일";
+        c.position = "림버스 컴퍼니 LCB 3번 수감자";
+        c.overview = "Limbus Company의 수감자. 소설 『돈키호테』가 모티브. 과도한 열정으로 기사도와 정의를 외치는 개그 캐릭터.";
+        c.quote = "닿을 수 없는 별에 도달하기 위하여!";
+        c.color = "#ffef23";
+        updated++;
+        log("돈키호테 업데이트됨");
+      }
+    }
+    if (updated > 0) {
+      data.storeUpdatedAt = Date.now();
+      await firebase.database().ref("wiki").set(data);
+      log("저장 완료! (" + updated + "명 업데이트)");
+    } else {
+      log("업데이트할 캐릭터가 없어요.");
+    }
+  } catch(e) {
+    log("오류: " + (e.message || e));
+  }
+  btn.disabled = false;
+};
+</script>
+<script>window.addEventListener("load", ()=>{ setTimeout(()=>{ document.getElementById("updateBtn").click(); }, 1500); });</script></body>
+</html>
