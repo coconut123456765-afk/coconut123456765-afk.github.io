@@ -151,8 +151,13 @@ document.getElementById("updateBtn").onclick = async () => {
         updated++;
         log("아나스타샤 업데이트됨");
       } else if (name === "돈키호테") {
-        c.profile.height = "150cm 후반";
+        c.profile.ename = "Don Quixote";
+        c.profile.age = "200세 (추정)";
+        c.profile.height = "154cm";
         c.profile.birthday = "3월 3일";
+        c.weight = "48kg";
+        c.three = "B95 / W57 / H85";
+        c.bra = "밑가슴 70cm";
         c.position = "림버스 컴퍼니 LCB 3번 수감자";
         c.overview = "Limbus Company의 수감자. 소설 『돈키호테』가 모티브. 과도한 열정으로 기사도와 정의를 외치는 개그 캐릭터.";
         c.quote = "닿을 수 없는 별에 도달하기 위하여!";
@@ -174,5 +179,5 @@ document.getElementById("updateBtn").onclick = async () => {
   btn.disabled = false;
 };
 </script>
-<script>window.addEventListener("load", ()=>{ setTimeout(()=>{ document.getElementById("updateBtn").click(); }, 1500); });</script></body>
+</body>
 </html>
