@@ -331,6 +331,14 @@ function loadLocal(){
       if (st && st.storeUpdatedAt) storeUpdatedAt = st.storeUpdatedAt;
     }
   }catch(e){}
+  normalizeStore();
+}
+// 구 데이터에 빠진 필드 보정 (rels 없는 캐릭터가 있으면 관계 추가가 조용히 실패함)
+function normalizeStore(){
+  Object.values(store).forEach(w=>{
+    if (!w || !Array.isArray(w.chars)) return;
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; });
+  });
 }
 function setSyncStatus(txt, color){
   const el = document.getElementById("syncStatus");
@@ -384,6 +392,7 @@ function initCloud(){
       cloudCache = data;
       if (editingTab) return; // 편집 중이면 덮어쓰지 않음
       store = v.store;
+      normalizeStore();
       if (v.theme) theme = v.theme;
       if (v.storeUpdatedAt) storeUpdatedAt = v.storeUpdatedAt;
       if (!store[curWorld]) curWorld = Object.keys(store)[0];
@@ -448,7 +457,7 @@ function cancelEdit(){
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const cur = () => { const w = store[curWorld]; return (w && w.chars) ? w.chars.find(c=>c.id===curChar) : null; };
-const nameOf = id => { for (const w of Object.values(store)){ const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
+const nameOf = id => { for (const w of Object.values(store)){ if(!w||!Array.isArray(w.chars)) continue; const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
 function charThumb(c){
   const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
   const initial = clean.charAt(0) || "?";
@@ -457,16 +466,18 @@ function charThumb(c){
   return `<span class="char-thumb"${bg}>${esc(initial)}</span>`;
 }
 function findCharById(id){
-  for (const [wk,w] of Object.entries(store)) if (w.chars.some(c=>c.id===id)) return { id, world:wk };
+  for (const [wk,w] of Object.entries(store)){ if(!w||!Array.isArray(w.chars)) continue; if (w.chars.some(c=>c.id===id)) return { id, world:wk }; }
   return null;
 }
 function findCharByName(name){
   const norm = s => String(s||"").replace(/^\(샘플\)\s*/,"").trim();
   const n = norm(name);
   if (!n) return null;
-  for (const [wk,w] of Object.entries(store)) for (const c of w.chars)
+  const allChars = [];
+  for (const [wk,w] of Object.entries(store)){ if(!w||!Array.isArray(w.chars)) continue; w.chars.forEach(c=>allChars.push([wk,c])); }
+  for (const [wk,c] of allChars)
     if (norm(c.profile.name)===n) return { id:c.id, world:wk };
-  for (const [wk,w] of Object.entries(store)) for (const c of w.chars)
+  for (const [wk,c] of allChars)
     if (norm(c.profile.name).includes(n)) return { id:c.id, world:wk };
   return null;
 }
@@ -755,7 +766,7 @@ function renderTabInner(c){
     }
     (c.rels||[]).forEach((r,i)=>{
       const opts = Object.entries(REL_KINDS).map(([k,n])=>`<option value="${k}" ${r.kind===k?"selected":""}>${n}</option>`).join("");
-      const chars = Object.values(store).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
+      const chars = Object.values(store).filter(w=>w&&Array.isArray(w.chars)).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
         .map(x=>`<option value="${x.id}" ${r.to===x.id?"selected":""}>${esc(x.profile.name||"(이름 없음)")}</option>`).join("");
       h += ed
         ? `<div class="rel" data-i="${i}"><select class="rel-to">${chars}</select><select class="rel-kind">${opts}</select><button class="rel-del">✕</button></div>`
@@ -809,7 +820,7 @@ function bindEdit(c){
   document.querySelectorAll(".rel-del").forEach(b=>b.onclick=()=>{ c.rels.splice(+b.closest(".rel").dataset.i,1); render(); });
   document.querySelectorAll(".rel-to").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].to = s.value; });
   document.querySelectorAll(".rel-kind").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].kind = s.value; });
-  const add = $("relAdd"); if (add) add.onclick = ()=>{ const other = Object.values(store).flatMap(w=>w.chars).find(x=>x.id!==c.id); if(other){ c.rels.push({to:other.id, kind:"friend"}); render(); } };
+  const add = $("relAdd"); if (add) add.onclick = ()=>{ const other = Object.values(store).filter(w=>w&&Array.isArray(w.chars)).flatMap(w=>w.chars).find(x=>x.id!==c.id); if(other){ (c.rels = c.rels || []).push({to:other.id, kind:"friend"}); render(); } };
   const sf = $("illustFile");
   if (sf) sf.onchange = async ()=>{
     const f = sf.files[0]; if (!f) return;
