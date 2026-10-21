@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이베이비 공식자료 보강</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+button { padding: 12px 24px; font-size: 16px; margin: 8px; cursor: pointer; }
+#log { background: #f5f5f5; padding: 16px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>마이베이비 공식자료 보강</h1>
+<p>라이더·이리야·릴파·아니스의 공식 자료 기반 데이터를 보강합니다.</p>
+<div id="loginBox" style="border:1px solid #ccc;border-radius:8px;padding:16px;margin-bottom:16px">
+  <b>어시스턴트 로그인</b><br><br>
+  <input id="loginEmail" type="email" autocomplete="username" value="dossier@don.local" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box">
+  <input id="loginPass" type="password" autocomplete="current-password" placeholder="비밀번호" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box">
+  <button id="loginBtn">로그인</button>
+  <span id="loginState" style="margin-left:8px;color:#888">로그인 필요</span>
+</div>
+<button id="fixBtn" disabled>보강 적용하기</button>
+<div id="log"></div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const log = (msg) => { document.getElementById("log").textContent += msg + "\n"; };
+
+document.getElementById("loginBtn").onclick = async () => {
+  const em = document.getElementById("loginEmail").value.trim();
+  const pw = document.getElementById("loginPass").value;
+  const st = document.getElementById("loginState");
+  try {
+    st.textContent = "로그인 중...";
+    await firebase.auth().signInWithEmailAndPassword(em, pw);
+    st.textContent = "로그인됨: " + em;
+    st.style.color = "green";
+    document.getElementById("fixBtn").disabled = false;
+    log("로그인 성공");
+  } catch(e) {
+    st.textContent = "로그인 실패";
+    st.style.color = "red";
+    log("로그인 오류: " + (e.message || e));
+  }
+};
+
+document.getElementById("fixBtn").onclick = async () => {
+  const btn = document.getElementById("fixBtn");
+  btn.disabled = true;
+  try {
+    if (!firebase.auth().currentUser) { log("먼저 로그인해주세요."); btn.disabled = false; return; }
+    log("데이터 가져오는 중...");
+    const snap = await firebase.database().ref("wiki").once("value");
+    const data = snap.val();
+    if (!data || !data.store) { log("데이터가 없어요."); return; }
+    const store = data.store;
+    let wid = null;
+    for (const [k, w] of Object.entries(store)) {
+      if (w && w.name && w.name.includes("마이베이비")) { wid = k; break; }
+    }
+    if (!wid) { log("'마이베이비' 세계관을 찾을 수 없어요."); return; }
+    const chars = store[wid].chars || [];
+    let updated = 0;
+    for (const c of chars) {
+      const name = c.profile && c.profile.name;
+      if (!c.profile) continue;
+      if (name === "라이더") {
+        // 공식: TYPE-MOON 캐릭터 자료 (좋아하는 것: 술·독서·뱀)
+        c.hobby = "독서, 음주";
+        c.specialty = "승마, 곡예";
+        c.custom = "진명: 메두사. 신장 172cm. 좋아하는 것: 술, 독서, 뱀. 싫어하는 것: 거울, 키 재기. 성우: 아사카와 유우.";
+        updated++;
+        log("라이더 보강됨");
+      } else if (name === "이리야") {
+        // 공식: TYPE-MOON / FGO 마테리얼
+        c.profile.age = "11세";
+        c.profile.weight = "29kg";
+        c.profile.three = "B61/W47/H62";
+        c.profile.gender = "여성";
+        c.custom = "신장 133cm. 호무라바라 학원 초등부 5학년. 이미지 컬러: 핑크. 좋아하는 것: 여름. 성우: 카도와키 마이.";
+        updated++;
+        log("이리야 보강됨");
+      } else if (name === "릴파") {
+        // 공식: 나무위키 / Virtual YouTuber Wiki
+        c.profile.age = "30세";
+        c.profile.birthday = "1996년 3월 9일";
+        c.profile.blood = "O형";
+        c.profile.birthplace = "부산광역시";
+        c.profile.gender = "여성";
+        c.specialty = "가창력";
+        c.custom = "본명: 이효인. 신장 164cm. 실용음악 보컬과 재즈 전공. 2018년 걸그룹 메이위시 '효인'으로 데뷔, 2021년 12월 17일 이세계아이돌 데뷔. 소속: 패러블 엔터테인먼트. 팬덤명: 박쥐단, 상징색: 남색.";
+        updated++;
+        log("릴파 보강됨");
+      } else if (name === "아니스") {
+        // 공식: NIKKE 인게임 / 공식 설정
+        c.profile.gender = "여성";
+        c.position = "니케 (카운터스 스쿼드 · SR · 방어형)";
+        c.weapon = "리버티스 테일 (유탄발사기)";
+        c.specialty = "개그, 분위기 메이커";
+        c.custom = "신장: 약 158cm (모자 포함 165cm). 성우: 김성희(한국어), 오카사키 미호(일본어). 성격 유형 ESFP. 테트라 라인 제조, 버스트 II.";
+        updated++;
+        log("아니스 보강됨");
+      }
+    }
+    if (updated > 0) {
+      data.storeUpdatedAt = Date.now();
+      await firebase.database().ref("wiki").set(data);
+      log("저장 완료! (" + updated + "명 보강)");
+    } else {
+      log("보강할 캐릭터가 없어요.");
+    }
+  } catch(e) {
+    log("오류: " + (e.message || e));
+  }
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>
