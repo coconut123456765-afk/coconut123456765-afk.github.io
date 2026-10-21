@@ -16,7 +16,14 @@ button { padding: 12px 24px; font-size: 16px; margin: 8px; cursor: pointer; }
 <body>
 <h1>마이베이비 캐릭터 추가 (2차)</h1>
 <p>아래 버튼을 누르면 "마이베이비" 세계관에 라이더, 이리야, 릴파, 아니스가 추가됩니다.</p>
-<button id="addBtn">캐릭터 추가하기</button>
+<div id="loginBox" style="border:1px solid #ccc;border-radius:8px;padding:16px;margin-bottom:16px">
+  <b>어시스턴트 로그인</b><br><br>
+  <input id="loginEmail" type="email" autocomplete="username" value="dossier@don.local" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box">
+  <input id="loginPass" type="password" autocomplete="current-password" placeholder="비밀번호" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box">
+  <button id="loginBtn">로그인</button>
+  <span id="loginState" style="margin-left:8px;color:#888">로그인 필요</span>
+</div>
+<button id="addBtn" disabled>캐릭터 추가하기</button>
 <div id="log"></div>
 <script>
 const firebaseConfig = {
@@ -123,12 +130,29 @@ const newChars = [
   }
 ];
 
+document.getElementById("loginBtn").onclick = async () => {
+  const em = document.getElementById("loginEmail").value.trim();
+  const pw = document.getElementById("loginPass").value;
+  const st = document.getElementById("loginState");
+  try {
+    st.textContent = "로그인 중...";
+    await firebase.auth().signInWithEmailAndPassword(em, pw);
+    st.textContent = "로그인됨: " + em;
+    st.style.color = "green";
+    document.getElementById("addBtn").disabled = false;
+    log("로그인 성공");
+  } catch(e) {
+    st.textContent = "로그인 실패";
+    st.style.color = "red";
+    log("로그인 오류: " + (e.message || e));
+  }
+};
+
 document.getElementById("addBtn").onclick = async () => {
   const btn = document.getElementById("addBtn");
   btn.disabled = true;
   try {
-    log("로그인 중...");
-    await firebase.auth().signInAnonymously();
+    if (!firebase.auth().currentUser) { log("먼저 로그인해주세요."); btn.disabled = false; return; }
     log("데이터 가져오는 중...");
     const snap = await firebase.database().ref("wiki").once("value");
     const data = snap.val();
