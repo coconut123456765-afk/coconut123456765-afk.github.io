@@ -258,7 +258,7 @@ const FIELDS = [
   ["profile.height","키"], ["weight","몸무게"],
   ["three","쓰리사이즈"], ["bra","속옷 사이즈"],
   ["hand","쓰는 손"], ["gender","성별"],
-  ["voiceActor","성우"], ["autograph","사인"],
+  ["voiceActor","성우"],
   ["color","이미지 컬러"],
   ["tagline","한 줄 소개"], ["position","지위/직책"],
   ["unit","소대·부대·동아리"], ["birthplace","출신지"],
@@ -685,7 +685,7 @@ function renderTabInner(c){
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="thumbFile" accept="image/*" style="display:none"></label>`;
       if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
       h += `</div></div>`;
-      h += `<div class="field" style="margin-top:10px"><label>로고</label>`;
+      h += `<div class="field" style="margin-top:10px"><label>로고 / 사인</label>`;
       if (c.logo) h += `<img id="logoPreview" src="${esc(c.logo)}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
       h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
@@ -699,7 +699,7 @@ function renderTabInner(c){
     }
     h += `</div>`;
     if (c.logo && !ed){
-      h += `<div class="field"><label>로고</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
+      h += `<div class="field"><label>로고 / 사인</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
     }
     if (vis("quote")){
       h += `<div class="field"><label>명대사</label>`;
@@ -733,7 +733,7 @@ function renderTabInner(c){
       h += prow([["쓰리사이즈",c.three,"three"],["속옷 사이즈",c.bra,"bra"]]);
     }
     h += prow([["쓰는 손",c.hand,"hand"],["성별",c.gender,"gender"]]);
-    h += prow([["성우",c.voiceActor,"voiceActor"],["사인",c.autograph,"autograph"]]);
+    h += prow([["성우",c.voiceActor,"voiceActor"]]);
     if (ed){
       h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
     }
@@ -979,7 +979,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:"", race:"", speech:"", unit:"", voiceActor:"", tagline:"", autograph:"", weaponName:"", weaponClass:"", weaponBg:"", combatStyle:"", charIndex:"", usedWeapon:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:"", race:"", speech:"", unit:"", voiceActor:"", tagline:"", weaponName:"", weaponClass:"", weaponBg:"", combatStyle:"", charIndex:"", usedWeapon:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
