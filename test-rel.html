@@ -1099,9 +1099,20 @@ render();
 </script>
 <div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" onclick="event.stopPropagation();this.parentElement.style.display='none'" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
 <script>
-// 테스트 오버라이드: 클라우드 쓰기 차단 + 마스터 강제 (읽기만 실제 데이터)
+// 테스트 오버라이드: 클라우드 쓰기 차단 + 마스터 강제 + 진단 표시
 window.cloudPush = function(){ console.log("[TEST] cloudPush 차단됨"); };
-window.addEventListener("DOMContentLoaded", ()=>{ setTimeout(()=>{ try{ isMaster = true; updateAuthUI(); render(); console.log("[TEST] 마스터 강제"); }catch(e){ console.log("[TEST] 강제 실패", e); } }, 1200); });
+window.addEventListener("DOMContentLoaded", ()=>{
+  setTimeout(()=>{ try{ isMaster = true; updateAuthUI(); render(); }catch(e){} }, 1200);
+  setTimeout(()=>{
+    try{
+      const info = Object.values(store).map(w=>({world:w&&w.name, chars:(w&&Array.isArray(w.chars))?w.chars.length:"MISSING"}));
+      const chs = [];
+      Object.values(store).forEach(w=>{ (w&&w.chars||[]).forEach(c=>{ chs.push({name:c.profile&&c.profile.name, rels:Array.isArray(c.rels)?c.rels.length:"MISSING"}); }); });
+      const txt = JSON.stringify({worlds:info, chars:chs}, null, 1).replace(/</g,"&lt;");
+      document.body.insertAdjacentHTML("afterbegin", "<pre id='diag' style='background:#111;color:#0f0;padding:10px;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto'>"+txt+"</pre>");
+    }catch(e){ document.body.insertAdjacentHTML("afterbegin","<pre>diag err: "+String(e).replace(/</g,"&lt;")+"</pre>"); }
+  }, 2500);
+});
 </script>
 </body>
 </html>
