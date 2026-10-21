@@ -146,6 +146,7 @@
   .modal-head b { font-size:17px; }
   .setting-row { margin-bottom:16px; }
   .setting-row > label { display:block; font-size:13px; color:var(--dim); margin-bottom:8px; }
+  .login-input { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:15px; }
   .seg { display:flex; gap:8px; }
   .seg button { flex:1; cursor:pointer; border:1px solid var(--line); background:var(--bg); color:var(--txt); padding:10px; border-radius:10px; font-size:14px; }
   .seg button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
@@ -174,6 +175,7 @@
   <h1 class="brand">Dossier<span class="b-colon">:</span><span class="b-don">Don</span></h1>
   <div class="worlds" id="worlds"></div>
   <span id="syncStatus" style="font-size:12px;color:var(--dim);margin-right:8px;">동기화 확인 중…</span>
+  <button id="authBtn" class="hdr-btn">마스터 로그인</button>
   <button id="settingsBtn" class="hdr-btn">설정</button>
 </header>
 <div id="settingsModal" class="modal" style="display:none">
@@ -198,6 +200,16 @@
       <div id="worldList"></div>
       <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
     </div>
+  </div>
+</div>
+<div id="loginModal" class="modal" style="display:none">
+  <div class="modal-panel">
+    <div class="modal-head"><b>마스터 로그인</b><button id="loginClose" class="hdr-btn">닫기</button></div>
+    <div class="setting-row"><label>이메일</label><input id="loginEmail" type="email" autocomplete="username" class="login-input"></div>
+    <div class="setting-row"><label>비밀번호</label><input id="loginPass" type="password" autocomplete="current-password" class="login-input"></div>
+    <p class="hint" id="loginErr" style="color:#e06c75;display:none"></p>
+    <button id="loginGo" class="hdr-btn acc" style="width:100%;padding:10px">로그인</button>
+    <p class="hint">한 번 로그인한 브라우저에서는 다음부터 자동으로 마스터로 들어갑니다.</p>
   </div>
 </div>
 <main>
@@ -298,6 +310,8 @@ async function uploadToCloudinary(file){
   return j.secure_url;
 }
 let cloudRef = null, cloudReady = false, cloudCache = "";
+const MASTER_EMAIL = "coconut123456765@gmail.com";
+let isMaster = false; // 마스터 로그인 여부 (게스트는 보기만)
 let storeUpdatedAt = 0;
 function saveLocal(){
   try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme, storeUpdatedAt })); }
@@ -343,47 +357,62 @@ function cloudPush(){
 function persist(){
   storeUpdatedAt = Date.now();
   saveLocal();
-  cloudPush();
+  if (isMaster) cloudPush(); // 게스트는 로컬만 (테마 등), 클라우드 쓰기 불가
 }
 function initCloud(){
   try{
     firebase.initializeApp(firebaseConfig);
     cloudRef = firebase.database().ref("wiki");
-    firebase.auth().signInAnonymously().then(()=>{
-      cloudRef.once("value").then(snap=>{
-        if (!snap.exists()) cloudPush();
-      });
-      cloudRef.on("value", snap=>{
-        const v = snap.val();
-        if (!v || !v.store) return;
-        // 구버전 잔재 _updatedAt이 store 안에 있으면 제거
-        if (v.store._updatedAt) delete v.store._updatedAt;
-        const data = JSON.stringify({ store: v.store, theme: v.theme, storeUpdatedAt: v.storeUpdatedAt || 0 });
-        if (data === cloudCache) return;
-        // 로컬이 더 새로우면 클라우드가 오래된 것. 덮어쓰지 말고 로컬을 푸시.
-        const localTime = storeUpdatedAt || 0;
-        const cloudTime = v.storeUpdatedAt || 0;
-        if (cloudTime < localTime){
-          cloudPush();
-          return;
-        }
-        cloudCache = data;
-        if (editingTab) return; // 편집 중이면 덮어쓰지 않음
-        store = v.store;
-        if (v.theme) theme = v.theme;
-        if (v.storeUpdatedAt) storeUpdatedAt = v.storeUpdatedAt;
-        if (!store[curWorld]) curWorld = Object.keys(store)[0];
-        const chars = store[curWorld] ? store[curWorld].chars : [];
-        if (curChar && !chars.some(c=>c.id===curChar)) curChar = chars.length ? chars[0].id : null;
-        saveLocal();
-        applyTheme(); render();
-      });
-      cloudReady = true;
-      setSyncStatus("동기화됨", "#4CAF50");
-    }).catch(()=>{
-      setSyncStatus("클라우드 연결 실패", "#f44336");
+    // 읽기는 게스트도 가능. 쓰기는 마스터만 (규칙에서 강제).
+    cloudRef.once("value").then(snap=>{
+      if (!snap.exists() && isMaster) cloudPush();
+    });
+    cloudRef.on("value", snap=>{
+      const v = snap.val();
+      if (!v || !v.store) return;
+      // 구버전 잔재 _updatedAt이 store 안에 있으면 제거
+      if (v.store._updatedAt) delete v.store._updatedAt;
+      const data = JSON.stringify({ store: v.store, theme: v.theme, storeUpdatedAt: v.storeUpdatedAt || 0 });
+      if (data === cloudCache) return;
+      // 로컬이 더 새로우면 클라우드가 오래된 것. 덮어쓰지 말고 로컬을 푸시.
+      const localTime = storeUpdatedAt || 0;
+      const cloudTime = v.storeUpdatedAt || 0;
+      if (cloudTime < localTime){
+        if (isMaster) cloudPush();
+        return;
+      }
+      cloudCache = data;
+      if (editingTab) return; // 편집 중이면 덮어쓰지 않음
+      store = v.store;
+      if (v.theme) theme = v.theme;
+      if (v.storeUpdatedAt) storeUpdatedAt = v.storeUpdatedAt;
+      if (!store[curWorld]) curWorld = Object.keys(store)[0];
+      const chars = store[curWorld] ? store[curWorld].chars : [];
+      if (curChar && !chars.some(c=>c.id===curChar)) curChar = chars.length ? chars[0].id : null;
+      saveLocal();
+      applyTheme(); render();
+    });
+    cloudReady = true;
+    setSyncStatus("동기화됨", "#4CAF50");
+    // 마스터 로그인 상태 감시. 한 번 로그인한 브라우저에서는 유지됨.
+    firebase.auth().onAuthStateChanged(user=>{
+      const was = isMaster;
+      isMaster = !!(user && user.email === MASTER_EMAIL);
+      updateAuthUI();
+      if (was !== isMaster){
+        if (!isMaster && editingTab) cancelEdit();
+        render();
+      }
     });
   }catch(e){}
+}
+function updateAuthUI(){
+  const b = $("authBtn");
+  if (b) b.textContent = isMaster ? "로그아웃" : "마스터 로그인";
+  const ac = $("addChar"); if (ac) ac.style.display = isMaster ? "" : "none";
+  const dc = $("delChar"); if (dc) dc.style.display = isMaster ? "" : "none";
+  const wr = $("worldMgmtRow"); if (wr) wr.style.display = isMaster ? "" : "none";
+  const ib = $("importBtn"); if (ib) ib.style.display = isMaster ? "" : "none";
 }
 function deriveStarsign(birthday){
   const s = String(birthday||"");
@@ -498,8 +527,11 @@ function render(){
     const disUp = i===0 ? " disabled" : "";
     const disDown = i===arr.length-1 ? " disabled" : "";
     const cname = esc(c.profile.name||"(이름 없음)");
+    const orderHtml = isMaster
+      ? '<span class="char-order"><button data-up="'+c.id+'" title="위로"'+disUp+'>▲</button><button data-down="'+c.id+'" title="아래로"'+disDown+'>▼</button></span>'
+      : "";
     return '<div class="char-row"><button class="char-sel '+selOn+'" data-c="'+c.id+'">'+charThumb(c)+'<span class="char-meta"><span class="char-name">'+cname+'</span>'+subHtml+'</span></button>'+
-    '<span class="char-order"><button data-up="'+c.id+'" title="위로"'+disUp+'>▲</button><button data-down="'+c.id+'" title="아래로"'+disDown+'>▼</button></span></div>'+imgHtml;
+    orderHtml+'</div>'+imgHtml;
   }).join("");
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile";  render();});
   document.querySelectorAll("#chars [data-up]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.up,-1);});
@@ -552,6 +584,7 @@ function fieldRow(label, val, key, type, ed){
 }
 
 function renderTab(c){
+  if (!isMaster) return renderTabInner(c); // 게스트는 보기만
   const bar = editingTab === curTab
     ? `<div class="tab-editbar"><button class="hdr-btn acc" id="tabSave">저장</button><button class="hdr-btn" id="tabCancel">취소</button></div>`
     : `<div class="tab-editbar"><button class="hdr-btn" id="tabEdit">수정</button></div>`;
@@ -948,6 +981,33 @@ document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
 document.getElementById("themeLightBtn").onclick = ()=>setTheme("light");
 const modal = document.getElementById("settingsModal");
 document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); modal.style.display = "flex"; };
+// 마스터 로그인 / 로그아웃
+const loginModal = document.getElementById("loginModal");
+document.getElementById("authBtn").onclick = ()=>{
+  if (isMaster){
+    if (editingTab) cancelEdit();
+    firebase.auth().signOut();
+  } else {
+    document.getElementById("loginErr").style.display = "none";
+    loginModal.style.display = "flex";
+  }
+};
+document.getElementById("loginClose").onclick = ()=>{ loginModal.style.display = "none"; };
+const doLogin = ()=>{
+  const em = document.getElementById("loginEmail").value.trim();
+  const pw = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginErr");
+  err.style.display = "none";
+  firebase.auth().signInWithEmailAndPassword(em, pw).then(()=>{
+    loginModal.style.display = "none";
+    document.getElementById("loginPass").value = "";
+  }).catch(e=>{
+    err.textContent = "로그인 실패: " + (e.code === "auth/invalid-credential" ? "이메일 또는 비밀번호가 맞지 않아요." : (e.message || e));
+    err.style.display = "";
+  });
+};
+document.getElementById("loginGo").onclick = doLogin;
+document.getElementById("loginPass").addEventListener("keydown", e=>{ if (e.key === "Enter") doLogin(); });
 function renderWorldList(){
   const wl = document.getElementById("worldList");
   if (!wl) return;
@@ -1034,6 +1094,7 @@ document.getElementById("importFile").onchange = (e)=>{
 modal.addEventListener("click", (e)=>{ if (e.target===modal) modal.style.display = "none"; });
 applyTheme(); applyAccent();
 curChar = store[curWorld].chars[0]?.id || null;
+updateAuthUI(); // 게스트 기본: 편집 UI 숨김
 render();
 </script>
 <div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" onclick="event.stopPropagation();this.parentElement.style.display='none'" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
