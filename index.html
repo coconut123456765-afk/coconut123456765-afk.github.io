@@ -750,6 +750,8 @@ function renderTabInner(c){
     h += wide("출신지",c.birthplace,"birthplace");
     h += wide("취미",c.hobby,"hobby");
     h += wide("특기",c.specialty,"specialty");
+    h += wide("좋아하는 것",c.likes,"likes");
+    h += wide("싫어하는 것",c.dislikes,"dislikes");
     h += `</table>`;
     h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
     if (ed){
@@ -972,7 +974,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
