@@ -746,6 +746,7 @@ function renderTabInner(c){
       return `<tr><td class="plabel">${label}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
     h += wide("지위/직책",c.position,"position");
+    h += wide("소속/진영",c.affil,"affil");
     h += wide("출신지",c.birthplace,"birthplace");
     h += wide("취미",c.hobby,"hobby");
     h += wide("특기",c.specialty,"specialty");
@@ -971,7 +972,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
