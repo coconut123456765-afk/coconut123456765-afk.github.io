@@ -77,7 +77,7 @@ document.getElementById("fixBtn").onclick = async () => {
           c.hobby = "";
           updated++;
           log("라이더: 좋아하는 것/싫어하는 것 기입");
-        } else if (name === "이리야") {
+        } else if (name.includes("이리야")) {
           // 공식: TYPE-MOON Wiki
           c.likes = "여름";
           c.dislikes = "쿠로가 말썽 부릴 때";
