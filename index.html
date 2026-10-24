@@ -724,6 +724,8 @@ function renderTabInner(c){
     h += `</div>`;
     h += `<table class="ptable">`;
     h += `<tr>${tcell("별명",p.nickname,"profile.nickname")}${tcell("영문명",p.ename,"profile.ename")}</tr>`;
+    h += `<tr>${tcell("개명 전 이름",c.formerName,"formerName")}${tcell("다른 이름",c.otherNames,"otherNames")}</tr>`;
+    h += ed ? `<tr><td class="plabel">옛 별명</td><td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">옛 별명</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`;
     const starCell = ()=>{
       const derived = deriveStarsign(p.birthday);
       if (ed) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
@@ -974,7 +976,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
