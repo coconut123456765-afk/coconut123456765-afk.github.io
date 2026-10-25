@@ -337,7 +337,7 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
   });
 }
 function setSyncStatus(txt, color){
@@ -447,6 +447,7 @@ function deriveStarsign(birthday){
 loadLocal();
 initCloud();
 let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null
+let lastRowOrder = [];
 function cancelEdit(){
   if (editingTab && editBackup){
     const w = store[curWorld];
@@ -671,18 +672,24 @@ function renderTabInner(c){
   const p = c.profile;
   if (curTab==="profile"){
     const p = c.profile;
-    const tcell = (label,val,key)=>{
-      if (ed) return `<td class="plabel">${label}</td><td><input data-k="${key}" value="${esc(val||"")}"></td>`;
-      return `<td class="plabel">${label}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
+    const dispLabel = (key,def)=>((c.rowLabels && c.rowLabels[key]) || def);
+    const updown = (rowId)=> ed && rowId ? `<button type="button" class="hdr-btn rowup" data-row="${rowId}" style="padding:1px 5px;margin-right:3px;font-size:12px">▲</button><button type="button" class="hdr-btn rowdown" data-row="${rowId}" style="padding:1px 5px;margin-right:3px;font-size:12px">▼</button>` : "";
+    const labelCell = (key,def,rowId)=>{
+      if (!ed) return `<td class="plabel">${esc(dispLabel(key,def))}</td>`;
+      return `<td class="plabel">${updown(rowId)}<input class="rowlabel" data-cell="${key}" data-def="${esc(def)}" value="${esc(dispLabel(key,def))}" style="width:70px"></td>`;
     };
-    const trow = (l1,v1,k1,l2,v2,k2)=>{
+    const tcell = (label,val,key,rowId)=>{
+      if (ed) return `${labelCell(key,label,rowId)}<td><input data-k="${key}" value="${esc(val||"")}"></td>`;
+      return `<td class="plabel">${esc(dispLabel(key,label))}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
+    };
+    const trow = (id,l1,v1,k1,l2,v2,k2)=>{
       if (!ed && !v1 && !v2) return "";
-      return `<tr>${tcell(l1,v1,k1)}${tcell(l2,v2,k2)}</tr>`;
+      return `<tr>${tcell(l1,v1,k1,id)}${tcell(l2,v2,k2,"")}</tr>`;
     };
     const colorRow = ()=>{
       if (!ed && !c.color) return "";
-      if (ed) return `<tr><td class="plabel">이미지 컬러</td><td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
-      return `<tr><td class="plabel">이미지 컬러</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
+      if (ed) return `<tr>${labelCell("color","이미지 컬러","color")}<td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
+      return `<tr><td class="plabel">${esc(dispLabel("color","이미지 컬러"))}</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
     };
     let h = `<div class="field"><label>대표 일러스트</label>`;
     if (ed){
@@ -730,63 +737,78 @@ function renderTabInner(c){
       : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
     h += `</div>`;
     h += `<table class="ptable">`;
-    h += trow("별명",p.nickname,"profile.nickname","영문명",p.ename,"profile.ename");
-    h += trow("개명 전 이름",c.formerName,"formerName","다른 이름",c.otherNames,"otherNames");
-    h += (ed || c.oldNick) ? (ed ? `<tr><td class="plabel">옛 별명</td><td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">옛 별명</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "";
-    const starCell = ()=>{
-      const derived = deriveStarsign(p.birthday);
-      if (ed) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
-      const v = c.starsign || derived;
-      return `<td class="plabel">별자리</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
-    };
-    h += trow("나이",p.age,"profile.age","혈액형",c.blood,"blood");
-    if (ed || p.birthday || c.starsign) h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
-    h += trow("키",p.height,"profile.height","몸무게",c.weight,"weight");
-    if (!c.hideSizes || ed){
-      h += trow("쓰리사이즈",c.three,"three","속옷 사이즈",c.bra,"bra");
-    }
-    h += trow("쓰는 손",c.hand,"hand","성별",c.gender,"gender");
     if (ed){
       h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
     }
-    h += colorRow();
-    const wide = (label,val,key)=>{
-      if (ed) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
-      if (!val) return "";
-      return `<tr><td class="plabel">${label}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
+    const rows = [];
+    const prow = (id, html)=>{ if (html) rows.push({id, tr: html}); };
+    prow("nick", trow("nick","별명",p.nickname,"profile.nickname","영문명",p.ename,"profile.ename"));
+    prow("names", trow("names","개명 전 이름",c.formerName,"formerName","다른 이름",c.otherNames,"otherNames"));
+    prow("oldNick", (ed || c.oldNick) ? (ed ? `<tr>${labelCell("oldNick","옛 별명","oldNick")}<td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">${esc(dispLabel("oldNick","옛 별명"))}</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "");
+    const starCell = ()=>{
+      const derived = deriveStarsign(p.birthday);
+      if (ed) return `${labelCell("starsign","별자리","")}<td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
+      const v = c.starsign || derived;
+      return `<td class="plabel">${esc(dispLabel("starsign","별자리"))}</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
     };
-    h += wide("지위/직책",c.position,"position");
-    h += wide("소속/진영",c.affil,"affil");
-    h += wide("출신지",c.birthplace,"birthplace");
-    h += wide("취미",c.hobby,"hobby");
-    h += wide("특기",c.specialty,"specialty");
-    h += wide("좋아하는 것",c.likes,"likes");
-    h += wide("싫어하는 것",c.dislikes,"dislikes");
-    if (!ed){
-      let half = null;
-      for (const r of (c.customRows||[])){
-        if (!r || (!r.label && !r.value)) continue;
-        if (r.span === "half"){
-          if (half){ h += `<tr>${tcell(half.label,half.value,"")}${tcell(r.label,r.value,"")}</tr>`; half = null; }
-          else half = r;
-        } else {
-          if (half){ h += `<tr>${tcell(half.label,half.value,"")}<td class="plabel"></td><td></td></tr>`; half = null; }
-          h += `<tr><td class="plabel">${esc(r.label)}</td><td colspan="3">${esc(r.value)}</td></tr>`;
-        }
-      }
-      if (half) h += `<tr>${tcell(half.label,half.value,"")}<td class="plabel"></td><td></td></tr>`;
+    prow("age", trow("age","나이",p.age,"profile.age","혈액형",c.blood,"blood"));
+    prow("birth", (ed || p.birthday || c.starsign) ? `<tr>${tcell("생일",p.birthday,"profile.birthday","birth")}${starCell()}</tr>` : "");
+    prow("height", trow("height","키",p.height,"profile.height","몸무게",c.weight,"weight"));
+    if (!c.hideSizes || ed){
+      prow("sizes", trow("sizes","쓰리사이즈",c.three,"three","속옷 사이즈",c.bra,"bra"));
     }
-    h += `</table>`;
-    if (ed){
-      h += `<div class="field"><label>추가 항목</label>`;
-      (c.customRows||[]).forEach((r,i)=>{
-        h += `<div class="crow" data-i="${i}" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">`
+    prow("hand", trow("hand","쓰는 손",c.hand,"hand","성별",c.gender,"gender"));
+    prow("color", colorRow());
+    const wide = (id,label,val,key)=>{
+      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      if (!val) return "";
+      return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
+    };
+    prow("pos", wide("pos","지위/직책",c.position,"position"));
+    prow("affil", wide("affil","소속/진영",c.affil,"affil"));
+    prow("birthplace", wide("birthplace","출신지",c.birthplace,"birthplace"));
+    prow("hobby", wide("hobby","취미",c.hobby,"hobby"));
+    prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
+    prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
+    prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
+    (c.customRows||[]).forEach((r,i)=>{
+      if (!r) return;
+      const cid = "c:" + (r.cid || ("tmp" + i));
+      if (ed){
+        rows.push({id: cid, tr: `<tr><td colspan="4"><div class="crow" data-i="${i}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">`
+          + `<button type="button" class="hdr-btn rowup" data-row="${cid}" style="padding:1px 5px;font-size:12px">▲</button><button type="button" class="hdr-btn rowdown" data-row="${cid}" style="padding:1px 5px;font-size:12px">▼</button>`
           + `<input class="crow-label" value="${esc(r.label||"")}" placeholder="항목 이름" style="flex:1;min-width:110px">`
           + `<input class="crow-value" value="${esc(r.value||"")}" placeholder="내용" style="flex:2;min-width:150px">`
           + `<select class="crow-span"><option value="full" ${r.span!=="half"?"selected":""}>1개 넓게</option><option value="half" ${r.span==="half"?"selected":""}>한 행에 2개</option></select>`
-          + `<button type="button" class="hdr-btn crow-del">삭제</button></div>`;
-      });
-      h += `<button type="button" class="hdr-btn" id="crowAdd">＋ 행 추가</button></div>`;
+          + `<button type="button" class="hdr-btn crow-del">삭제</button></div></td></tr>`});
+      } else {
+        if (!r.label && !r.value) return;
+        if (r.span === "half") rows.push({id: cid, half: tcell(r.label, r.value, "")});
+        else rows.push({id: cid, tr: `<tr><td class="plabel">${esc(r.label)}</td><td colspan="3">${esc(r.value)}</td></tr>`});
+      }
+    });
+    const orderIdx = {};
+    (c.rowOrder||[]).forEach((id,i)=>{ orderIdx[id] = i; });
+    rows.sort((a,b)=>{
+      const ai = Object.prototype.hasOwnProperty.call(orderIdx, a.id) ? orderIdx[a.id] : 1e9;
+      const bi = Object.prototype.hasOwnProperty.call(orderIdx, b.id) ? orderIdx[b.id] : 1e9;
+      return ai - bi;
+    });
+    lastRowOrder = rows.map(r=>r.id);
+    let buf = null;
+    for (const r of rows){
+      if (r.half){
+        if (buf){ h += `<tr>${buf.half}${r.half}</tr>`; buf = null; }
+        else buf = r;
+      } else {
+        if (buf){ h += `<tr>${buf.half}<td class="plabel"></td><td></td></tr>`; buf = null; }
+        h += r.tr;
+      }
+    }
+    if (buf) h += `<tr>${buf.half}<td class="plabel"></td><td></td></tr>`;
+    h += `</table>`;
+    if (ed){
+      h += `<div style="margin-top:8px"><button type="button" class="hdr-btn" id="crowAdd">＋ 행 추가</button></div>`;
     }
     if (ed || c.overview){
     h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
@@ -849,6 +871,14 @@ function renderTabInner(c){
   return `<div class="field"><label>여담</label><div class="val">${t?linkify(t):'<span class="empty">—</span>'}</div></div>`;
 }
 
+function moveRow(c, id, dir){
+  const ord = lastRowOrder.slice();
+  const i = ord.indexOf(id); if (i < 0) return;
+  const j = i + dir; if (j < 0 || j >= ord.length) return;
+  const t = ord[i]; ord[i] = ord[j]; ord[j] = t;
+  c.rowOrder = ord; render();
+}
+
 function bindEdit(c){
   document.querySelectorAll("#body [data-k]").forEach(el=>{
     el.oninput = ()=>{
@@ -865,7 +895,15 @@ function bindEdit(c){
   document.querySelectorAll(".crow-value").forEach(inp=>inp.oninput=()=>{ c.customRows[+inp.closest(".crow").dataset.i].value = inp.value; });
   document.querySelectorAll(".crow-span").forEach(s=>s.onchange=()=>{ c.customRows[+s.closest(".crow").dataset.i].span = s.value; });
   document.querySelectorAll(".crow-del").forEach(b=>b.onclick=()=>{ c.customRows.splice(+b.closest(".crow").dataset.i,1); render(); });
-  const ca = $("crowAdd"); if (ca) ca.onclick = ()=>{ (c.customRows = c.customRows || []).push({label:"", value:"", span:"full"}); render(); };
+  const ca = $("crowAdd"); if (ca) ca.onclick = ()=>{ (c.customRows = c.customRows || []).push({label:"", value:"", span:"full", cid:"cr_"+Math.random().toString(36).slice(2,10)}); render(); };
+  document.querySelectorAll(".rowlabel").forEach(inp=>inp.oninput=()=>{
+    c.rowLabels = c.rowLabels || {};
+    const v = inp.value;
+    if (!v || v === inp.dataset.def) delete c.rowLabels[inp.dataset.cell];
+    else c.rowLabels[inp.dataset.cell] = v;
+  });
+  document.querySelectorAll(".rowup").forEach(b=>b.onclick=()=>moveRow(c, b.dataset.row, -1));
+  document.querySelectorAll(".rowdown").forEach(b=>b.onclick=()=>moveRow(c, b.dataset.row, 1));
   const sf = $("illustFile");
   if (sf) sf.onchange = async ()=>{
     const f = sf.files[0]; if (!f) return;
