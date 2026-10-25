@@ -337,7 +337,7 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; });
   });
 }
 function setSyncStatus(txt, color){
@@ -675,7 +675,12 @@ function renderTabInner(c){
       if (ed) return `<td class="plabel">${label}</td><td><input data-k="${key}" value="${esc(val||"")}"></td>`;
       return `<td class="plabel">${label}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
     };
+    const trow = (l1,v1,k1,l2,v2,k2)=>{
+      if (!ed && !v1 && !v2) return "";
+      return `<tr>${tcell(l1,v1,k1)}${tcell(l2,v2,k2)}</tr>`;
+    };
     const colorRow = ()=>{
+      if (!ed && !c.color) return "";
       if (ed) return `<tr><td class="plabel">이미지 컬러</td><td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
       return `<tr><td class="plabel">이미지 컬러</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
     };
@@ -708,6 +713,7 @@ function renderTabInner(c){
     if (c.logo && !ed){
       h += `<div class="field"><label>로고 / 사인</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
     }
+    if (ed || c.quote){
     h += `<div class="field"><label>명대사</label>`;
     if (ed){
       h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
@@ -717,34 +723,36 @@ function renderTabInner(c){
       h += `<div class="val"><span class="empty">—</span></div>`;
     }
     h += `</div>`;
+    }
     h += `<div class="field"><label>이름</label>`;
     h += ed
       ? `<input data-k="profile.name" value="${esc(p.name||"")}">`
       : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
     h += `</div>`;
     h += `<table class="ptable">`;
-    h += `<tr>${tcell("별명",p.nickname,"profile.nickname")}${tcell("영문명",p.ename,"profile.ename")}</tr>`;
-    h += `<tr>${tcell("개명 전 이름",c.formerName,"formerName")}${tcell("다른 이름",c.otherNames,"otherNames")}</tr>`;
-    h += ed ? `<tr><td class="plabel">옛 별명</td><td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">옛 별명</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`;
+    h += trow("별명",p.nickname,"profile.nickname","영문명",p.ename,"profile.ename");
+    h += trow("개명 전 이름",c.formerName,"formerName","다른 이름",c.otherNames,"otherNames");
+    h += (ed || c.oldNick) ? (ed ? `<tr><td class="plabel">옛 별명</td><td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">옛 별명</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "";
     const starCell = ()=>{
       const derived = deriveStarsign(p.birthday);
       if (ed) return `<td class="plabel">별자리</td><td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
       const v = c.starsign || derived;
       return `<td class="plabel">별자리</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
     };
-    h += `<tr>${tcell("나이",p.age,"profile.age")}${tcell("혈액형",c.blood,"blood")}</tr>`;
-    h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
-    h += `<tr>${tcell("키",p.height,"profile.height")}${tcell("몸무게",c.weight,"weight")}</tr>`;
+    h += trow("나이",p.age,"profile.age","혈액형",c.blood,"blood");
+    if (ed || p.birthday || c.starsign) h += `<tr>${tcell("생일",p.birthday,"profile.birthday")}${starCell()}</tr>`;
+    h += trow("키",p.height,"profile.height","몸무게",c.weight,"weight");
     if (!c.hideSizes || ed){
-      h += `<tr>${tcell("쓰리사이즈",c.three,"three")}${tcell("속옷 사이즈",c.bra,"bra")}</tr>`;
+      h += trow("쓰리사이즈",c.three,"three","속옷 사이즈",c.bra,"bra");
     }
-    h += `<tr>${tcell("쓰는 손",c.hand,"hand")}${tcell("성별",c.gender,"gender")}</tr>`;
+    h += trow("쓰는 손",c.hand,"hand","성별",c.gender,"gender");
     if (ed){
       h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
     }
     h += colorRow();
     const wide = (label,val,key)=>{
       if (ed) return `<tr><td class="plabel">${label}</td><td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      if (!val) return "";
       return `<tr><td class="plabel">${label}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
     h += wide("지위/직책",c.position,"position");
@@ -754,7 +762,33 @@ function renderTabInner(c){
     h += wide("특기",c.specialty,"specialty");
     h += wide("좋아하는 것",c.likes,"likes");
     h += wide("싫어하는 것",c.dislikes,"dislikes");
+    if (!ed){
+      let half = null;
+      for (const r of (c.customRows||[])){
+        if (!r || (!r.label && !r.value)) continue;
+        if (r.span === "half"){
+          if (half){ h += `<tr>${tcell(half.label,half.value,"")}${tcell(r.label,r.value,"")}</tr>`; half = null; }
+          else half = r;
+        } else {
+          if (half){ h += `<tr>${tcell(half.label,half.value,"")}<td class="plabel"></td><td></td></tr>`; half = null; }
+          h += `<tr><td class="plabel">${esc(r.label)}</td><td colspan="3">${esc(r.value)}</td></tr>`;
+        }
+      }
+      if (half) h += `<tr>${tcell(half.label,half.value,"")}<td class="plabel"></td><td></td></tr>`;
+    }
     h += `</table>`;
+    if (ed){
+      h += `<div class="field"><label>추가 항목</label>`;
+      (c.customRows||[]).forEach((r,i)=>{
+        h += `<div class="crow" data-i="${i}" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">`
+          + `<input class="crow-label" value="${esc(r.label||"")}" placeholder="항목 이름" style="flex:1;min-width:110px">`
+          + `<input class="crow-value" value="${esc(r.value||"")}" placeholder="내용" style="flex:2;min-width:150px">`
+          + `<select class="crow-span"><option value="full" ${r.span!=="half"?"selected":""}>1개 넓게</option><option value="half" ${r.span==="half"?"selected":""}>한 행에 2개</option></select>`
+          + `<button type="button" class="hdr-btn crow-del">삭제</button></div>`;
+      });
+      h += `<button type="button" class="hdr-btn" id="crowAdd">＋ 행 추가</button></div>`;
+    }
+    if (ed || c.overview){
     h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
     if (ed){
       h += `<textarea data-k="overview" rows="2" placeholder="이 캐릭터를 한두 줄로 소개해주세요">${esc(c.overview||"")}</textarea>`;
@@ -762,6 +796,7 @@ function renderTabInner(c){
       h += `<div class="val overview">${c.overview?linkify(c.overview):'<span class="empty">—</span>'}</div>`;
     }
     h += `</div>`;
+    }
     return `<div class="notebook">${h}</div>`;
   }
   if (curTab==="relations"){
@@ -826,6 +861,11 @@ function bindEdit(c){
   document.querySelectorAll(".rel-to").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].to = s.value; });
   document.querySelectorAll(".rel-kind").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].kind = s.value; });
   const add = $("relAdd"); if (add) add.onclick = ()=>{ const other = Object.values(store).filter(w=>w&&Array.isArray(w.chars)).flatMap(w=>w.chars).find(x=>x.id!==c.id); if(other){ (c.rels = c.rels || []).push({to:other.id, kind:"friend"}); render(); } };
+  document.querySelectorAll(".crow-label").forEach(inp=>inp.oninput=()=>{ c.customRows[+inp.closest(".crow").dataset.i].label = inp.value; });
+  document.querySelectorAll(".crow-value").forEach(inp=>inp.oninput=()=>{ c.customRows[+inp.closest(".crow").dataset.i].value = inp.value; });
+  document.querySelectorAll(".crow-span").forEach(s=>s.onchange=()=>{ c.customRows[+s.closest(".crow").dataset.i].span = s.value; });
+  document.querySelectorAll(".crow-del").forEach(b=>b.onclick=()=>{ c.customRows.splice(+b.closest(".crow").dataset.i,1); render(); });
+  const ca = $("crowAdd"); if (ca) ca.onclick = ()=>{ (c.customRows = c.customRows || []).push({label:"", value:"", span:"full"}); render(); };
   const sf = $("illustFile");
   if (sf) sf.onchange = async ()=>{
     const f = sf.files[0]; if (!f) return;
@@ -976,7 +1016,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
