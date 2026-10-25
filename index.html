@@ -898,6 +898,7 @@ function bindEdit(c){
       const tr = hnd.closest("tr"); if (!tr) return;
       const table = tr.closest("table"); if (!table) return;
       const rect = tr.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
       const clone = tr.cloneNode(true);
       const srcFields = tr.querySelectorAll("input,select,textarea");
@@ -912,6 +913,7 @@ function bindEdit(c){
       document.body.appendChild(wrap);
       tr.style.visibility = "hidden";
       const move = (ev)=>{
+        wrap.style.left = (ev.clientX - offsetX) + "px";
         wrap.style.top = (ev.clientY - offsetY) + "px";
         const all = [...table.querySelectorAll("tr")].filter(x=>x !== tr);
         const before = new Map(all.map(x=>[x, x.getBoundingClientRect().top]));
@@ -939,6 +941,7 @@ function bindEdit(c){
         document.removeEventListener("pointercancel", up);
         wrap.remove();
         tr.style.visibility = "";
+        table.querySelectorAll("tr").forEach(x=>{ x.style.transition = ""; x.style.transform = ""; });
         c.rowOrder = [...table.querySelectorAll("tr")].map(t=>t.querySelector(".draghandle")?.dataset.row).filter(Boolean);
       };
       document.addEventListener("pointermove", move);
