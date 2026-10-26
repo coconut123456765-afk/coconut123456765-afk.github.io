@@ -55,6 +55,12 @@
   .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:10px; }
   .prompttext { white-space:pre-wrap; overflow-wrap:break-word; }
   .promptbox .promptcopy { align-self:flex-end; }
+  .pair-list { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
+  .pair-row { display:flex; gap:12px; align-items:flex-start; padding:10px; border:1px solid var(--line); border-radius:10px; }
+  .pair-img { width:200px; flex-shrink:0; }
+  .pair-img img { width:100%; height:200px; object-fit:cover; border-radius:10px; display:block; cursor:zoom-in; }
+  .pair-row .promptbox { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  @media (max-width:700px){ .pair-row{flex-direction:column;} .pair-img{width:100%;} }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
   .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
   .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
@@ -256,7 +262,7 @@ const WORLDS = {
   ]},
 };
 const TABS = [
-  ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장·유니폼"],
+  ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장"],
   ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
 ];
 const REL_KINDS = { family:"가족", friend:"지인" };
@@ -339,7 +345,7 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; if (c.appearance===undefined) c.appearance = ""; if (c.promptChar===undefined) c.promptChar = ""; if (c.promptOutfit===undefined) c.promptOutfit = ""; if (!Array.isArray(c.promptRefs)) c.promptRefs = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
   });
 }
 function setSyncStatus(txt, color){
@@ -630,6 +636,39 @@ function galleryField(c, label, textKey, imgKey, ed){
   h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-'+imgKey+'" accept="image/*" style="display:none"></label></div>';
   return h;
 }
+function wardrobeField(c, ed){
+  const pairs = c.wardrobeImgs || [];
+  let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
+  if (!ed){
+    if (!pairs.length) return h;
+    h += `<div class="pair-list">`;
+    pairs.forEach(g=>{
+      h += `<div class="pair-row">`;
+      h += `<div class="pair-img"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)">` + (g.title?`<div class="gal-title">${esc(g.title)}</div>`:"") + `</div>`;
+      h += `<div class="promptbox">`;
+      if (g.prompt) h += `<div class="prompttext">${esc(g.prompt)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button>`;
+      else h += `<div class="prompttext"><span class="empty">—</span></div>`;
+      h += `</div></div>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+  h += `<div class="pair-list" id="pairList">`;
+  pairs.forEach((g,i)=>{
+    h += `<div class="pair-row" data-i="${i}">`;
+    h += `<span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span>`;
+    h += `<div class="pair-img" style="width:56px"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="width:56px;height:56px"></div>`;
+    h += `<div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">`;
+    h += `<input class="pair-title" value="${esc(g.title||"")}" placeholder="제목">`;
+    h += `<textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea>`;
+    h += `</div>`;
+    h += `<button type="button" class="hdr-btn pair-del">삭제</button>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  h += `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-wardrobeImgs" accept="image/*" style="display:none"></label></div>`;
+  return h;
+}
 function relMindmap(c){
   const rels = c.rels||[];
   if (!rels.length) return "";
@@ -765,34 +804,6 @@ function renderTabInner(c){
       if (!val) return "";
       return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
-    const appearanceRow = ()=>{
-      if (ed) return `<tr>${labelCell("appearance","외형 설명","appearance")}<td colspan="3"><textarea data-k="appearance" rows="3" placeholder="머리색, 눈, 체형, 특징 등 외형을 설명해주세요" style="width:100%;box-sizing:border-box">${esc(c.appearance||"")}</textarea></td></tr>`;
-      if (!c.appearance) return "";
-      return `<tr><td class="plabel">${esc(dispLabel("appearance","외형 설명"))}</td><td colspan="3"><div style="white-space:pre-wrap">${esc(c.appearance)}</div></td></tr>`;
-    };
-    const promptRow = (id,label,val,key)=>{
-      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><textarea data-k="${key}" rows="3" placeholder="NAI에 붙여넣을 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(val||"")}</textarea></td></tr>`;
-      if (!val) return "";
-      return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3"><div class="promptbox"><div class="prompttext">${esc(val)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></td></tr>`;
-    };
-    const promptRefsRow = ()=>{
-      const imgs = c.promptRefs || [];
-      if (ed){
-        let inner = `<div class="gal-edit" id="gal-promptRefs">`;
-        imgs.forEach((g,i)=>{
-          inner += `<div class="gal-edrow" data-i="${i}"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in"><input class="gal-edtitle" data-gi="${i}" value="${esc(g.title||"")}" placeholder="제목"><button type="button" class="hdr-btn gal-del" data-gdel="${i}">삭제</button></div>`;
-        });
-        inner += `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-promptRefs" accept="image/*" style="display:none"></label></div>`;
-        return `<tr>${labelCell("promptRefs","프롬 참고 이미지","promptRefs")}<td colspan="3">${inner}</td></tr>`;
-      }
-      if (!imgs.length) return "";
-      let grid = `<div class="gal-grid">`;
-      imgs.forEach(g=>{
-        grid += `<div class="gal-item"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">` + (g.title?`<div class="gal-title">${esc(g.title)}</div>`:"") + `</div>`;
-      });
-      grid += `</div>`;
-      return `<tr><td class="plabel">${esc(dispLabel("promptRefs","프롬 참고 이미지"))}</td><td colspan="3">${grid}</td></tr>`;
-    };
     prow("pos", wide("pos","지위/직책",c.position,"position"));
     prow("affil", wide("affil","소속/진영",c.affil,"affil"));
     prow("birthplace", wide("birthplace","출신지",c.birthplace,"birthplace"));
@@ -800,10 +811,6 @@ function renderTabInner(c){
     prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
     prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
     prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
-    prow("appearance", appearanceRow());
-    prow("promptChar", promptRow("promptChar","캐릭터용 프롬",c.promptChar,"promptChar"));
-    prow("promptOutfit", promptRow("promptOutfit","옷 포함용 프롬",c.promptOutfit,"promptOutfit"));
-    prow("promptRefs", promptRefsRow());
     (c.customRows||[]).forEach((r,i)=>{
       if (!r) return;
       const cid = "c:" + (r.cid || ("tmp" + i));
@@ -892,7 +899,7 @@ function renderTabInner(c){
       ).join("")+
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
-  if (curTab==="wardrobe") return galleryField(c, "옷장·유니폼", "wardrobe", "wardrobeImgs", ed);
+  if (curTab==="wardrobe") return wardrobeField(c, ed);
   if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
   if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
@@ -1066,7 +1073,7 @@ function bindEdit(c){
     c.illust = lines.join("\n");
     persist(); render();
   });
-  ["wardrobeImgs","weaponImgs","promptRefs"].forEach(imgKey=>{
+  ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
     if (gf) gf.onchange = async ()=>{
       const f = gf.files[0]; if (!f) return;
@@ -1093,6 +1100,77 @@ function bindEdit(c){
     if (c[key]) c[key].splice(i,1);
     render();
   });
+  document.querySelectorAll(".pair-title").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].title = inp.value;
+  });
+  document.querySelectorAll(".pair-prompt").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].prompt = inp.value;
+  });
+  document.querySelectorAll(".pair-del").forEach(b=>b.onclick=()=>{
+    const row = b.closest(".pair-row"); if (!row) return;
+    (c.wardrobeImgs || []).splice(+row.dataset.i, 1);
+    render();
+  });
+  document.querySelectorAll(".pair-handle").forEach(hnd=>{
+    hnd.onpointerdown = (e)=>{
+      e.preventDefault();
+      const list = $("pairList"); if (!list) return;
+      const row = hnd.closest(".pair-row"); if (!row) return;
+      const rect = row.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      const clone = row.cloneNode(true);
+      const srcFields = row.querySelectorAll("input,textarea");
+      clone.querySelectorAll("input,textarea").forEach((el,i)=>{ if (srcFields[i]) el.value = srcFields[i].value; });
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:fixed;left:" + rect.left + "px;top:" + rect.top + "px;width:" + rect.width + "px;pointer-events:none;opacity:0.92;z-index:9999;";
+      wrap.appendChild(clone);
+      document.body.appendChild(wrap);
+      row.style.visibility = "hidden";
+      const move = (ev)=>{
+        wrap.style.left = (ev.clientX - offsetX) + "px";
+        wrap.style.top = (ev.clientY - offsetY) + "px";
+        const all = [...list.querySelectorAll(".pair-row")].filter(x=>x !== row);
+        const before = new Map(all.map(x=>[x, x.getBoundingClientRect().top]));
+        let target = null;
+        for (const x of all){
+          const r = x.getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2){ target = x; break; }
+        }
+        if (target){ if (target !== row.nextSibling) list.insertBefore(row, target); }
+        else if (row !== list.lastElementChild){ list.appendChild(row); }
+        for (const x of all){
+          const dy = before.get(x) - x.getBoundingClientRect().top;
+          if (dy){
+            x.style.transition = "none";
+            x.style.transform = "translateY(" + dy + "px)";
+            void x.offsetHeight;
+            x.style.transition = "transform 0.18s ease";
+            x.style.transform = "";
+          }
+        }
+      };
+      const up = ()=>{
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", up);
+        wrap.remove();
+        row.style.visibility = "";
+        list.querySelectorAll(".pair-row").forEach(x=>{ x.style.transition = ""; x.style.transform = ""; });
+        const order = [...list.querySelectorAll(".pair-row")].map(el=>+el.dataset.i);
+        const old = c.wardrobeImgs || [];
+        const reordered = order.map(i=>old[i]).filter(v=>v !== undefined);
+        if (reordered.length === old.length) c.wardrobeImgs = reordered;
+        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; });
+        window.__pairDragEnd = Date.now();
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", up);
+    };
+  });
   document.querySelectorAll(".gal-item img, img.zoomable, .gal-edimg").forEach(img=>{
     img.style.cursor = "zoom-in";
   });
@@ -1100,6 +1178,7 @@ function bindEdit(c){
   if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
 }
 function openLightbox(src){
+  if (window.__pairDragEnd && Date.now() - window.__pairDragEnd < 300) return;
   const lb = document.getElementById("lightbox");
   const im = document.getElementById("lightboxImg");
   if (lb && im){ im.src = src; lb.style.display = "flex"; }
@@ -1150,7 +1229,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", appearance:"", promptChar:"", promptOutfit:"", promptRefs:[], customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
