@@ -549,8 +549,7 @@ function render(){
   const cw = store[curWorld];
   const charList = (cw && cw.chars) ? cw.chars : [];
   $("chars").innerHTML = charList.map((c,i,arr)=>{
-    const relNames = (c.rels||[]).map(r=>nameOf(r.to)).filter(n=>n&&n!=="?");
-    const sub = [c.position||"", relNames.length?"→ "+relNames.join(", "):""].filter(Boolean).join(" · ");
+    const sub = c.position || "";
     const img = (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
     const subHtml = sub ? '<span class="char-sub">'+esc(sub)+'</span>' : "";
     const imgHtml = (c.id===curChar && img) ? '<div class="char-item-img"><img src="'+esc(img)+'" alt=""></div>' : "";
