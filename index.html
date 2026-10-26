@@ -53,6 +53,8 @@
   .char-item-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .char-thumb { cursor:pointer; }
   .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:10px; }
+  .prompttext { white-space:pre-wrap; overflow-wrap:break-word; }
+  .promptbox .promptcopy { align-self:flex-end; }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
   .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
   .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
@@ -337,7 +339,7 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; if (c.appearance===undefined) c.appearance = ""; if (c.promptChar===undefined) c.promptChar = ""; if (c.promptOutfit===undefined) c.promptOutfit = ""; if (!Array.isArray(c.promptRefs)) c.promptRefs = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
   });
 }
 function setSyncStatus(txt, color){
@@ -763,6 +765,34 @@ function renderTabInner(c){
       if (!val) return "";
       return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
+    const appearanceRow = ()=>{
+      if (ed) return `<tr>${labelCell("appearance","외형 설명","appearance")}<td colspan="3"><textarea data-k="appearance" rows="3" placeholder="머리색, 눈, 체형, 특징 등 외형을 설명해주세요" style="width:100%;box-sizing:border-box">${esc(c.appearance||"")}</textarea></td></tr>`;
+      if (!c.appearance) return "";
+      return `<tr><td class="plabel">${esc(dispLabel("appearance","외형 설명"))}</td><td colspan="3"><div style="white-space:pre-wrap">${esc(c.appearance)}</div></td></tr>`;
+    };
+    const promptRow = (id,label,val,key)=>{
+      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><textarea data-k="${key}" rows="3" placeholder="NAI에 붙여넣을 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(val||"")}</textarea></td></tr>`;
+      if (!val) return "";
+      return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3"><div class="promptbox"><div class="prompttext">${esc(val)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></td></tr>`;
+    };
+    const promptRefsRow = ()=>{
+      const imgs = c.promptRefs || [];
+      if (ed){
+        let inner = `<div class="gal-edit" id="gal-promptRefs">`;
+        imgs.forEach((g,i)=>{
+          inner += `<div class="gal-edrow" data-i="${i}"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in"><input class="gal-edtitle" data-gi="${i}" value="${esc(g.title||"")}" placeholder="제목"><button type="button" class="hdr-btn gal-del" data-gdel="${i}">삭제</button></div>`;
+        });
+        inner += `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-promptRefs" accept="image/*" style="display:none"></label></div>`;
+        return `<tr>${labelCell("promptRefs","프롬 참고 이미지","promptRefs")}<td colspan="3">${inner}</td></tr>`;
+      }
+      if (!imgs.length) return "";
+      let grid = `<div class="gal-grid">`;
+      imgs.forEach(g=>{
+        grid += `<div class="gal-item"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">` + (g.title?`<div class="gal-title">${esc(g.title)}</div>`:"") + `</div>`;
+      });
+      grid += `</div>`;
+      return `<tr><td class="plabel">${esc(dispLabel("promptRefs","프롬 참고 이미지"))}</td><td colspan="3">${grid}</td></tr>`;
+    };
     prow("pos", wide("pos","지위/직책",c.position,"position"));
     prow("affil", wide("affil","소속/진영",c.affil,"affil"));
     prow("birthplace", wide("birthplace","출신지",c.birthplace,"birthplace"));
@@ -770,6 +800,10 @@ function renderTabInner(c){
     prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
     prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
     prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
+    prow("appearance", appearanceRow());
+    prow("promptChar", promptRow("promptChar","캐릭터용 프롬",c.promptChar,"promptChar"));
+    prow("promptOutfit", promptRow("promptOutfit","옷 포함용 프롬",c.promptOutfit,"promptOutfit"));
+    prow("promptRefs", promptRefsRow());
     (c.customRows||[]).forEach((r,i)=>{
       if (!r) return;
       const cid = "c:" + (r.cid || ("tmp" + i));
@@ -1032,7 +1066,7 @@ function bindEdit(c){
     c.illust = lines.join("\n");
     persist(); render();
   });
-  ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
+  ["wardrobeImgs","weaponImgs","promptRefs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
     if (gf) gf.onchange = async ()=>{
       const f = gf.files[0]; if (!f) return;
@@ -1070,6 +1104,23 @@ function openLightbox(src){
   const im = document.getElementById("lightboxImg");
   if (lb && im){ im.src = src; lb.style.display = "flex"; }
 }
+async function copyPrompt(btn){
+  const box = btn.closest(".promptbox");
+  const txt = box ? box.querySelector(".prompttext").textContent : "";
+  if (!txt) return;
+  let ok = false;
+  try{ await navigator.clipboard.writeText(txt); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+  }
+  const old = btn.textContent;
+  btn.textContent = ok ? "복사됨!" : "복사 실패";
+  setTimeout(()=>{ btn.textContent = old; }, 1500);
+}
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
   return new Promise((resolve, reject)=>{
@@ -1099,7 +1150,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", appearance:"", promptChar:"", promptOutfit:"", promptRefs:[], customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
