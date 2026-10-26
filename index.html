@@ -55,12 +55,20 @@
   .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:10px; }
   .prompttext { white-space:pre-wrap; overflow-wrap:break-word; }
   .promptbox .promptcopy { align-self:flex-end; }
-  .pair-list { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
-  .pair-row { display:flex; gap:12px; align-items:flex-start; padding:10px; border:1px solid var(--line); border-radius:10px; }
-  .pair-img { width:200px; flex-shrink:0; }
-  .pair-img img { width:100%; height:200px; object-fit:cover; border-radius:10px; display:block; cursor:zoom-in; }
-  .pair-row .promptbox { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
-  @media (max-width:700px){ .pair-row{flex-direction:column;} .pair-img{width:100%;} }
+  .pair-list { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
+  .pair-row { background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .pair-head { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--plabel-bg); border-bottom:1px solid var(--line); }
+  .pair-no { font-family:"Special Elite","Courier New",monospace; color:var(--acc); font-size:14px; letter-spacing:1px; white-space:nowrap; }
+  .pair-name { font-weight:700; font-size:16px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pair-head .pair-title { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:15px; }
+  .pair-body { display:flex; gap:16px; padding:14px; align-items:flex-start; }
+  .pair-frame { background:#fdfdf8; padding:8px 8px 20px; border-radius:2px; box-shadow:0 3px 10px rgba(0,0,0,0.18); width:216px; flex-shrink:0; }
+  .pair-frame img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
+  .pair-ptext { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .pair-plabel { font-family:"Special Elite","Courier New",monospace; font-size:12px; letter-spacing:2px; color:var(--dim); }
+  .pair-ptext .prompttext { font-size:15px; line-height:1.7; }
+  .pair-body .pair-prompt { flex:1; min-width:0; }
+  @media (max-width:700px){ .pair-body{flex-direction:column;} .pair-frame{width:100%;} }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
   .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
   .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
@@ -639,16 +647,20 @@ function galleryField(c, label, textKey, imgKey, ed){
 function wardrobeField(c, ed){
   const pairs = c.wardrobeImgs || [];
   let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
+  const num = (i)=> String(i+1).padStart(2, "0");
   if (!ed){
     if (!pairs.length) return h;
     h += `<div class="pair-list">`;
-    pairs.forEach(g=>{
+    pairs.forEach((g,i)=>{
+      const name = g.title || ("옷 " + num(i));
       h += `<div class="pair-row">`;
-      h += `<div class="pair-img"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)">` + (g.title?`<div class="gal-title">${esc(g.title)}</div>`:"") + `</div>`;
-      h += `<div class="promptbox">`;
+      h += `<div class="pair-head"><span class="pair-no">No. ${num(i)}</span><span class="pair-name">${esc(name)}</span></div>`;
+      h += `<div class="pair-body">`;
+      h += `<div class="pair-frame"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)"></div>`;
+      h += `<div class="promptbox pair-ptext"><div class="pair-plabel">PROMPT</div>`;
       if (g.prompt) h += `<div class="prompttext">${esc(g.prompt)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button>`;
       else h += `<div class="prompttext"><span class="empty">—</span></div>`;
-      h += `</div></div>`;
+      h += `</div></div></div>`;
     });
     h += `</div>`;
     return h;
@@ -656,13 +668,8 @@ function wardrobeField(c, ed){
   h += `<div class="pair-list" id="pairList">`;
   pairs.forEach((g,i)=>{
     h += `<div class="pair-row" data-i="${i}">`;
-    h += `<span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span>`;
-    h += `<div class="pair-img" style="width:56px"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="width:56px;height:56px"></div>`;
-    h += `<div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">`;
-    h += `<input class="pair-title" value="${esc(g.title||"")}" placeholder="제목">`;
-    h += `<textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea>`;
-    h += `</div>`;
-    h += `<button type="button" class="hdr-btn pair-del">삭제</button>`;
+    h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
+    h += `<div class="pair-body"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div>`;
     h += `</div>`;
   });
   h += `</div>`;
@@ -1163,7 +1170,7 @@ function bindEdit(c){
         const old = c.wardrobeImgs || [];
         const reordered = order.map(i=>old[i]).filter(v=>v !== undefined);
         if (reordered.length === old.length) c.wardrobeImgs = reordered;
-        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; });
+        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; const no = el.querySelector(".pair-no"); if (no) no.textContent = "No. " + String(idx+1).padStart(2, "0"); });
         window.__pairDragEnd = Date.now();
       };
       document.addEventListener("pointermove", move);
