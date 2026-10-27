@@ -542,6 +542,7 @@ function linkify(text){
 function gotoChar(id){
   const t = findCharById(id);
   if (!t) return;
+  cancelEdit(); // 편집 중 이동하면 미저장 편집을 버리고 이동 (다른 캐릭터 편집이 섞이지 않게)
   if (t.world!==curWorld) curWorld = t.world;
   curChar = t.id; curTab = "profile"; render(); window.scrollTo(0,0);
 }
@@ -1356,6 +1357,7 @@ function fileToDataURL(file, maxW, quality){
 }
 
 $("addChar").onclick = ()=>{
+  cancelEdit();
   const w = store[curWorld];
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
@@ -1439,6 +1441,7 @@ function renderWorldList(){
   });
 }
 document.getElementById("addWorldBtn").onclick = ()=>{
+  cancelEdit();
   const wid = "w"+Date.now();
   store[wid] = { name:"새 세계관", hasWeapon:false, accent:null, chars:[] };
   curWorld = wid; curChar = null; curTab = "profile";
