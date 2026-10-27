@@ -275,6 +275,7 @@ const WORLDS = {
 };
 const TABS = [
   ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장"],
+  ["appearance","외형·프롬"],
   ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
 ];
 const REL_KINDS = { family:"가족", friend:"지인" };
@@ -679,6 +680,42 @@ function wardrobeField(c, ed){
   h += `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-wardrobeImgs" accept="image/*" style="display:none"></label></div>`;
   return h;
 }
+function appearanceField(c, ed){
+  const ap = c.appearance || "", pc = c.promptChar || "", po = c.promptOutfit || "";
+  const refs = c.promptRefImgs || [];
+  if (!ed){
+    let h = "";
+    if (ap) h += `<div class="field"><label>외형 설명</label><div class="val">${esc(ap)}</div></div>`;
+    if (pc) h += `<div class="field"><label>캐릭터용 프롬</label><div class="promptbox"><div class="pair-plabel">PROMPT</div><div class="prompttext">${esc(pc)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></div>`;
+    if (po) h += `<div class="field"><label>옷 포함용 프롬</label><div class="promptbox"><div class="pair-plabel">PROMPT</div><div class="prompttext">${esc(po)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></div>`;
+    if (refs.length){
+      h += '<div class="field"><label>프롬 참고 이미지</label><div class="gal-grid">';
+      refs.forEach(g=>{
+        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
+        if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
+        h += '</div>';
+      });
+      h += '</div></div>';
+    }
+    if (!h) h = `<div class="field"><label>외형·프롬</label><div class="val"><span class="empty">아직 작성된 내용이 없습니다.</span></div></div>`;
+    return h;
+  }
+  let h = fieldRow("외형 설명", ap, "appearance", "area", ed);
+  h += fieldRow("캐릭터용 프롬", pc, "promptChar", "area", ed);
+  h += fieldRow("옷 포함용 프롬", po, "promptOutfit", "area", ed);
+  h += '<div class="field"><label>프롬 참고 이미지</label>';
+  h += '<div class="gal-edit" id="gal-promptRefImgs">';
+  refs.forEach((g,i)=>{
+    h += '<div class="gal-edrow" data-i="'+i+'">';
+    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
+    h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
+    h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-promptRefImgs" accept="image/*" style="display:none"></label></div></div>';
+  return h;
+}
 function relMindmap(c){
   const rels = c.rels||[];
   if (!rels.length) return "";
@@ -910,6 +947,7 @@ function renderTabInner(c){
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return wardrobeField(c, ed);
+  if (curTab==="appearance") return appearanceField(c, ed);
   if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
   if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
@@ -1083,7 +1121,7 @@ function bindEdit(c){
     c.illust = lines.join("\n");
     persist(); render();
   });
-  ["wardrobeImgs","weaponImgs"].forEach(imgKey=>{
+  ["wardrobeImgs","weaponImgs","promptRefImgs"].forEach(imgKey=>{
     const gf = $("gal-file-"+imgKey);
     if (gf) gf.onchange = async ()=>{
       const f = gf.files[0]; if (!f) return;
@@ -1239,7 +1277,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
