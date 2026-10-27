@@ -654,8 +654,9 @@ function galleryField(c, label, textKey, imgKey, ed){
 }
 function wardrobeField(c, ed){
   const pairs = c.wardrobeImgs || [];
-  const num = (i)=> String(i+1).padStart(2, "0");
   const ap = c.appearance || "", pc = c.promptChar || "";
+  const off = pc ? 1 : 0;
+  const num = (i)=> String(i+1+off).padStart(2, "0");
   const refs = c.promptRefImgs || [];
   const firstIllust = (c.illust||"").split("\n").find(s=>s.trim()) || "";
   const charImg = (refs[0] && refs[0].img) || firstIllust;
@@ -664,7 +665,7 @@ function wardrobeField(c, ed){
     if (ap) h += `<div class="field"><label>외형 설명</label><div class="val">${esc(ap)}</div></div>`;
     if (pc){
       h += `<div class="pair-list"><div class="pair-row copybox" onclick="copyBox(this, event)">`;
-      h += `<div class="pair-head"><span class="pair-name">캐릭터 프롬</span></div>`;
+      h += `<div class="pair-head"><span class="pair-no">No. 01</span><span class="pair-name">캐릭터 프롬</span></div>`;
       h += `<div class="pair-body">`;
       if (charImg) h += `<div class="pair-frame"><img src="${esc(charImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
       h += `<div class="pair-side"><div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(pc)}</div></div>`;
@@ -1200,7 +1201,7 @@ function bindEdit(c){
         const old = c.wardrobeImgs || [];
         const reordered = order.map(i=>old[i]).filter(v=>v !== undefined);
         if (reordered.length === old.length) c.wardrobeImgs = reordered;
-        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; const no = el.querySelector(".pair-no"); if (no) no.textContent = "No. " + String(idx+1).padStart(2, "0"); });
+        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; const no = el.querySelector(".pair-no"); if (no) no.textContent = "No. " + String(idx+1+(c.promptChar?1:0)).padStart(2, "0"); });
         window.__pairDragEnd = Date.now();
       };
       document.addEventListener("pointermove", move);
