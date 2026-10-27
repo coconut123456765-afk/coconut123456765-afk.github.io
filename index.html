@@ -1307,7 +1307,7 @@ async function copyBox(card, ev){
     try{ ok = document.execCommand("copy"); }catch(_){}
     ta.remove();
   }
-  const hint = card.querySelector(".copyhint");
+  const hint = card.querySelector(".copytip span") || card.querySelector(".copyhint");
   if (hint){ const old = hint.textContent; hint.textContent = ok ? "복사됨!" : "복사 실패"; setTimeout(()=>{ hint.textContent = old; }, 1500); }
 }
 function fileToDataURL(file, maxW, quality){
