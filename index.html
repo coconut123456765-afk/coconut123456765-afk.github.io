@@ -370,7 +370,7 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; });
   });
 }
 function setSyncStatus(txt, color){
@@ -579,7 +579,7 @@ function render(){
   const charList = (cw && cw.chars) ? cw.chars : [];
   $("chars").innerHTML = charList.map((c,i,arr)=>{
     const sub = c.position || "";
-    const img = (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
+    const img = c.repImg || (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
     const subHtml = sub ? '<span class="char-sub">'+esc(sub)+'</span>' : "";
     const imgHtml = (c.id===curChar && img) ? '<div class="char-item-img"><img src="'+esc(img)+'" alt=""></div>' : "";
     const selOn = c.id===curChar ? "on" : "";
@@ -681,7 +681,7 @@ function wardrobeField(c, ed){
   const ap = c.appearance || "", pc = c.promptChar || "";
   const bodyImg = c.bodyImg || "";
   const defDesc = c.defaultDesc || "", defPrompt = c.promptOutfit || "";
-  const repImg = (c.illust||"").split("\n").find(s=>s.trim()) || "";
+  const repImg = c.repImg || (c.illust||"").split("\n").find(s=>s.trim()) || "";
   const num = (i)=> String(i+3).padStart(2, "0");
   if (!ed){
     let h = "";
@@ -753,7 +753,7 @@ function relMindmap(c){
   if (!rels.length) return "";
   const W=400, H=300, cx=200, cy=145, R=105;
   const nodeImg = (ch, x, y, r, id)=>{
-    const img = (ch.thumb || (ch.illust||"").split("\n").find(s=>s.trim()) || "");
+    const img = (ch.thumb || ch.repImg || (ch.illust||"").split("\n").find(s=>s.trim()) || "");
     const name = esc(ch.profile.name||"(이름 없음)");
     let inner = "";
     if (img){
@@ -812,7 +812,9 @@ function renderTabInner(c){
     };
     let h = `<div class="field"><label>대표 일러스트</label>`;
     if (ed){
-      h += `<input data-k="illust" value="${esc(c.illust||"")}" placeholder="이미지 링크 또는 파일 첨부">`;
+      const repPreview = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+      if (repPreview) h += `<img id="repPreview" src="${esc(repPreview)}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
+      h += `<input data-k="repImg" value="${esc(c.repImg||"")}" placeholder="대표 이미지 링크 또는 파일 첨부">`;
       h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
       h += `</div>`;
@@ -828,8 +830,8 @@ function renderTabInner(c){
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
       if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
       h += `</div></div>`;
-    } else if (c.illust){
-      const firstIllust = String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+    } else if (c.repImg || c.illust){
+      const firstIllust = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
       h += `<div class="polaroid"><img src="${esc(firstIllust)}" alt="대표 일러스트"></div>`;
     } else {
       h += `<div class="val"><span class="empty">—</span></div>`;
@@ -971,11 +973,14 @@ function renderTabInner(c){
       return `<div class="field"><label>일러스트</label>${grid}${tparts}</div>`;
     }
     return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
-      lines.map((ln,i)=>
-        `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
+      lines.map((ln,i)=>{
+        const isRep = (c.repImg||"") && ln === c.repImg;
+        return `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
+        (isRep ? `<span style="font-size:12px;color:var(--acc);font-weight:700">★대표</span>` : ``)+
+        `<button class="hdr-btn" data-ilrep="${i}">대표로</button>`+
         `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
-        `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`
-      ).join("")+
+        `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`;
+      }).join("")+
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return wardrobeField(c, ed);
@@ -1075,10 +1080,17 @@ function bindEdit(c){
     setSyncStatus("이미지 업로드 중…", "var(--warm)");
     try{
       const url = await uploadToCloudinary(f);
-      // 대표 이미지 교체: 새 이미지를 맨 앞에 넣고 기존 일러스트는 유지 (덮어쓰기 금지)
-      const old = String(c.illust || "").trim();
-      c.illust = old ? url + "\n" + old : url;
-      const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
+      // 대표 이미지는 전용 칸에만 저장, 일러스트 목록은 건드리지 않음
+      c.repImg = url;
+      const inp = document.querySelector('#body [data-k="repImg"]'); if (inp) inp.value = c.repImg;
+      let pv = $("repPreview");
+      if (pv) pv.src = url;
+      else if (inp){
+        pv = document.createElement("img");
+        pv.id = "repPreview"; pv.src = url;
+        pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
+        inp.parentElement.insertBefore(pv, inp);
+      }
       setSyncStatus("동기화됨", "#4CAF50");
     }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   };
@@ -1153,6 +1165,12 @@ function bindEdit(c){
     }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
     render();
   };
+  document.querySelectorAll("[data-ilrep]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    const u = lines[+b.dataset.ilrep]; if (!u) return;
+    c.repImg = u;
+    render();
+  });
   document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
     const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     lines.splice(+b.dataset.ildel,1);
@@ -1362,7 +1380,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", repImg:"", thumb:"", logo:"", position:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
