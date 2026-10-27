@@ -224,6 +224,10 @@
       <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
       <p class="hint">이미지가 base64로 저장돼 무거우면 'Cloudinary로 옮기기'를 눌러보세요.</p>
     </div>
+    <div class="setting-row" id="backupRow"><label>자동 백업</label>
+      <div id="backupList"></div>
+      <p class="hint">저장할 때마다 최근 5개 상태가 서버에 자동 백업돼요. 실수로 지웠을 때 여기서 되돌릴 수 있어요. 파일로 따로 보관하려면 내보내기를 쓰세요.</p>
+    </div>
     <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
       <div id="worldList"></div>
       <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
@@ -338,6 +342,7 @@ async function uploadToCloudinary(file){
   return j.secure_url;
 }
 let cloudRef = null, cloudReady = false, cloudCache = "";
+let cloudBackups = []; // 서버 자동 백업 스냅샷 (최근 5개, wiki 노드 내 backups)
 const MASTER_EMAIL = "coconut123456765@gmail.com";
 let isMaster = false; // 마스터 로그인 여부 (게스트는 보기만)
 let storeUpdatedAt = 0;
@@ -379,6 +384,19 @@ function cloudPush(){
   const data = JSON.stringify({ store, theme, storeUpdatedAt });
   let payload;
   try{ payload = JSON.parse(data); }catch(e){ return; }
+  // 자동 백업: 실제 내용이 바뀔 때만 스냅샷 추가, 최근 5개 유지.
+  // wiki 노드 안에 함께 저장돼서 도우미의 전체 읽기-쓰기에도 보존됨.
+  try{
+    if (Object.keys(store).length){
+      const storeStr = JSON.stringify(store);
+      const last = cloudBackups[cloudBackups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        cloudBackups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (cloudBackups.length > 5) cloudBackups.shift();
+      }
+    }
+  }catch(e){}
+  payload.backups = cloudBackups;
   const sizeKB = Math.round(data.length / 1024);
   setSyncStatus("저장 중… (" + sizeKB + "KB)", "var(--warm)");
   cloudRef.set(payload).then(()=>{
@@ -406,6 +424,7 @@ function initCloud(){
     cloudRef.on("value", snap=>{
       const v = snap.val();
       if (!v || !v.store) return;
+      if (Array.isArray(v.backups)) cloudBackups = v.backups;
       // 구버전 잔재 _updatedAt이 store 안에 있으면 제거
       if (v.store._updatedAt) delete v.store._updatedAt;
       const data = JSON.stringify({ store: v.store, theme: v.theme, storeUpdatedAt: v.storeUpdatedAt || 0 });
@@ -450,6 +469,7 @@ function updateAuthUI(){
   const dc = $("delChar"); if (dc) dc.style.display = isMaster ? "" : "none";
   const wr = $("worldMgmtRow"); if (wr) wr.style.display = isMaster ? "" : "none";
   const ib = $("importBtn"); if (ib) ib.style.display = isMaster ? "" : "none";
+  const br = $("backupRow"); if (br) br.style.display = isMaster ? "" : "none";
 }
 function deriveStarsign(birthday){
   const s = String(birthday||"");
@@ -605,7 +625,20 @@ function render(){
   const te = $("tabEdit");
   if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
   const ts = $("tabSave");
-  if (ts) ts.onclick = ()=>{ persist(); editingTab = null; editBackup = null; render(); };
+  if (ts) ts.onclick = ()=>{
+    // 축소 저장 가드: 일러스트·옷 쌍이 줄었으면 확인받고, 취소하면 편집 상태 유지
+    if (editBackup && editBackup.id === c.id){
+      const il0 = String(editBackup.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
+      const il1 = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
+      const w0 = Array.isArray(editBackup.wardrobeImgs) ? editBackup.wardrobeImgs.length : 0;
+      const w1 = Array.isArray(c.wardrobeImgs) ? c.wardrobeImgs.length : 0;
+      const msgs = [];
+      if (il1 < il0) msgs.push("일러스트 " + il0 + "장 → " + il1 + "장");
+      if (w1 < w0) msgs.push("옷 쌍 " + w0 + "개 → " + w1 + "개");
+      if (msgs.length && !confirm(msgs.join("\n") + "\n줄었습니다. 이대로 저장할까요?")) return;
+    }
+    persist(); editingTab = null; editBackup = null; render();
+  };
   const tc = $("tabCancel");
   if (tc) tc.onclick = ()=>{ cancelEdit(); render(); };
   applyAccent();
@@ -1054,13 +1087,20 @@ function bindEdit(c){
     const f = sf.files[0]; if (!f) return;
     setSyncStatus("이미지 업로드 중…", "var(--warm)");
     try{
-      c.illust = await uploadToCloudinary(f);
+      const url = await uploadToCloudinary(f);
+      // 대표 이미지 교체: 새 이미지를 맨 앞에 넣고 기존 일러스트는 유지 (덮어쓰기 금지)
+      const old = String(c.illust || "").trim();
+      c.illust = old ? url + "\n" + old : url;
       const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
       setSyncStatus("동기화됨", "#4CAF50");
     }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   };
   const sc = $("illustClear");
-  if (sc) sc.onclick = ()=>{ c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = ""; };
+  if (sc) sc.onclick = ()=>{
+    const n = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
+    if (!confirm("일러스트 " + n + "장을 전부 지울까요? 저장하기 전에는 취소 버튼으로 되돌릴 수 있어요.")) return;
+    c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = "";
+  };
   const tf = $("thumbFile");
   if (tf) tf.onchange = async ()=>{
     const f = tf.files[0]; if (!f) return;
@@ -1360,7 +1400,7 @@ const setTheme = (t)=>{
 document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
 document.getElementById("themeLightBtn").onclick = ()=>setTheme("light");
 const modal = document.getElementById("settingsModal");
-document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); modal.style.display = "flex"; };
+document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); renderBackupList(); modal.style.display = "flex"; };
 // 마스터 로그인 / 로그아웃
 const loginModal = document.getElementById("loginModal");
 document.getElementById("authBtn").onclick = ()=>{
@@ -1427,6 +1467,35 @@ document.getElementById("addWorldBtn").onclick = ()=>{
   if (inp){ inp.focus(); inp.select(); }
 };
 document.getElementById("settingsClose").onclick = ()=>{ modal.style.display = "none"; };
+function renderBackupList(){
+  const el = document.getElementById("backupList"); if (!el) return;
+  if (!cloudBackups.length){ el.innerHTML = `<p class="hint">아직 자동 백업이 없어요. 저장하면 생겨요.</p>`; return; }
+  el.innerHTML = cloudBackups.slice().reverse().map((b, i)=>{
+    const idx = cloudBackups.length - 1 - i;
+    const n = Object.values(b.store || {}).reduce((s, w)=>s + ((w && w.chars) ? w.chars.length : 0), 0);
+    const d = b.t ? new Date(b.t).toLocaleString("ko-KR") : "시간 미상";
+    return `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:13px">${d} · 캐릭터 ${n}명</span><button class="hdr-btn" data-restore="${idx}">복원</button></div>`;
+  }).join("");
+  el.querySelectorAll("[data-restore]").forEach(btn=>{ btn.onclick = ()=>{
+    const b = cloudBackups[+btn.dataset.restore]; if (!b) return;
+    if (!confirm(new Date(b.t).toLocaleString("ko-KR") + " 시점으로 되돌릴까요? 현재 상태도 백업 목록에 남겨둘게요.")) return;
+    try{
+      const curStr = JSON.stringify(store);
+      const last = cloudBackups[cloudBackups.length - 1];
+      if (!last || JSON.stringify(last.store) !== curStr){
+        cloudBackups.push({ t: storeUpdatedAt, store: JSON.parse(curStr) });
+        while (cloudBackups.length > 5) cloudBackups.shift();
+      }
+    }catch(e){}
+    cancelEdit();
+    store = JSON.parse(JSON.stringify(b.store));
+    normalizeStore();
+    curWorld = Object.keys(store)[0] || null;
+    curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
+    curTab = "profile";
+    persist(); render(); renderBackupList();
+  }; });
+}
 document.getElementById("exportBtn").onclick = ()=>{
   const blob = new Blob([JSON.stringify({ tabs: TABS, worlds: store }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
