@@ -72,6 +72,11 @@
   .pair-plabel { font-family:"Special Elite","Courier New",monospace; font-size:12px; letter-spacing:2px; color:var(--dim); }
   .pair-ptext .prompttext { font-size:15px; line-height:28px; }
   .pair-body .pair-prompt { flex:1; min-width:0; }
+  .pair-row.copybox { cursor:pointer; }
+  .pair-side { flex:1; min-width:0; }
+  .pair-desc { white-space:pre-wrap; line-height:28px; font-size:15px; }
+  .copyhint { font-size:12px; color:var(--dim); margin-top:6px; }
+  .pair-body input.pair-desc { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
   @media (max-width:700px){ .pair-body{flex-direction:column;} .pair-frame{width:100%;} }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
   .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
@@ -275,7 +280,6 @@ const WORLDS = {
 };
 const TABS = [
   ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장"],
-  ["appearance","외형·프롬"],
   ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
 ];
 const REL_KINDS = { family:"가족", friend:"지인" };
@@ -650,44 +654,22 @@ function galleryField(c, label, textKey, imgKey, ed){
 }
 function wardrobeField(c, ed){
   const pairs = c.wardrobeImgs || [];
-  let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
   const num = (i)=> String(i+1).padStart(2, "0");
-  if (!ed){
-    if (!pairs.length) return h;
-    h += `<div class="pair-list">`;
-    pairs.forEach((g,i)=>{
-      const name = g.title || ("옷 " + num(i));
-      h += `<div class="pair-row">`;
-      h += `<div class="pair-head"><span class="pair-no">No. ${num(i)}</span><span class="pair-name">${esc(name)}</span></div>`;
-      h += `<div class="pair-body">`;
-      h += `<div class="pair-frame"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)"></div>`;
-      h += `<div class="promptbox pair-ptext"><div class="pair-plabel">PROMPT</div>`;
-      if (g.prompt) h += `<div class="prompttext">${esc(g.prompt)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button>`;
-      else h += `<div class="prompttext"><span class="empty">—</span></div>`;
-      h += `</div></div></div>`;
-    });
-    h += `</div>`;
-    return h;
-  }
-  h += `<div class="pair-list" id="pairList">`;
-  pairs.forEach((g,i)=>{
-    h += `<div class="pair-row" data-i="${i}">`;
-    h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
-    h += `<div class="pair-body"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div>`;
-    h += `</div>`;
-  });
-  h += `</div>`;
-  h += `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-wardrobeImgs" accept="image/*" style="display:none"></label></div>`;
-  return h;
-}
-function appearanceField(c, ed){
-  const ap = c.appearance || "", pc = c.promptChar || "", po = c.promptOutfit || "";
+  const ap = c.appearance || "", pc = c.promptChar || "";
   const refs = c.promptRefImgs || [];
+  const firstIllust = (c.illust||"").split("\n").find(s=>s.trim()) || "";
+  const charImg = (refs[0] && refs[0].img) || firstIllust;
   if (!ed){
-    let h = "";
+    let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
     if (ap) h += `<div class="field"><label>외형 설명</label><div class="val">${esc(ap)}</div></div>`;
-    if (pc) h += `<div class="field"><label>캐릭터용 프롬</label><div class="promptbox"><div class="pair-plabel">PROMPT</div><div class="prompttext">${esc(pc)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></div>`;
-    if (po) h += `<div class="field"><label>옷 포함용 프롬</label><div class="promptbox"><div class="pair-plabel">PROMPT</div><div class="prompttext">${esc(po)}</div><button type="button" class="hdr-btn promptcopy" onclick="copyPrompt(this)">📋 복사</button></div></div>`;
+    if (pc){
+      h += `<div class="pair-list"><div class="pair-row copybox" onclick="copyBox(this, event)">`;
+      h += `<div class="pair-head"><span class="pair-name">캐릭터 프롬</span></div>`;
+      h += `<div class="pair-body">`;
+      if (charImg) h += `<div class="pair-frame"><img src="${esc(charImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
+      h += `<div class="pair-side"><div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(pc)}</div></div>`;
+      h += `</div></div></div>`;
+    }
     if (refs.length){
       h += '<div class="field"><label>프롬 참고 이미지</label><div class="gal-grid">';
       refs.forEach(g=>{
@@ -697,12 +679,27 @@ function appearanceField(c, ed){
       });
       h += '</div></div>';
     }
-    if (!h) h = `<div class="field"><label>외형·프롬</label><div class="val"><span class="empty">아직 작성된 내용이 없습니다.</span></div></div>`;
+    if (pairs.length){
+      h += `<div class="pair-list">`;
+      pairs.forEach((g,i)=>{
+        const name = g.title || ("옷 " + num(i));
+        h += `<div class="pair-row${g.prompt ? " copybox" : ""}"${g.prompt ? ` onclick="copyBox(this, event)"` : ""}>`;
+        h += `<div class="pair-head"><span class="pair-no">No. ${num(i)}</span><span class="pair-name">${esc(name)}</span></div>`;
+        h += `<div class="pair-body">`;
+        h += `<div class="pair-frame"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)"></div>`;
+        h += `<div class="pair-side">`;
+        if (g.desc) h += `<div class="pair-desc">${esc(g.desc)}</div>`;
+        if (g.prompt) h += `<div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(g.prompt)}</div>`;
+        else h += `<div class="copyhint"><span class="empty">프롬 없음</span></div>`;
+        h += `</div></div></div>`;
+      });
+      h += `</div>`;
+    }
     return h;
   }
-  let h = fieldRow("외형 설명", ap, "appearance", "area", ed);
+  let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
+  h += fieldRow("외형 설명", ap, "appearance", "area", ed);
   h += fieldRow("캐릭터용 프롬", pc, "promptChar", "area", ed);
-  h += fieldRow("옷 포함용 프롬", po, "promptOutfit", "area", ed);
   h += '<div class="field"><label>프롬 참고 이미지</label>';
   h += '<div class="gal-edit" id="gal-promptRefImgs">';
   refs.forEach((g,i)=>{
@@ -714,6 +711,15 @@ function appearanceField(c, ed){
   });
   h += '</div>';
   h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-promptRefImgs" accept="image/*" style="display:none"></label></div></div>';
+  h += `<div class="pair-list" id="pairList">`;
+  pairs.forEach((g,i)=>{
+    h += `<div class="pair-row" data-i="${i}">`;
+    h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
+    h += `<div class="pair-body"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><div style="flex:1;min-width:0"><input class="pair-desc" value="${esc(g.desc||"")}" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)"><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  h += `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-wardrobeImgs" accept="image/*" style="display:none"></label></div>`;
   return h;
 }
 function relMindmap(c){
@@ -947,7 +953,6 @@ function renderTabInner(c){
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return wardrobeField(c, ed);
-  if (curTab==="appearance") return appearanceField(c, ed);
   if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
   if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
@@ -1156,6 +1161,10 @@ function bindEdit(c){
     const row = inp.closest(".pair-row"); if (!row) return;
     const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].prompt = inp.value;
   });
+  document.querySelectorAll(".pair-desc").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].desc = inp.value;
+  });
   document.querySelectorAll(".pair-del").forEach(b=>b.onclick=()=>{
     const row = b.closest(".pair-row"); if (!row) return;
     (c.wardrobeImgs || []).splice(+row.dataset.i, 1);
@@ -1248,6 +1257,23 @@ async function copyPrompt(btn){
   btn.textContent = ok ? "복사됨!" : "복사 실패";
   setTimeout(()=>{ btn.textContent = old; }, 1500);
 }
+async function copyBox(card, ev){
+  if (ev && ev.target.closest("img")) return;
+  const txtEl = card.querySelector(".prompttext");
+  const txt = txtEl ? txtEl.textContent : "";
+  if (!txt) return;
+  let ok = false;
+  try{ await navigator.clipboard.writeText(txt); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+  }
+  const hint = card.querySelector(".copyhint");
+  if (hint){ const old = hint.textContent; hint.textContent = ok ? "복사됨!" : "복사 실패"; setTimeout(()=>{ hint.textContent = old; }, 1500); }
+}
 function fileToDataURL(file, maxW, quality){
   maxW = maxW || 1200; quality = quality || 0.85;
   return new Promise((resolve, reject)=>{
@@ -1277,7 +1303,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", thumb:"", logo:"", position:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
