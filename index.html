@@ -961,16 +961,20 @@ function renderTabInner(c){
   if (curTab==="illust"){
     const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     if (!ed){
-      if (!lines.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
-      const imgs = lines.filter(ln => (/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
-      const txts = lines.filter(ln => !(/^https?:\/\//.test(ln)||ln.startsWith("data:image")));
+      const isImgLn = (ln)=> /^https?:\/\//.test(ln)||ln.startsWith("data:image");
+      const rep = (c.repImg && isImgLn(c.repImg)) ? c.repImg : (lines.find(isImgLn) || "");
+      const rest = rep ? lines.filter(ln=>ln !== rep) : lines;
+      if (!rep && !rest.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
+      const imgs = rest.filter(isImgLn);
+      const txts = rest.filter(ln => !isImgLn(ln));
       const grid = imgs.length
         ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px">`+
           imgs.map(ln=>`<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
           `</div>`
         : "";
       const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
-      return `<div class="field"><label>일러스트</label>${grid}${tparts}</div>`;
+      const repHtml = rep ? `<div class="polaroid"><img src="${esc(rep)}" alt="대표 일러스트"></div>` : "";
+      return `<div class="field"><label>일러스트</label>${repHtml}${grid}${tparts}</div>`;
     }
     return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
       lines.map((ln,i)=>{
