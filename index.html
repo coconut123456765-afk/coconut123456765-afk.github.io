@@ -76,6 +76,8 @@
   .pair-side { flex:1; min-width:0; }
   .pair-desc { white-space:pre-wrap; line-height:28px; font-size:15px; }
   .copyhint { font-size:12px; color:var(--dim); margin-top:6px; }
+  .copytip { text-align:right; margin-top:8px; }
+  .copytip span { display:inline-block; font-size:13px; color:var(--txt); background:var(--plabel-bg); border:1px solid var(--line); border-radius:8px; padding:5px 10px; }
   .pair-body input.pair-desc { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; font-size:14px; }
   @media (max-width:700px){ .pair-body{flex-direction:column;} .pair-frame{width:100%;} }
   .gal-item { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
@@ -667,7 +669,7 @@ function wardrobeField(c, ed){
     if (bodyImg) h += `<div class="pair-frame"><img src="${esc(bodyImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
     h += `<div class="pair-side">`;
     if (ap) h += `<div class="pair-desc">${esc(ap)}</div>`;
-    if (pc) h += `<div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(pc)}</div>`;
+    if (pc) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(pc)}</div>`;
     else h += `<div class="copyhint"><span class="empty">아직 작성된 내용이 없습니다.</span></div>`;
     h += `</div></div></div></div>`;
     h += `<div class="pair-list"><div class="pair-row${defPrompt ? " copybox" : ""}"${defPrompt ? ` onclick="copyBox(this, event)"` : ""}>`;
@@ -676,7 +678,7 @@ function wardrobeField(c, ed){
     if (repImg) h += `<div class="pair-frame"><img src="${esc(repImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
     h += `<div class="pair-side">`;
     if (defDesc) h += `<div class="pair-desc">${esc(defDesc)}</div>`;
-    if (defPrompt) h += `<div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(defPrompt)}</div>`;
+    if (defPrompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(defPrompt)}</div>`;
     else h += `<div class="copyhint"><span class="empty">프롬 없음</span></div>`;
     h += `</div></div></div></div>`;
     if (pairs.length){
@@ -689,7 +691,7 @@ function wardrobeField(c, ed){
         h += `<div class="pair-frame"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)"></div>`;
         h += `<div class="pair-side">`;
         if (g.desc) h += `<div class="pair-desc">${esc(g.desc)}</div>`;
-        if (g.prompt) h += `<div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(g.prompt)}</div>`;
+        if (g.prompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(g.prompt)}</div>`;
         else h += `<div class="copyhint"><span class="empty">프롬 없음</span></div>`;
         h += `</div></div></div>`;
       });
