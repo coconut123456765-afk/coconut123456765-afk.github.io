@@ -74,7 +74,8 @@
   .pair-body .pair-prompt { flex:1; min-width:0; }
   .pair-row.copybox { cursor:pointer; }
   .pair-side { flex:1; min-width:0; }
-  .pair-desc { white-space:pre-wrap; line-height:28px; font-size:15px; }
+  .pair-desc { white-space:pre-wrap; line-height:28px; font-size:20px; font-family:"Nanum Pen Script","Segoe Print",cursive; color:#3A3325; background:#FFE89A; padding:8px 12px; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+  .pair-body textarea.desc-note { width:100%; box-sizing:border-box; background:#FFE89A; color:#3A3325; font-family:"Nanum Pen Script","Segoe Print",cursive; font-size:20px; line-height:28px; padding:8px 12px; border:1px solid #E8C86A; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.12); margin-bottom:8px; }
   .copyhint { font-size:12px; color:var(--dim); margin-top:6px; }
   .copytip { text-align:right; margin-top:8px; }
   .copytip span { display:inline-block; font-size:13px; color:var(--txt); background:var(--plabel-bg); border:1px solid var(--line); border-radius:8px; padding:5px 10px; }
@@ -707,19 +708,19 @@ function wardrobeField(c, ed){
   h += `<div><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="bodyImgFile" accept="image/*" style="display:none"></label>`;
   if (bodyImg) h += ` <button class="hdr-btn" id="bodyImgClear" type="button">지우기</button>`;
   h += `</div></div>`;
-  h += `<div style="flex:1;min-width:0"><textarea data-k="appearance" rows="3" placeholder="신체정보 설명 (옷 제외)" style="width:100%;box-sizing:border-box">${esc(ap)}</textarea><textarea data-k="promptChar" rows="3" placeholder="옷 없는 신체 프롬" style="width:100%;box-sizing:border-box">${esc(pc)}</textarea></div>`;
+  h += `<div style="flex:1;min-width:0"><textarea data-k="appearance" class="desc-note" rows="3" placeholder="신체정보 설명 (옷 제외)" style="width:100%;box-sizing:border-box">${esc(ap)}</textarea><textarea data-k="promptChar" rows="3" placeholder="옷 없는 신체 프롬" style="width:100%;box-sizing:border-box">${esc(pc)}</textarea></div>`;
   h += `</div></div></div>`;
   h += `<div class="pair-list"><div class="pair-row">`;
   h += `<div class="pair-head"><span class="pair-no">No. 02</span><span class="pair-name">기본복장</span></div>`;
   h += `<div class="pair-body">`;
   if (repImg) h += `<div class="pair-frame"><img src="${esc(repImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
-  h += `<div style="flex:1;min-width:0"><div class="copyhint" style="margin:0 0 8px">대표 일러스트를 따라갑니다</div><textarea data-k="defaultDesc" rows="3" placeholder="기본복장 설명" style="width:100%;box-sizing:border-box">${esc(defDesc)}</textarea><textarea data-k="promptOutfit" rows="3" placeholder="옷 포함 프롬" style="width:100%;box-sizing:border-box">${esc(defPrompt)}</textarea></div>`;
+  h += `<div style="flex:1;min-width:0"><div class="copyhint" style="margin:0 0 8px">대표 일러스트를 따라갑니다</div><textarea data-k="defaultDesc" class="desc-note" rows="3" placeholder="기본복장 설명" style="width:100%;box-sizing:border-box">${esc(defDesc)}</textarea><textarea data-k="promptOutfit" rows="3" placeholder="옷 포함 프롬" style="width:100%;box-sizing:border-box">${esc(defPrompt)}</textarea></div>`;
   h += `</div></div></div>`;
   h += `<div class="pair-list" id="pairList">`;
   pairs.forEach((g,i)=>{
     h += `<div class="pair-row" data-i="${i}">`;
     h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
-    h += `<div class="pair-body"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><div style="flex:1;min-width:0"><textarea class="pair-desc" rows="2" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)">${esc(g.desc||"")}</textarea><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
+    h += `<div class="pair-body"><div style="flex-shrink:0"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 변경<input type="file" class="pair-imgfile" accept="image/*" style="display:none"></label></div></div><div style="flex:1;min-width:0"><textarea class="pair-desc desc-note" rows="2" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)">${esc(g.desc||"")}</textarea><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
     h += `</div>`;
   });
   h += `</div>`;
@@ -1188,6 +1189,17 @@ function bindEdit(c){
   document.querySelectorAll(".pair-desc").forEach(inp=>inp.oninput=()=>{
     const row = inp.closest(".pair-row"); if (!row) return;
     const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].desc = inp.value;
+  });
+  document.querySelectorAll(".pair-imgfile").forEach(inp=>inp.onchange=async ()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const f = inp.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      const url = await uploadToCloudinary(f);
+      const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].img = url;
+      const im = row.querySelector("img.gal-edimg"); if (im) im.src = url;
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
   });
   document.querySelectorAll(".pair-del").forEach(b=>b.onclick=()=>{
     const row = b.closest(".pair-row"); if (!row) return;
