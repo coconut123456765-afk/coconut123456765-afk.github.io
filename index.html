@@ -670,15 +670,6 @@ function wardrobeField(c, ed){
       h += `<div class="pair-side"><div class="copyhint">박스를 누르면 프롬이 복사돼요</div><div class="prompttext" style="display:none">${esc(pc)}</div></div>`;
       h += `</div></div></div>`;
     }
-    if (refs.length){
-      h += '<div class="field"><label>프롬 참고 이미지</label><div class="gal-grid">';
-      refs.forEach(g=>{
-        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
-        if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
-        h += '</div>';
-      });
-      h += '</div></div>';
-    }
     if (pairs.length){
       h += `<div class="pair-list">`;
       pairs.forEach((g,i)=>{
@@ -700,17 +691,6 @@ function wardrobeField(c, ed){
   let h = fieldRow("옷장", ""+c.wardrobe, "wardrobe", "area", ed);
   h += fieldRow("외형 설명", ap, "appearance", "area", ed);
   h += fieldRow("캐릭터용 프롬", pc, "promptChar", "area", ed);
-  h += '<div class="field"><label>프롬 참고 이미지</label>';
-  h += '<div class="gal-edit" id="gal-promptRefImgs">';
-  refs.forEach((g,i)=>{
-    h += '<div class="gal-edrow" data-i="'+i+'">';
-    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
-    h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
-    h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
-    h += '</div>';
-  });
-  h += '</div>';
-  h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-promptRefImgs" accept="image/*" style="display:none"></label></div></div>';
   h += `<div class="pair-list" id="pairList">`;
   pairs.forEach((g,i)=>{
     h += `<div class="pair-row" data-i="${i}">`;
