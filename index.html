@@ -625,20 +625,7 @@ function render(){
   const te = $("tabEdit");
   if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
   const ts = $("tabSave");
-  if (ts) ts.onclick = ()=>{
-    // 축소 저장 가드: 일러스트·옷 쌍이 줄었으면 확인받고, 취소하면 편집 상태 유지
-    if (editBackup && editBackup.id === c.id){
-      const il0 = String(editBackup.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
-      const il1 = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
-      const w0 = Array.isArray(editBackup.wardrobeImgs) ? editBackup.wardrobeImgs.length : 0;
-      const w1 = Array.isArray(c.wardrobeImgs) ? c.wardrobeImgs.length : 0;
-      const msgs = [];
-      if (il1 < il0) msgs.push("일러스트 " + il0 + "장 → " + il1 + "장");
-      if (w1 < w0) msgs.push("옷 쌍 " + w0 + "개 → " + w1 + "개");
-      if (msgs.length && !confirm(msgs.join("\n") + "\n줄었습니다. 이대로 저장할까요?")) return;
-    }
-    persist(); editingTab = null; editBackup = null; render();
-  };
+  if (ts) ts.onclick = ()=>{ persist(); editingTab = null; editBackup = null; render(); };
   const tc = $("tabCancel");
   if (tc) tc.onclick = ()=>{ cancelEdit(); render(); };
   applyAccent();
@@ -827,7 +814,6 @@ function renderTabInner(c){
       h += `<input data-k="illust" value="${esc(c.illust||"")}" placeholder="이미지 링크 또는 파일 첨부">`;
       h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
-      if (c.illust) h += `<button class="hdr-btn" id="illustClear" type="button">지우기</button>`;
       h += `</div>`;
       h += `<div class="field" style="margin-top:10px"><label>썸네일 (목록용)</label>`;
       if (c.thumb) h += `<img id="thumbPreview" src="${esc(c.thumb)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px">`;
@@ -1094,12 +1080,6 @@ function bindEdit(c){
       const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = c.illust;
       setSyncStatus("동기화됨", "#4CAF50");
     }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
-  };
-  const sc = $("illustClear");
-  if (sc) sc.onclick = ()=>{
-    const n = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean).length;
-    if (!confirm("일러스트 " + n + "장을 전부 지울까요? 저장하기 전에는 취소 버튼으로 되돌릴 수 있어요.")) return;
-    c.illust = ""; const inp = document.querySelector('#body [data-k="illust"]'); if (inp) inp.value = "";
   };
   const tf = $("thumbFile");
   if (tf) tf.onchange = async ()=>{
