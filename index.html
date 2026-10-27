@@ -977,7 +977,6 @@ function renderTabInner(c){
         const isRep = (c.repImg||"") && ln === c.repImg;
         return `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
         (isRep ? `<span style="font-size:12px;color:var(--acc);font-weight:700">★대표</span>` : ``)+
-        `<button class="hdr-btn" data-ilrep="${i}">대표로</button>`+
         `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
         `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`;
       }).join("")+
@@ -1165,12 +1164,6 @@ function bindEdit(c){
     }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
     render();
   };
-  document.querySelectorAll("[data-ilrep]").forEach(b=>b.onclick=()=>{
-    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
-    const u = lines[+b.dataset.ilrep]; if (!u) return;
-    c.repImg = u;
-    render();
-  });
   document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
     const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
     lines.splice(+b.dataset.ildel,1);
