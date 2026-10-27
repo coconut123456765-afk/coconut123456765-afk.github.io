@@ -1,0 +1,51 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>clear outfit drafts</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+</head><body>
+<input id="email" value="dossier@don.local">
+<input id="pw" type="password">
+<button id="loginBtn">로그인</button>
+<button id="runBtn" disabled>옷 포함 프롬 초안 지우기 실행</button>
+<pre id="log"></pre>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.database();
+const log = m => { document.getElementById('log').textContent += m + "\n"; };
+document.getElementById('loginBtn').onclick = async () => {
+  try {
+    await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pw').value);
+    log("로그인됨: " + document.getElementById('email').value);
+    document.getElementById('runBtn').disabled = false;
+  } catch(e){ log("로그인 실패: " + e.message); }
+};
+document.getElementById('runBtn').onclick = async () => {
+  const snap = await db.ref('wiki').get();
+  const data = snap.val();
+  let cleared = 0; const names = [];
+  for (const wkey of Object.keys(data)){
+    const chars = (data[wkey] && data[wkey].chars) || [];
+    chars.forEach(c => {
+      if (c.promptOutfit){ c.promptOutfit = ""; cleared++; names.push((c.profile && c.profile.name) || c.id); }
+    });
+  }
+  await db.ref('wiki').set(data);
+  const snap2 = await db.ref('wiki').get();
+  const data2 = snap2.val();
+  let remaining = 0;
+  for (const wkey of Object.keys(data2)){
+    ((data2[wkey] && data2[wkey].chars) || []).forEach(c => { if (c.promptOutfit) remaining++; });
+  }
+  names.forEach(n => log("CLEARED " + n));
+  log("DONE cleared=" + cleared + " remaining=" + remaining);
+};
+</script></body></html>
