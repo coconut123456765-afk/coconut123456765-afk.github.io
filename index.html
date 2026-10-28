@@ -58,8 +58,8 @@
   .group-create-panel button { width:100%; border:1px solid var(--line); background:var(--acc); color:var(--on-acc); border-radius:8px; cursor:pointer; padding:10px; font-size:14px; font-weight:700; }
   .gcard-select { display:flex; gap:6px; align-items:center; justify-content:center; font-size:12px; color:var(--dim); padding:4px 0 0; }
   .gcard-wrap.selected .gcard { outline:3px solid var(--acc); }
-  .group-sub { margin-left:10px; border-left:2px solid var(--line); padding-left:10px; }
-  .group-block { margin-top:10px; padding:0; border:0; background:transparent; }
+  .group-sub { margin-left:12px; margin-top:14px; border-left:3px solid var(--line); padding-left:12px; }
+  .group-block { margin-top:18px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
   .group-block:first-child { margin-top:0; }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
   button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
@@ -716,8 +716,9 @@ function render(){
     const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
     const sibCount = groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind).length;
     const orderBtn = sibCount > 1 ? '<button data-gup="'+g.id+'" title="그룹 순서 위로">▲</button><button data-gdown="'+g.id+'" title="그룹 순서 아래로">▼</button>' : '';
-    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
-    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    if (isOrg) return '<div class="group-head"><div style="font-size:12px;color:#888;margin-bottom:4px">조직</div><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    const parentName = g.parentId ? (groupOf(cw, g.parentId) ? groupOf(cw, g.parentId).name + " › " : "") : "";
+    return '<div class="group-head"><div style="font-size:12px;color:#888;margin-bottom:4px">'+(parentName ? esc(parentName) + '하위 그룹' : '상위 없는 그룹')+'</div><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
   const renderGroupBlock = (g)=>{
@@ -766,7 +767,6 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head">'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
@@ -850,7 +850,7 @@ function render(){
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gdown, 1));
   document.querySelectorAll("#chars [data-orgup]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.orgup, -1));
   document.querySelectorAll("#chars [data-orgdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.orgdown, 1));
-  document.querySelectorAll("#chars [data-addchar-existing]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.addcharExisting; const sel = document.querySelector('[data-addchar-select="'+gid+'"]'); const cid = sel ? sel.value : ""; if (!cid) return; const ch = cw.chars.find(x=>x.id===cid); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; if (!ch.groupIds.includes(gid)) ch.groupIds.push(gid); persist(); render(); });
+  document.querySelectorAll("#chars [data-addchar-existing]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.addcharExisting; const container = b.closest("div"); const sel = container ? container.querySelector('[data-addchar-select="'+gid+'"]') : document.querySelector('[data-addchar-select="'+gid+'"]'); const cid = sel ? sel.value : ""; if (!cid) return; const ch = cw.chars.find(x=>x.id===cid); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; if (!ch.groupIds.includes(gid)) ch.groupIds.push(gid); persist(); render(); });
   document.querySelectorAll("#chars [data-sub-org]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.subOrg; const inp = document.querySelector('[data-sub-name="'+pid+'"]'); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 그룹 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "group", parentId: pid, logo: ""}); persist(); render(); });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
 
