@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>cha-ungroup</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">모니카 상급자 적용</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{}; const store = v.store||{};
+    const sib = store["siblings"];
+    if (!sib) { log("NOT FOUND siblings"); return; }
+    const monica = (sib.chars||[]).find(x=>x.id==="c1792782821758");
+    if (!monica){ log("NOT FOUND monica"); return; }
+    log("monica=" + monica.profile.name + " groups=" + JSON.stringify(monica.groupIds||[]));
+    const ids = ["c1792394391937","c1792313574027"];
+    ids.forEach(id=>{
+      const ch = (sib.chars||[]).find(x=>x.id===id);
+      if (!ch){ log("NOT FOUND "+id); return; }
+      if (!ch.groupSuperior || typeof ch.groupSuperior !== "object") ch.groupSuperior = {};
+      log("before " + (ch.profile.name||id) + " cheong superior=" + JSON.stringify(ch.groupSuperior["g-cheong"]||null));
+      ch.groupSuperior["g-cheong"] = monica.id;
+      log("set superior " + (ch.profile.name||id) + " -> 모니카 (청량고 조직도)");
+    });
+    const dona = (sib.chars||[]).find(x=>x.id==="c1792350034365");
+    if (dona) log("andona untouched groups=" + JSON.stringify(dona.groupIds||[]) + " cheong superior=" + JSON.stringify((dona.groupSuperior||{})["g-cheong"]||null));
+    else log("andona NOT FOUND");
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("DONE siblings chars=" + sib.chars.length);
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
