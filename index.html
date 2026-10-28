@@ -1281,21 +1281,7 @@ function renderTabInner(c){
     return `<div class="notebook">${h}</div>`;
   }
   if (curTab==="relations"){
-    let h = `<div class="field"><label>인간관계</label><div id="rels">`;
-    if (!ed && (c.rels||[]).length){
-      h += relMindmap(c);
-    }
-    (c.rels||[]).forEach((r,i)=>{
-      const opts = Object.entries(REL_KINDS).map(([k,n])=>`<option value="${k}" ${r.kind===k?"selected":""}>${n}</option>`).join("");
-      const chars = Object.values(store).filter(w=>w&&Array.isArray(w.chars)).flatMap(w=>w.chars).filter(x=>x.id!==c.id)
-        .map(x=>`<option value="${x.id}" ${r.to===x.id?"selected":""}>${esc(x.profile.name||"(이름 없음)")}</option>`).join("");
-      h += ed
-        ? `<div class="rel" data-i="${i}"><select class="rel-to">${chars}</select><select class="rel-kind">${opts}</select><button class="rel-del">✕</button></div>`
-        : `<div class="val">🔗 ${esc(nameOf(r.to))} — ${REL_KINDS[r.kind]||r.kind}</div>`;
-    });
-    if (ed) h += `<button class="rel" id="relAdd" style="border:1px dashed var(--line);background:none;color:var(--dim);padding:8px;border-radius:8px;cursor:pointer;width:100%">＋ 관계 추가</button>`;
-    if (!ed && !(c.rels||[]).length) h += `<div class="val"><span class="empty">—</span></div>`;
-    h += `</div>`;
+    let h = ``;
     // 조직도 (프로토타입): 인간관계 탭 안에, 조직별 하위탭 + 트리 + 드래그 상급자 지정
     {
       const w = store[curWorld]; const gs = worldGroups(w);
@@ -1304,7 +1290,7 @@ function renderTabInner(c){
       // 멤버 1명 이하인 조직(마이베이비 1인 조직 등)은 조직도에서 제외
       orgs = orgs.filter(g=>{ const d = descIds(g.id); return (w.chars||[]).filter(ch=>charInGroup(ch, g.id) || [...d].some(id=>charInGroup(ch, id))).length > 1; });
       if (Array.isArray(c.orgChartOrder) && c.orgChartOrder.length){ orgs.sort((a,b)=>{ const ia = c.orgChartOrder.indexOf(a.id); const ib = c.orgChartOrder.indexOf(b.id); return (ia<0?999:ia) - (ib<0?999:ib); }); }
-      h += `<div class="field" style="margin-top:18px"><label>조직도</label>`;
+      h += `<div class="field"><label>조직도</label>`;
       if (!orgs.length){ h += `<div class="val"><span class="empty">소속된 조직이 없어요</span></div>`; }
       else {
         const selOrgId = (window.orgChartOrg && orgs.some(g=>g.id===window.orgChartOrg)) ? window.orgChartOrg : orgs[0].id;
@@ -1337,6 +1323,7 @@ function renderTabInner(c){
       }
       h += `</div>`;
     }
+    h += `<div class="field" style="margin-top:18px"><label>메모</label>` + (ed ? `<textarea data-k="orgMemo" rows="5" placeholder="조직도 관련 메모, 여담을 자유롭게 적어주세요">${esc(c.orgMemo||"")}</textarea>` : `<div class="val">${c.orgMemo ? linkify(c.orgMemo) : '<span class="empty">—</span>'}</div>`) + `</div>`;
     return h + `</div>`;
   }
   if (curTab==="illust"){
