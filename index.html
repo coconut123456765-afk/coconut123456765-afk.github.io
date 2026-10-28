@@ -672,11 +672,27 @@ function render(){
     const img = groupPortrait(c);
     const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(img)+'" alt=""></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
     const gidKey = gid===null ? "__all" : gid;
-    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그: 카드 위쪽=상급자, 가운데=동급자, 아래쪽=하급자</span>' : "";
+    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
     const supHtml = "";
     const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
-    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+supHtml+gtileHtml+'</div>';
+    let arrowHtml = "";
+    if (listEdit && gid && gid!=="__ungrouped"){
+      const supV = (c.groupSuperior && c.groupSuperior[gid]) ? c.groupSuperior[gid] : (c.superiorId || null);
+      const peers = list.filter(x=>{ const sv = (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null); return sv === supV; });
+      const pi = peers.findIndex(x=>x.id===c.id);
+      const canDemote = pi > 0;
+      const gi = groups.findIndex(g=>g.id===gid);
+      const prevG = gi > 0 ? groups[gi-1] : null;
+      const nextG = (gi >= 0 && gi < groups.length-1) ? groups[gi+1] : null;
+      arrowHtml = '<div class="arrow-row">'
+        + '<button data-promote="'+c.id+'" data-pgid="'+esc(gid)+'"'+(supV ? "" : " disabled")+'>▲ 승격</button>'
+        + '<button data-demote="'+c.id+'" data-pgid="'+esc(gid)+'"'+(canDemote ? "" : " disabled")+'>▼ 강등</button>'
+        + (prevG ? '<button data-gmove="'+c.id+'" data-pgid="'+esc(gid)+'" data-to="'+prevG.id+'">◀ '+esc(prevG.name)+'으로</button>' : "")
+        + (nextG ? '<button data-gmove="'+c.id+'" data-pgid="'+esc(gid)+'" data-to="'+nextG.id+'">'+esc(nextG.name)+'으로 ▶</button>' : "")
+        + '</div>';
+    }
+    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
   const supOf = (c, gid)=>{ if (gid && c.groupSuperior && c.groupSuperior[gid]) return c.groupSuperior[gid]; return c.superiorId || null; };
@@ -783,66 +799,80 @@ function render(){
   document.querySelectorAll("#chars [data-gtile-char]").forEach(b=>b.onclick=()=>{ const ch = cw.chars.find(x=>x.id===b.dataset.gtileChar); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; const gid = b.dataset.gtileGid; if (ch.groupIds.includes(gid)) ch.groupIds = ch.groupIds.filter(id=>id!==gid); else ch.groupIds.push(gid); persist(); render(); });
   document.querySelectorAll("#chars [data-gsub-char]").forEach(inp=>inp.onchange=()=>{ const ch = cw.chars.find(x=>x.id===inp.dataset.gsubChar); if (!ch) return; if (!ch.groupSubs) ch.groupSubs = {}; const gid = inp.dataset.gsubGid; if (gid === "__all" || gid === "__ungrouped"){ ch.position = inp.value.trim(); } else { if (inp.value.trim()) ch.groupSubs[gid] = inp.value.trim(); else delete ch.groupSubs[gid]; } persist(); render(); });
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
-  // 드래그로 지위 정하기: 카드 위쪽에 놓으면 그 카드의 상급자, 가운데에 놓으면 동급자, 아래쪽에 놓으면 그 카드의 하급자
+  // 드래그: 순서만 바꾼다 (상급자는 건드리지 않음, 트리 동급자 안에서도 순서만)
   document.querySelectorAll("#chars [data-drag]").forEach(h=>{
     h.onpointerdown = (e)=>{
       e.preventDefault();
       const wrap = h.closest(".gcard-wrap"); if (!wrap) return;
+      const container = wrap.closest("[data-grid], .tree-children"); if (!container) return;
       const gidRaw = h.dataset.gid; const gid = gidRaw==="__all" ? null : gidRaw;
-      const getSup = (ch)=>{ if (gid && gid!=="__ungrouped" && ch.groupSuperior && ch.groupSuperior[gid]) return ch.groupSuperior[gid]; return ch.superiorId || null; };
-      const setSup = (ch, val)=>{ if (gid && gid!=="__ungrouped"){ if (!ch.groupSuperior) ch.groupSuperior = {}; if (val) ch.groupSuperior[gid] = val; else delete ch.groupSuperior[gid]; } else { ch.superiorId = val || null; } };
-      const wouldCycle = (ch, newSup)=>{ let cur = newSup, seen = new Set(); while (cur){ if (cur===ch.id) return true; if (seen.has(cur)) return true; seen.add(cur); const nxt = cw.chars.find(x=>x.id===cur); if (!nxt) return false; cur = getSup(nxt); } return false; };
-      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY, lastTarget = null, lastZone = "peer";
+      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY;
       const move = (ev)=>{
         if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
         if (!moved){ moved = true; wrap.classList.add("dragging"); ghost = document.createElement("div"); ghost.className = "drag-ghost"; ghost.innerHTML = wrap.innerHTML; document.body.appendChild(ghost); }
         if (ghost){ ghost.style.left = (ev.clientX-80)+"px"; ghost.style.top = (ev.clientY-40)+"px"; }
-        if (lastTarget){ const pc = lastTarget.querySelector(".gcard"); if (pc){ pc.style.outline = ""; pc.style.boxShadow = ""; } }
         const el = document.elementFromPoint(ev.clientX, ev.clientY);
         const target = el ? el.closest(".gcard-wrap") : null;
-        if (target && target !== wrap){
-          const cardEl = target.querySelector(".gcard") || target;
-          const r = cardEl.getBoundingClientRect(); const yRel = (ev.clientY - r.top) / Math.max(1, r.height);
-          lastTarget = target; lastZone = yRel < 0.33 ? "above" : (yRel > 0.66 ? "below" : "peer");
-          if (lastZone === "above") cardEl.style.boxShadow = "0 -6px 0 var(--acc)";
-          else if (lastZone === "below") cardEl.style.boxShadow = "0 6px 0 var(--acc)";
-          else cardEl.style.outline = "3px solid var(--acc)";
-        } else { lastTarget = null; }
+        if (target && target !== wrap && container.contains(target)){
+          const r = target.getBoundingClientRect(); const after = ev.clientX > r.left + r.width/2;
+          if (after) target.after(wrap); else target.before(wrap);
+        }
       };
       const up = ()=>{
         document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
         if (ghost) ghost.remove();
-        if (lastTarget){ const pc = lastTarget.querySelector(".gcard"); if (pc){ pc.style.outline = ""; pc.style.boxShadow = ""; } }
-        if (moved && lastTarget){
+        if (moved){
           window.lastDragEnd = Date.now();
-          const dragged = cw.chars.find(x=>x.id===wrap.dataset.wrap);
-          const targetCh = cw.chars.find(x=>x.id===lastTarget.dataset.wrap);
-          if (dragged && targetCh && dragged.id!==targetCh.id){
-            let ok = true;
-            if (lastZone === "above"){
-              if (wouldCycle(targetCh, dragged.id)) ok = false;
-              else { const oldSup = getSup(targetCh); setSup(targetCh, dragged.id); setSup(dragged, oldSup); }
-            } else if (lastZone === "below"){
-              if (wouldCycle(dragged, targetCh.id)) ok = false;
-              else setSup(dragged, targetCh.id);
-            } else {
-              if (wouldCycle(dragged, getSup(targetCh))) ok = false;
-              else setSup(dragged, getSup(targetCh));
+          const ids = [...container.querySelectorAll(":scope > .tree-node > .gcard-wrap, :scope > .gcard-wrap")].map(x=>x.dataset.wrap);
+          // tree-children의 직접 자식은 tree-node 안에 있으므로, 그 안의 wrap까지 모은다
+          const peerIds = [...container.querySelectorAll(".gcard-wrap")].map(x=>x.dataset.wrap).filter((id, i, arr)=>arr.indexOf(id)===i);
+          if (container.hasAttribute("data-grid")){
+            reorderGroupByDom(gid, ids.length ? ids : peerIds); render();
+          } else {
+            // 동급자 순서만: cw.chars에서 동급자들을 새 순서로 재배치, 나머지는 그대로
+            const firstIdx = cw.chars.findIndex(c=>c.id===peerIds[0]);
+            if (firstIdx >= 0){
+              const peerChars = peerIds.map(id=>cw.chars.find(c=>c.id===id)).filter(Boolean);
+              const rest = cw.chars.filter(c=>!peerIds.includes(c.id));
+              cw.chars = [...rest.slice(0, firstIdx), ...peerChars, ...rest.slice(firstIdx)];
+              persist();
             }
-            if (ok){
-              const members = (gid===null) ? cw.chars.slice() : (gid==="__ungrouped" ? cw.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0) : cw.chars.filter(c=>charInGroup(c, gid)));
-              const ids = members.map(c=>c.id).filter(id=>id!==dragged.id);
-              const ti = ids.indexOf(targetCh.id);
-              if (ti >= 0){ if (lastZone === "above") ids.splice(ti, 0, dragged.id); else ids.splice(ti+1, 0, dragged.id); reorderGroupByDom(gid, ids); }
-              else persist();
-            }
+            render();
           }
-          render();
         }
         wrap.classList.remove("dragging");
       };
       document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
     };
+  });
+  // 화살표: 상급자/하급자 (승격/강등, 순환이 생길 수 없는 구조) + 다른 그룹으로 이동
+  document.querySelectorAll("#chars [data-promote]").forEach(b=>b.onclick=()=>{
+    const ch = cw.chars.find(x=>x.id===b.dataset.promote); if (!ch) return;
+    const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
+    const sup = ch.groupSuperior[gid] || ch.superiorId || null; if (!sup) return;
+    const supCh = cw.chars.find(x=>x.id===sup); if (!supCh) return;
+    const supSup = (supCh.groupSuperior && supCh.groupSuperior[gid]) ? supCh.groupSuperior[gid] : (supCh.superiorId || null);
+    if (supSup) ch.groupSuperior[gid] = supSup; else delete ch.groupSuperior[gid];
+    persist(); render();
+  });
+  document.querySelectorAll("#chars [data-demote]").forEach(b=>b.onclick=()=>{
+    const ch = cw.chars.find(x=>x.id===b.dataset.demote); if (!ch) return;
+    const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
+    const sup = ch.groupSuperior[gid] || ch.superiorId || null;
+    const members = cw.chars.filter(c=>charInGroup(c, gid));
+    const peers = members.filter(x=>{ const sv = (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null); return sv === sup; });
+    const pi = peers.findIndex(x=>x.id===ch.id); if (pi <= 0) return;
+    ch.groupSuperior[gid] = peers[pi-1].id;
+    persist(); render();
+  });
+  document.querySelectorAll("#chars [data-gmove]").forEach(b=>b.onclick=()=>{
+    const ch = cw.chars.find(x=>x.id===b.dataset.gmove); if (!ch) return;
+    const gid = b.dataset.pgid, to = b.dataset.to;
+    if (!Array.isArray(ch.groupIds)) ch.groupIds = [];
+    ch.groupIds = ch.groupIds.filter(id=>id!==gid);
+    if (!ch.groupIds.includes(to)) ch.groupIds.push(to);
+    if (ch.groupSuperior) delete ch.groupSuperior[gid];
+    persist(); render();
   });
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
