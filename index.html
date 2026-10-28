@@ -1313,9 +1313,8 @@ function renderTabInner(c){
           const seen2 = new Set(seen); seen2.add(m.id);
           const img = groupPortrait(m);
           const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId);
-          const supName = supOf(m) ? ((w.chars||[]).find(x=>x.id===supOf(m))?.profile?.name || "") : "";
           const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null;
-          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `<div class="orgchart-node-sub">${supName ? "상급자: "+esc(supName) : "최상위"}</div></div>`;
+          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`;
           const chs = childrenMap[m.id] || [];
           if (chs.length) html = `<div class="orgchart-tree-node"><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
           else html = `<div class="orgchart-tree-node">${html}</div>`;
