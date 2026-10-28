@@ -721,9 +721,9 @@ function render(){
     const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
     const sibCount = groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind).length;
     const orderBtn = sibCount > 1 ? '<button data-gup="'+g.id+'" title="그룹 순서 위로">▲</button><button data-gdown="'+g.id+'" title="그룹 순서 아래로">▼</button>' : '';
-    if (isOrg) return '<div class="group-head"><div style="font-size:12px;color:#888;margin-bottom:4px">조직</div><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    if (isOrg) return '<div class="group-head"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">조직</div><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
     const parentName = g.parentId ? (groupOf(cw, g.parentId) ? groupOf(cw, g.parentId).name + " › " : "") : "";
-    return '<div class="group-head"><div style="font-size:12px;color:#888;margin-bottom:4px">'+(parentName ? esc(parentName) + '하위 그룹' : '상위 없는 그룹')+'</div><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    return '<div class="group-head"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">'+(parentName ? esc(parentName) + '하위 그룹' : '상위 없는 그룹')+'</div><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
   const renderGroupBlock = (g)=>{
@@ -743,7 +743,7 @@ function render(){
     children.forEach(ch=>{
       html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
     });
-    if (listEdit){ const cand2 = charList.filter(c=>!charInGroup(c, g.id)); html += '<div class="group-bigrow"><span style="font-size:12px;color:#888;margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand2.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand2.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>'; }
+    if (listEdit){ const cand2 = charList.filter(c=>!charInGroup(c, g.id)); html += '<div class="group-bigrow"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand2.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand2.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>'; }
     return html + '</div>';
   };
   let charsHtml = "";
@@ -772,7 +772,7 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:#888;margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
+        if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
@@ -1217,7 +1217,7 @@ function renderTabInner(c){
           const label = parent ? esc(parent.name)+" › "+esc(g.name) : esc(g.name);
           h += `<label style="display:block;font-weight:normal;margin:4px 0"><input type="checkbox" class="grp-check" data-gid="${g.id}" ${myIds.includes(g.id)?"checked":""}> ${label}</label>`;
         });
-        h += `<div style="margin-top:10px"><input id="grp-new-name" placeholder="새 소속 이름 (예: 안씨네)" style="width:60%"><button id="grp-new-btn" type="button" style="margin-left:6px">새 소속 추가</button><div style="font-size:12px;color:#666;margin-top:4px">새 소속은 평범한 그룹으로만 만들어요. 상위·하위나 상급자는 안 붙어요. 만들면 이 캐릭터에 바로 넣어요.</div></div>`;
+        h += `<div style="margin-top:10px"><input id="grp-new-name" placeholder="새 소속 이름 (예: 안씨네)" style="width:60%"><button id="grp-new-btn" type="button" style="margin-left:6px">새 소속 추가</button><div style="font-size:12px;color:var(--dim);margin-top:4px">새 소속은 평범한 그룹으로만 만들어요. 상위·하위나 상급자는 안 붙어요. 만들면 이 캐릭터에 바로 넣어요.</div></div>`;
         h += `</div>`;
       } else if (myIds.length){
         // 보기에서는 그룹 이름만 (청량고랑 삼총사를 같이 적지 않음, 상위는 목록의 중첩으로 알 수 있음)
