@@ -66,12 +66,16 @@
   .orgchart-tabs { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
   .orgchart-tabs button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
   .orgchart-tabs button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
-  .orgchart-node { border:1px solid var(--line); border-radius:10px; padding:8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; }
+  .orgchart-node { border:1px solid var(--line); border-top:4px solid var(--acc); border-radius:12px; padding:10px 8px 8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
   .orgchart-node.drop-target { outline:3px solid var(--acc); }
-  .orgchart-node img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
+  .orgchart-node img { width:56px; height:56px; object-fit:cover; border-radius:50%; display:block; margin:0 auto; border:2px solid var(--line); }
   .orgchart-node-name { font-weight:700; font-size:13px; margin-top:6px; }
   .orgchart-node-sub { font-size:11px; color:var(--dim); }
-  .orgchart-children { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; padding-left:14px; border-left:3px solid var(--line); }
+  .orgchart-tree { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
+  .orgchart-tree-node { display:flex; flex-direction:column; align-items:center; position:relative; }
+  .orgchart-children { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px; padding-top:18px; position:relative; }
+  .orgchart-children::before { content:""; position:absolute; top:0; left:50%; width:2px; height:18px; background:var(--line); }
+  .orgchart-tree-node > .orgchart-children::after { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:var(--line); }
   .orgchart-topzone { border:2px dashed var(--line); border-radius:10px; padding:10px; text-align:center; color:var(--dim); font-size:13px; margin:8px 0; }
   .orgchart-topzone.drop-target { border-color:var(--acc); color:var(--acc); }
   .group-block:first-child { margin-top:0; }
@@ -1310,13 +1314,15 @@ function renderTabInner(c){
           const img = groupPortrait(m);
           const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId);
           const supName = supOf(m) ? ((w.chars||[]).find(x=>x.id===supOf(m))?.profile?.name || "") : "";
-          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="aspect-ratio:1;background:var(--plabel-bg);border-radius:8px"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `<div class="orgchart-node-sub">${supName ? "상급자: "+esc(supName) : "최상위"}</div></div>`;
+          const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null;
+          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `<div class="orgchart-node-sub">${supName ? "상급자: "+esc(supName) : "최상위"}</div></div>`;
           const chs = childrenMap[m.id] || [];
-          if (chs.length) html = `<div><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
+          if (chs.length) html = `<div class="orgchart-tree-node"><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
+          else html = `<div class="orgchart-tree-node">${html}</div>`;
           return html;
         };
         if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
-        h += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">` + (roots.length ? roots.map(m=>nodeHtml(m, 0, new Set())).join("") : members.map(m=>nodeHtml(m, 0, new Set())).join("")) + `</div>`;
+        h += `<div class="orgchart-tree">` + (roots.length ? roots.map(m=>nodeHtml(m, 0, new Set())).join("") : members.map(m=>nodeHtml(m, 0, new Set())).join("")) + `</div>`;
         // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
         const childGroups = gs.filter(x=>x.parentId===selOrgId);
         if (childGroups.length){ h += `<div style="margin-top:10px;font-size:12px;color:var(--dim)">하위 그룹: ` + childGroups.map(x=>esc(x.name)).join(", ") + `</div>`; }
