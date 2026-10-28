@@ -74,6 +74,7 @@
   button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:12px; text-align:center; border:1px solid var(--line); box-shadow:0 2px 8px rgba(0,0,0,.08); }
   button.gcard.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
   .gcard-pos { font-size:11px; color:var(--dim); padding:7px 6px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+  .gcard-sub { font-size:11px; color:var(--dim); padding:3px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   button.gcard.on .gcard-pos { color:var(--on-acc); opacity:0.85; }
   .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -436,7 +437,7 @@ function normalizeStore(){
     w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
     // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
     if (!window.expandedOrgs) window.expandedOrgs = new Set();
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (c.subtitle === undefined) c.subtitle = ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
   });
 }
 function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; }
@@ -677,7 +678,8 @@ function render(){
     const supHtml = "";
     const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
     const arrowHtml = "";
-    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
+    const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'">'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
   const supOf = (c, gid)=>{ if (gid && c.groupSuperior && c.groupSuperior[gid]) return c.groupSuperior[gid]; return c.superiorId || null; };
@@ -1095,6 +1097,8 @@ function renderTabInner(c){
     h += ed
       ? `<input data-k="profile.name" value="${esc(p.name||"")}">`
       : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
+    if (!ed && c.subtitle) h += `<div class="val">${esc(c.subtitle)}</div>`;
+    if (ed) h += `<div class="field"><label>호칭 (부제, 비우면 직책이 뜹니다)</label><input data-k="subtitle" value="${esc(c.subtitle||"")}"></div>`;
     h += `</div>`;
     h += `<table class="ptable">`;
     if (ed){
@@ -1125,6 +1129,7 @@ function renderTabInner(c){
       return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
     prow("pos", wide("pos","지위/직책",c.position,"position"));
+    prow("subtitle", wide("subtitle","호칭 (부제)",c.subtitle,"subtitle"));
     prow("series", wide("series","출연 작품",c.series,"series"));
     prow("affil", wide("affil","소속/진영",c.affil,"affil"));
     prow("birthplace", wide("birthplace","출신지",c.birthplace,"birthplace"));
@@ -1642,7 +1647,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{

@@ -1,0 +1,56 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>mybaby-tiles</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">마이베이비 타일 정리 실행</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{};
+    const store = v.store||{};
+    // 1. Doi subtitle
+    const sib = store["siblings"];
+    const doi = (sib.chars||[]).find(c=>c.id==="c1792313574027");
+    if (doi){ doi.subtitle = "안씨네 넷째"; log("Doi subtitle set to 안씨네 넷째"); }
+    // 2. MyBaby: split Blue Archive (g-mb-7) and Genshin (g-mb-8) into per-character groups, all groups -> org tiles
+    const mb = store["w1792508654855"];
+    const repOf = (c)=>{ if (c.repImg) return c.repImg; const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean); return lines[0]||""; };
+    const splitGroups = ["g-mb-7","g-mb-8"];
+    const newGroups = [];
+    splitGroups.forEach(gid=>{
+      const members = (mb.chars||[]).filter(c=>Array.isArray(c.groupIds)&&c.groupIds.includes(gid));
+      members.forEach(c=>{
+        const nid = "g-mb-char-"+c.id;
+        newGroups.push({id:nid, name:(c.profile&&c.profile.name)||"새 캐릭터", kind:"org", logo:repOf(c), parentId:null});
+        c.groupIds = c.groupIds.filter(id=>id!==gid); if (!c.groupIds.includes(nid)) c.groupIds.push(nid);
+        log("SPLIT "+(c.profile&&c.profile.name)+" -> "+nid);
+      });
+    });
+    mb.groups = (mb.groups||[]).filter(g=>!splitGroups.includes(g.id));
+    mb.groups.forEach(g=>{ g.kind="org"; if (!g.logo){ const mem = (mb.chars||[]).filter(c=>Array.isArray(c.groupIds)&&c.groupIds.includes(g.id)); if (mem.length===1) g.logo = repOf(mem[0]); } });
+    mb.groups = mb.groups.concat(newGroups);
+    log("MyBaby groups now="+mb.groups.length+" names="+mb.groups.map(g=>g.name).join("|"));
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("AFTER mybaby chars="+(mb.chars||[]).length);
+    (mb.chars||[]).forEach(c=>{ log("  "+(c.profile&&c.profile.name)+" groupIds="+JSON.stringify(c.groupIds||[])); });
+    log("DONE");
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
