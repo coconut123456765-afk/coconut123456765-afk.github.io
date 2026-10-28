@@ -76,7 +76,7 @@
   button.gcard.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
   .gcard-pos { font-size:11px; color:var(--dim); padding:7px 6px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   .gcard-sub { font-size:11px; color:var(--dim); padding:3px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
-  button.gcard.on .gcard-pos { color:var(--on-acc); opacity:0.85; }
+  button.gcard.on .gcard-pos, button.gcard.on .gcard-sub { color:inherit; opacity:0.85; }
   .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .gcard-img-empty { width:100%; height:100%; background:var(--plabel-bg); }
@@ -680,7 +680,10 @@ function render(){
     const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.filter(g=>g.kind==="org").map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
     const arrowHtml = "";
     const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
-    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'">'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
+    const isSel = c.id===curChar;
+    const selColor = isSel ? (/^#[0-9a-fA-F]{6}$/.test(c.color||"") ? c.color : worldAccent()) : "";
+    const selStyle = selColor ? ' style="background:'+esc(selColor)+';color:'+pickText(selColor)+';border-color:'+esc(selColor)+'"' : "";
+    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(isSel?"on":"")+'" data-c="'+c.id+'"'+selStyle+'>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
   const supOf = (c, gid)=>{ if (gid && c.groupSuperior && c.groupSuperior[gid]) return c.groupSuperior[gid]; return c.superiorId || null; };
