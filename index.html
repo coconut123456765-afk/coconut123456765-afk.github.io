@@ -750,7 +750,9 @@ function render(){
     if (topOrgs.length){
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
-        const imgHtml = g.logo ? '<span class="org-tile-img"><img src="'+esc(g.logo)+'" alt=""></span>' : '<span class="org-tile-img"></span>';
+        const members1 = charList.filter(c=>charInGroup(c, g.id));
+        const tileImg = (members1.length === 1 ? groupPortrait(members1[0]) : "") || g.logo || "";
+        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(tileImg)+'" alt=""></span>' : '<span class="org-tile-img"></span>';
         return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
       }).join("")+'</div>';
       // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
