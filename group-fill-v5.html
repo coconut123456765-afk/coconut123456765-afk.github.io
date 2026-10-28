@@ -1,0 +1,38 @@
+<!doctype html><meta charset="utf-8"><title>살룬 조직</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<body style="font-family:sans-serif;padding:20px">
+<p>이메일 <input id="em" value="dossier@don.local"> 비밀번호 <input id="pw" type="password">
+<button id="go">로그인 후 실행</button></p>
+<pre id="log" style="white-space:pre-wrap"></pre>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const log = s => { document.getElementById('log').textContent += s + "\n"; };
+document.getElementById('go').onclick = async () => {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref('wiki');
+    const v = (await ref.get()).val() || {}; const store = v.store || {};
+    const w = store['hotel']; if (!w) { log('ERROR no hotel'); return; }
+    log('BEFORE groups=' + JSON.stringify(w.groups||[]) + ' chars=' + (w.chars||[]).length);
+    if (!Array.isArray(w.groups)) w.groups = [];
+    let g = w.groups.find(x=>x.name==='살룬 라군');
+    if (!g) { g = {id:'g-saloon', name:'살룬 라군', parentId:null, kind:'org', logo:''}; w.groups.push(g); log('CREATED g-saloon'); }
+    else { g.kind='org'; g.parentId=null; log('EXISTING '+g.id); }
+    let assigned = 0;
+    (w.chars||[]).forEach(c=>{ if (!Array.isArray(c.groupIds)) c.groupIds=[]; if (!c.groupIds.includes(g.id)) { c.groupIds.push(g.id); assigned++; } log('  '+c.profile.name+' groups='+JSON.stringify(c.groupIds)); });
+    await ref.set(v);
+    log('DONE groups=' + JSON.stringify(w.groups) + ' ASSIGNED=' + assigned + ' TOTAL=' + (w.chars||[]).length);
+  } catch(e) { log('ERROR ' + (e && e.message)); }
+};
+</script></body>

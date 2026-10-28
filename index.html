@@ -70,6 +70,16 @@
   .gcard-name { font-size:12px; padding:5px 4px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .gcard-order { display:flex; gap:4px; justify-content:center; }
   .gcard-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; }
+  .group-editbar { display:flex; gap:8px; align-items:center; margin:0 0 10px; }
+  .group-editbar button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 10px; font-size:12px; font-weight:700; }
+  .group-editbar button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .group-editbar span { font-size:11px; color:var(--dim); }
+  .org-chart .org-top { max-width:220px; margin:0 auto; }
+  .org-conn { width:2px; height:18px; background:var(--line); margin:2px auto 6px; }
+  .gcard-drag { cursor:grab; text-align:center; font-size:12px; color:var(--dim); padding:2px 0 0; touch-action:none; user-select:none; }
+  .gcard-wrap.dragging { opacity:.35; }
+  .gcard-sub-input { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
+  .drag-ghost { position:fixed; z-index:9999; width:160px; pointer-events:none; opacity:.9; box-shadow:0 8px 20px rgba(0,0,0,.25); border-radius:10px; overflow:hidden; background:var(--panel); }
   .group-add { display:flex; gap:6px; margin-top:10px; }
   .group-add input { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:12px; }
   .group-add button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 9px; font-size:12px; }
@@ -404,12 +414,14 @@ function normalizeStore(){
     w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
     // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
     if (!window.expandedOrgs) window.expandedOrgs = new Set();
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; });
   });
 }
 function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; }
 function groupOf(w, id){ return worldGroups(w).find(g=>g.id===id) || null; }
 function charInGroup(c, gid){ return Array.isArray(c.groupIds) && c.groupIds.includes(gid); }
+function groupSubtitle(c, gid){ if (gid && gid !== '__ungrouped' && c.groupSubs && c.groupSubs[gid]) return c.groupSubs[gid]; return c.position || ''; }
+function reorderGroupByDom(gid, domIds){ const w = store[curWorld]; if (!w) return; let members; if (gid === null) members = w.chars.slice(); else if (gid === '__ungrouped') members = w.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0); else members = w.chars.filter(c=>charInGroup(c, gid)); const ordered = domIds.map(id=>members.find(c=>c.id===id)).filter(Boolean); if (ordered.length !== members.length) return; const firstIdx = w.chars.findIndex(c=>c.id===members[0].id); const rest = w.chars.filter(c=>!members.some(m=>m.id===c.id)); w.chars = [...rest.slice(0, firstIdx), ...ordered, ...rest.slice(firstIdx)]; persist(); }
 function groupPortrait(c){
   const rep = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
   if (rep) return rep;
@@ -633,20 +645,21 @@ function render(){
   const cw = store[curWorld];
   const charList = (cw && cw.chars) ? cw.chars : [];
   const groups = worldGroups(cw);
+  const listEdit = !!(isMaster && window.listEdit);
   const cardHtml = (c, list, gid)=>{
     const img = groupPortrait(c);
     const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(img)+'" alt=""></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
-    const idx = list.findIndex(x=>x.id===c.id);
-    const orderHtml = isMaster
-      ? '<span class="gcard-order"><button data-gup="'+c.id+'" data-gid="'+esc(gid===null?"__all":gid)+'" title="위로"'+(idx===0?" disabled":"")+'>▲</button><button data-gdown="'+c.id+'" data-gid="'+esc(gid===null?"__all":gid)+'" title="아래로"'+(idx===list.length-1?" disabled":"")+'>▼</button></span>'
-      : "";
-    return '<div class="gcard-wrap"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(c.position||"")+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+orderHtml+'</div>';
+    const gidKey = gid===null ? "__all" : gid;
+    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
+    const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
+    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+'</div>';
   };
-  const gridHtml = (list, gid)=> '<div class="group-grid">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
+  const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
+  const orgChartHtml = (list, gid)=>{ if (list.length <= 1) return gridHtml(list, gid); return '<div class="org-chart"><div class="org-top">'+cardHtml(list[0], list, gid)+'</div><div class="org-conn"></div>'+gridHtml(list.slice(1), gid)+'</div>'; };
   const groupHeadHtml = (g)=>{
     const isOrg = g.kind === "org";
     const expanded = !isOrg || window.expandedOrgs.has(g.id);
-    if (!isMaster){
+    if (!isMaster || !window.listEdit){
       if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button></div>';
       return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
     }
@@ -668,7 +681,7 @@ function render(){
     collect(g.id);
     const direct = charList.filter(c=>charInGroup(c, g.id) && !childIds.some(id=>charInGroup(c, id)) && ![...descendantIds].some(id=>charInGroup(c, id)));
     // 직접 소속이 아닌데 하위만 있는 경우(예: 삼총사만 있는 모니카반의 상위 조직)는 빈 그리드를 그리지 않음
-    if (direct.length) html += gridHtml(direct, g.id);
+    if (direct.length) html += (isOrg ? orgChartHtml(direct, g.id) : gridHtml(direct, g.id));
     children.forEach(ch=>{
       html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
     });
@@ -697,8 +710,8 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><input class="group-name" data-glogo="'+g.id+'" value="'+esc(g.logo||"")+'" placeholder="조직 로고 링크"><button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="조직 삭제">✕</button></div>';
-        if (direct.length) charsHtml += gridHtml(direct, g.id);
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><input class="group-name" data-glogo="'+g.id+'" value="'+esc(g.logo||"")+'" placeholder="조직 로고 링크"><button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="조직 삭제">✕</button></div>';
+        if (direct.length) charsHtml += orgChartHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
         charsHtml += '</div>';
       });
@@ -711,10 +724,38 @@ function render(){
     }
   }
   if (isMaster){
-    charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><button id="groupAddBtn">그룹 추가</button></div>';
+    charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span></div>' + charsHtml;
+    if (window.listEdit) charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><button id="groupAddBtn">그룹 추가</button></div>';
   }
   $("chars").innerHTML = charsHtml;
-  document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile";  render();});
+  document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
+  // 그리드 드래그: 핸들을 잡으면 고스트가 커서를 따라오고, 다른 카드가 미끄러지듯 비켜남
+  document.querySelectorAll("#chars [data-drag]").forEach(h=>{
+    h.onpointerdown = (e)=>{
+      e.preventDefault();
+      const wrap = h.closest(".gcard-wrap"); const grid = h.closest("[data-grid]"); if (!wrap || !grid) return;
+      const gidRaw = h.dataset.gid; const gid = gidRaw==="__all" ? null : gidRaw;
+      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY;
+      const move = (ev)=>{
+        if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+        if (!moved){ moved = true; wrap.classList.add("dragging"); ghost = document.createElement("div"); ghost.className = "drag-ghost"; ghost.innerHTML = wrap.innerHTML; document.body.appendChild(ghost); }
+        if (ghost){ ghost.style.left = (ev.clientX-80)+"px"; ghost.style.top = (ev.clientY-40)+"px"; }
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const target = el ? el.closest(".gcard-wrap") : null;
+        if (target && target !== wrap && grid.contains(target)){
+          const r = target.getBoundingClientRect(); const after = ev.clientX > r.left + r.width/2;
+          if (after) target.after(wrap); else target.before(wrap);
+        }
+      };
+      const up = ()=>{
+        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+        if (ghost) ghost.remove();
+        if (moved){ window.lastDragEnd = Date.now(); const ids = [...grid.querySelectorAll("[data-wrap]")].map(x=>x.dataset.wrap); reorderGroupByDom(gid, ids); render(); }
+        wrap.classList.remove("dragging");
+      };
+      document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+    };
+  });
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gup, gid==="__all"?null:gid, -1);});
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gdown, gid==="__all"?null:gid, 1);});
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
