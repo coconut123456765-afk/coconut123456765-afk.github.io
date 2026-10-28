@@ -775,7 +775,11 @@ function render(){
     const groupedIds = new Set(groups.map(g=>g.id));
     const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
     if (ungrouped.length){
-      charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
+      const ungOn = !!window.expandedUngrouped;
+      const ungTile = '<button class="org-tile '+(ungOn?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungrouped.length+')</span></button>';
+      if (topOrgs.length){ charsHtml += '<div class="org-grid">'+ungTile+'</div>'; }
+      else { charsHtml += '<div class="group-block"><div class="group-head"><button class="group-org" data-ungrouped="1">'+(ungOn?"▾ ":"▸ ")+'미분류 ('+ungrouped.length+')</button></div></div>'; }
+      if (ungOn) charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
     }
   }
   if (isMaster){
@@ -836,6 +840,7 @@ function render(){
   });
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
+  document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ window.expandedUngrouped = !window.expandedUngrouped; render(); });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; const members = cw.chars.filter(c=>Array.isArray(c.groupIds) && c.groupIds.includes(gid)); if (members.length === 1){ cancelEdit(); curChar = members[0].id; curTab = "profile"; render(); return; } if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
