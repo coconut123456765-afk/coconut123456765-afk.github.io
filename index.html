@@ -84,7 +84,10 @@
   .group-editbar button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 10px; font-size:12px; font-weight:700; }
   .group-editbar button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
   .group-editbar span { font-size:11px; color:var(--dim); }
-  .org-chart .org-top { max-width:220px; margin:0 auto; }
+  .org-chart .org-top { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .org-chart .org-top .gcard-wrap { width:160px; flex:0 0 160px; }
+  .org-top-count { display:flex; gap:6px; align-items:center; font-size:12px; color:var(--dim); margin:6px 0; }
+  .org-top-count input { width:56px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:13px; }
   .org-conn { width:3px; height:22px; background:var(--dim); margin:0 auto 6px; }
   .gcard-drag { cursor:grab; text-align:center; font-size:12px; color:var(--dim); padding:2px 0 0; touch-action:none; user-select:none; }
   .gcard-wrap.dragging { opacity:.35; }
@@ -421,7 +424,7 @@ function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
     if (!Array.isArray(w.groups)) w.groups = [];
-    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
+    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; if (g.topCount === undefined) g.topCount = 1; });
     // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
     if (!window.expandedOrgs) window.expandedOrgs = new Set();
     w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; });
@@ -666,7 +669,7 @@ function render(){
     return '<div class="gcard-wrap '+(window.selectedChars && window.selectedChars.has(c.id)?"selected":"")+'" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+selHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
-  const orgChartHtml = (list, gid)=>{ if (list.length <= 1) return gridHtml(list, gid); return '<div class="org-chart"><div class="org-top">'+cardHtml(list[0], list, gid)+'</div><div class="org-conn"></div>'+gridHtml(list.slice(1), gid)+'</div>'; };
+  const orgChartHtml = (list, gid, g)=>{ const n = Math.max(1, Math.min(list.length, (g && g.topCount) ? parseInt(g.topCount) : 1)); if (list.length <= 1 || n >= list.length) return gridHtml(list, gid); return '<div class="org-chart"><div class="org-top">'+list.slice(0, n).map(c=>cardHtml(c, list, gid)).join("")+'</div><div class="org-conn"></div>'+gridHtml(list.slice(n), gid)+'</div>'; };
   const groupHeadHtml = (g)=>{
     const isOrg = g.kind === "org";
     const expanded = !isOrg || window.expandedOrgs.has(g.id);
@@ -676,7 +679,7 @@ function render(){
     }
     const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'으로 바꾸기</button>';
     const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
-    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div>';
+    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div><div class="org-top-count">맨 위 줄 인원 <input type="number" min="1" max="5" data-gtop="'+g.id+'" value="'+(g.topCount||1)+'"> 명</div>';
     return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
@@ -693,7 +696,7 @@ function render(){
     collect(g.id);
     const direct = charList.filter(c=>charInGroup(c, g.id) && !childIds.some(id=>charInGroup(c, id)) && ![...descendantIds].some(id=>charInGroup(c, id)));
     // 직접 소속이 아닌데 하위만 있는 경우(예: 삼총사만 있는 모니카반의 상위 조직)는 빈 그리드를 그리지 않음
-    if (direct.length) html += (isOrg ? orgChartHtml(direct, g.id) : gridHtml(direct, g.id));
+    if (direct.length) html += (isOrg ? orgChartHtml(direct, g.id, g) : gridHtml(direct, g.id));
     children.forEach(ch=>{
       html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
     });
@@ -723,8 +726,8 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"></div>';
-        if (direct.length) charsHtml += orgChartHtml(direct, g.id);
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"></div><div class="org-top-count">맨 위 줄 인원 <input type="number" min="1" max="5" data-gtop="'+g.id+'" value="'+(g.topCount||1)+'"> 명 (레비처럼 상급자가 여러 명이면 숫자를 늘리세요)</div>';
+        if (direct.length) charsHtml += orgChartHtml(direct, g.id, g);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
         if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><button data-gsub="'+g.id+'">＋ 여기에 하위 그룹 만들기</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
         charsHtml += '</div>';
@@ -783,6 +786,7 @@ function render(){
   });
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gup, gid==="__all"?null:gid, -1);});
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gdown, gid==="__all"?null:gid, 1);});
+  document.querySelectorAll("#chars [data-gtop]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gtop); if (g){ g.topCount = Math.max(1, Math.min(5, parseInt(inp.value)||1)); persist(); render(); } });
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
