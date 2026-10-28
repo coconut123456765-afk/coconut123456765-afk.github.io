@@ -753,7 +753,8 @@ function render(){
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
         const members1 = charList.filter(c=>charInGroup(c, g.id));
-        const tileImg = (members1.length === 1 ? groupPortrait(members1[0]) : "") || g.logo || "";
+        const hasChild1 = groups.some(x=>x.parentId===g.id);
+        const tileImg = (members1.length === 1 && !hasChild1 ? groupPortrait(members1[0]) : "") || g.logo || "";
         const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(tileImg)+'" alt=""></span>' : '<span class="org-tile-img"></span>';
         return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
       }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
@@ -783,10 +784,12 @@ function render(){
     }
   }
   if (isMaster){
-    charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span></div>' + charsHtml;
+    charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span>'+(window.listEdit ? '<span style="margin-left:12px"><input id="org-new-name" placeholder="새 조직 이름" style="width:140px"><button id="org-new-btn" type="button">조직 추가</button></span>' : '')+'</div>' + charsHtml;
   }
   $("chars").innerHTML = charsHtml;
   const leb = $("listEditBtn"); if (leb) leb.onclick=()=>{ window.listEdit = !window.listEdit; render(); };
+  const orgNewBtn = document.getElementById("org-new-btn");
+  if (orgNewBtn) orgNewBtn.onclick=()=>{ const inp = document.getElementById("org-new-name"); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 조직 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "org", logo: ""}); persist(); render(); };
   document.querySelectorAll("#chars [data-glogo-btn]").forEach(b=>b.onclick=()=>{ const f = document.querySelector('[data-glogo-file="'+b.dataset.glogoBtn+'"]'); if (f) f.click(); });
   document.querySelectorAll("#chars [data-glogo-file]").forEach(f=>f.onchange=async ()=>{ const file = f.files && f.files[0]; if (!file) return; try{ const url = await uploadToCloudinary(file); const g = groupOf(cw, f.dataset.glogoFile); if (g){ g.logo = url; persist(); render(); } }catch(e){ alert("로고 업로드 실패: " + (e && e.message)); } });
   document.querySelectorAll("#chars [data-gtile-char]").forEach(b=>b.onclick=()=>{ const ch = cw.chars.find(x=>x.id===b.dataset.gtileChar); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; const gid = b.dataset.gtileGid; if (ch.groupIds.includes(gid)) ch.groupIds = ch.groupIds.filter(id=>id!==gid); else ch.groupIds.push(gid); persist(); render(); });
@@ -841,7 +844,7 @@ function render(){
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ window.expandedUngrouped = !window.expandedUngrouped; render(); });
-  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; const members = cw.chars.filter(c=>Array.isArray(c.groupIds) && c.groupIds.includes(gid)); if (members.length === 1){ cancelEdit(); curChar = members[0].id; curTab = "profile"; render(); return; } if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
+  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; const members = cw.chars.filter(c=>Array.isArray(c.groupIds) && c.groupIds.includes(gid)); const hasChildren = cw.groups.some(g=>g.parentId===gid); if (members.length === 1 && !hasChildren){ cancelEdit(); curChar = members[0].id; curTab = "profile"; render(); return; } if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
 
