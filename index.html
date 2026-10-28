@@ -63,6 +63,17 @@
   .group-block { margin-top:24px; padding:14px; border:2px solid var(--cover); border-radius:8px; background-color:var(--paper); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); box-shadow:0 3px 10px rgba(0,0,0,.12); }
   .group-block.org-block { background-color:var(--cover-bg); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); }
   .group-block .group-head h4 { font-family:"Noto Serif KR",serif; letter-spacing:.2px; }
+  .orgchart-tabs { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+  .orgchart-tabs button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .orgchart-tabs button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  .orgchart-node { border:1px solid var(--line); border-radius:10px; padding:8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; }
+  .orgchart-node.drop-target { outline:3px solid var(--acc); }
+  .orgchart-node img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
+  .orgchart-node-name { font-weight:700; font-size:13px; margin-top:6px; }
+  .orgchart-node-sub { font-size:11px; color:var(--dim); }
+  .orgchart-children { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; padding-left:14px; border-left:3px solid var(--line); }
+  .orgchart-topzone { border:2px dashed var(--line); border-radius:10px; padding:10px; text-align:center; color:var(--dim); font-size:13px; margin:8px 0; }
+  .orgchart-topzone.drop-target { border-color:var(--acc); color:var(--acc); }
   .group-block:first-child { margin-top:0; }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
   button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
@@ -887,6 +898,47 @@ function render(){
     fb.textContent = open ? "접기 ▴" : "펼치기 ▾";
   };
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
+  // 조직도 프로토타입: 하위탭, 탭 순서, 드래그 상급자 지정
+  document.querySelectorAll("[data-orgchart-tab]").forEach(b=>b.onclick=()=>{ window.orgChartOrg = b.dataset.orgchartTab; render(); });
+  document.querySelectorAll("[data-orgchart-up]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartUp; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos > 0){ const tmp = ordered[pos-1]; ordered[pos-1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
+  document.querySelectorAll("[data-orgchart-down]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartDown; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos >= 0 && pos < ordered.length-1){ const tmp = ordered[pos+1]; ordered[pos+1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
+  document.querySelectorAll("[data-org-node]").forEach(n=>{
+    n.onclick = ()=>{ if (editingTab !== "relations") gotoChar(n.dataset.orgNode); };
+    if (editingTab !== "relations") return;
+    n.onpointerdown = (e)=>{
+      const dragId = n.dataset.orgDrag; const orgId = window.orgChartOrg; if (!orgId) return;
+      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY;
+      const move = (ev)=>{
+        if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+        moved = true;
+        if (!ghost){ ghost = n.cloneNode(true); ghost.style.cssText = "position:fixed;z-index:9999;width:120px;pointer-events:none;opacity:0.9;box-shadow:0 8px 20px rgba(0,0,0,0.3);"; document.body.appendChild(ghost); }
+        ghost.style.left = (ev.clientX-60)+"px"; ghost.style.top = (ev.clientY-40)+"px";
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        document.querySelectorAll(".orgchart-node.drop-target, .orgchart-topzone.drop-target").forEach(x=>x.classList.remove("drop-target"));
+        const tgt = el ? el.closest("[data-org-node], [data-org-top]") : null;
+        if (tgt) tgt.classList.add("drop-target");
+      };
+      const up = (ev)=>{
+        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+        if (ghost) ghost.remove();
+        document.querySelectorAll(".orgchart-node.drop-target, .orgchart-topzone.drop-target").forEach(x=>x.classList.remove("drop-target"));
+        if (!moved) return;
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const tgt = el ? el.closest("[data-org-node], [data-org-top]") : null;
+        if (!tgt) return;
+        const w = store[curWorld]; const dragged = (w.chars||[]).find(x=>x.id===dragId); if (!dragged) return;
+        if (!dragged.groupSuperior || typeof dragged.groupSuperior !== "object") dragged.groupSuperior = {};
+        if (tgt.dataset.orgTop){ delete dragged.groupSuperior[orgId]; persist(); render(); return; }
+        const targetId = tgt.dataset.orgNode;
+        if (!targetId || targetId === dragId) return;
+        // 순환 검사: 타겟의 상급자 체인을 따라가다 드래그한 사람이 나오면 거부
+        let curId = targetId; const seen = new Set();
+        while (curId && !seen.has(curId)){ seen.add(curId); if (curId === dragId){ alert("순환이 생겨서 저장하지 않았어요."); return; } const ch = (w.chars||[]).find(x=>x.id===curId); curId = ch && ch.groupSuperior ? ch.groupSuperior[orgId] : null; }
+        dragged.groupSuperior[orgId] = targetId; persist(); render();
+      };
+      document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+    };
+  });
   if (editingTab) bindEdit(c);
   const te = $("tabEdit");
   if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
@@ -1243,7 +1295,49 @@ function renderTabInner(c){
     });
     if (ed) h += `<button class="rel" id="relAdd" style="border:1px dashed var(--line);background:none;color:var(--dim);padding:8px;border-radius:8px;cursor:pointer;width:100%">＋ 관계 추가</button>`;
     if (!ed && !(c.rels||[]).length) h += `<div class="val"><span class="empty">—</span></div>`;
-    return h + `</div></div>`;
+    h += `</div>`;
+    // 조직도 (프로토타입): 인간관계 탭 안에, 조직별 하위탭 + 트리 + 드래그 상급자 지정
+    {
+      const w = store[curWorld]; const gs = worldGroups(w);
+      const descIds = (orgId)=>{ const out = new Set(); const collect = (pid)=>{ gs.filter(x=>x.parentId===pid).forEach(x=>{ out.add(x.id); collect(x.id); }); }; collect(orgId); return out; };
+      let orgs = gs.filter(g=>g.kind==="org" && (charInGroup(c, g.id) || [...descIds(g.id)].some(id=>charInGroup(c, id))));
+      // 멤버 1명 이하인 조직(마이베이비 1인 조직 등)은 조직도에서 제외
+      orgs = orgs.filter(g=>{ const d = descIds(g.id); return (w.chars||[]).filter(ch=>charInGroup(ch, g.id) || [...d].some(id=>charInGroup(ch, id))).length > 1; });
+      if (Array.isArray(c.orgChartOrder) && c.orgChartOrder.length){ orgs.sort((a,b)=>{ const ia = c.orgChartOrder.indexOf(a.id); const ib = c.orgChartOrder.indexOf(b.id); return (ia<0?999:ia) - (ib<0?999:ib); }); }
+      h += `<div class="field" style="margin-top:18px"><label>조직도</label>`;
+      if (!orgs.length){ h += `<div class="val"><span class="empty">소속된 조직이 없어요</span></div>`; }
+      else {
+        const selOrgId = (window.orgChartOrg && orgs.some(g=>g.id===window.orgChartOrg)) ? window.orgChartOrg : orgs[0].id;
+        window.orgChartOrg = selOrgId;
+        h += `<div class="orgchart-tabs">` + orgs.map(g=>`<button class="${g.id===selOrgId?"on":""}" data-orgchart-tab="${g.id}">${esc(g.name)}</button>` + (ed ? `<button data-orgchart-up="${g.id}" title="조직 탭 순서 위로">▲</button><button data-orgchart-down="${g.id}" title="조직 탭 순서 아래로">▼</button>` : ``)).join("") + `</div>`;
+        const selOrg = orgs.find(g=>g.id===selOrgId);
+        const dsel = descIds(selOrgId);
+        const members = (w.chars||[]).filter(ch=>charInGroup(ch, selOrgId) || [...dsel].some(id=>charInGroup(ch, id)));
+        const supOf = (m)=> (m.groupSuperior && m.groupSuperior[selOrgId]) || null;
+        const memberIds = new Set(members.map(m=>m.id));
+        const childrenMap = {}; members.forEach(m=>{ const sup = supOf(m); if (sup && memberIds.has(sup)){ (childrenMap[sup] = childrenMap[sup] || []).push(m); } });
+        const roots = members.filter(m=>{ const sup = supOf(m); return !sup || !memberIds.has(sup); });
+        const nodeHtml = (m, depth, seen)=>{
+          if (depth > 10) return "";
+          if (seen.has(m.id)) return "";
+          const seen2 = new Set(seen); seen2.add(m.id);
+          const img = groupPortrait(m);
+          const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId);
+          const supName = supOf(m) ? ((w.chars||[]).find(x=>x.id===supOf(m))?.profile?.name || "") : "";
+          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="aspect-ratio:1;background:var(--plabel-bg);border-radius:8px"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `<div class="orgchart-node-sub">${supName ? "상급자: "+esc(supName) : "최상위"}</div></div>`;
+          const chs = childrenMap[m.id] || [];
+          if (chs.length) html = `<div><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
+          return html;
+        };
+        if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
+        h += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">` + (roots.length ? roots.map(m=>nodeHtml(m, 0, new Set())).join("") : members.map(m=>nodeHtml(m, 0, new Set())).join("")) + `</div>`;
+        // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
+        const childGroups = gs.filter(x=>x.parentId===selOrgId);
+        if (childGroups.length){ h += `<div style="margin-top:10px;font-size:12px;color:var(--dim)">하위 그룹: ` + childGroups.map(x=>esc(x.name)).join(", ") + `</div>`; }
+      }
+      h += `</div>`;
+    }
+    return h + `</div>`;
   }
   if (curTab==="illust"){
     const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
