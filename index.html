@@ -713,11 +713,10 @@ function render(){
       if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button></div>';
       return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
     }
-    const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'으로 바꾸기</button>';
     const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
     const orderBtn = '<button data-gup="'+g.id+'" title="그룹 순서 위로">▲</button><button data-gdown="'+g.id+'" title="그룹 순서 아래로">▼</button>';
-    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
-    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+orderBtn+'</div>';
+    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
   const renderGroupBlock = (g)=>{
@@ -845,7 +844,6 @@ function render(){
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
-  document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gup; const idx = cw.groups.findIndex(g=>g.id===gid); if (idx > 0){ const tmp = cw.groups[idx-1]; cw.groups[idx-1] = cw.groups[idx]; cw.groups[idx] = tmp; persist(); render(); } });
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdown; const idx = cw.groups.findIndex(g=>g.id===gid); if (idx >= 0 && idx < cw.groups.length-1){ const tmp = cw.groups[idx+1]; cw.groups[idx+1] = cw.groups[idx]; cw.groups[idx] = tmp; persist(); render(); } });
   document.querySelectorAll("#chars [data-addchar-org]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.addcharOrg; cancelEdit(); const id = "c"+Date.now(); if (!cw.chars) cw.chars = []; cw.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[gid], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""}); curChar=id; persist(); render(); });
