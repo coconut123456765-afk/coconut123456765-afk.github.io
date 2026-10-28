@@ -90,7 +90,7 @@
   .tree-node .gcard-wrap { width:170px; }
   .tree-children { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
   .tree-conn { width:3px; height:20px; background:var(--dim); border-radius:2px; }
-  .sup-select, .gtile-btn { width:100%; box-sizing:border-box; margin-top:4px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
+  .gtile-btn { width:100%; box-sizing:border-box; margin-top:4px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
   .gtile-row { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; justify-content:center; }
   .gtile-row button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:3px 7px; font-size:11px; }
   .gtile-row button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
@@ -433,7 +433,7 @@ function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
     if (!Array.isArray(w.groups)) w.groups = [];
-    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; if (g.topCount === undefined) g.topCount = 1; });
+    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
     // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
     if (!window.expandedOrgs) window.expandedOrgs = new Set();
     w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
@@ -841,14 +841,11 @@ function render(){
       document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
     };
   });
-  document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gup, gid==="__all"?null:gid, -1);});
-  document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gdown, gid==="__all"?null:gid, 1);});
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
-  document.querySelectorAll("#chars [data-gsub]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.gsub; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name:"새 하위그룹", parentId:pid, kind:"group"}); persist(); render(); });
 
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
@@ -1205,7 +1202,7 @@ function renderTabInner(c){
           const label = parent ? esc(parent.name)+" › "+esc(g.name) : esc(g.name);
           h += `<label style="display:block;font-weight:normal;margin:4px 0"><input type="checkbox" class="grp-check" data-gid="${g.id}" ${myIds.includes(g.id)?"checked":""}> ${label}</label>`;
         });
-        h += `<div style="display:flex;gap:6px;margin-top:8px"><input id="grpNewName" placeholder="새 그룹 이름" style="flex:1"><button type="button" class="hdr-btn" id="grpNewBtn">그룹 추가</button></div></div>`;
+        h += `</div>`;
       } else if (myIds.length){
         // 보기에서는 그룹 이름만 (청량고랑 삼총사를 같이 적지 않음, 상위는 목록의 중첩으로 알 수 있음)
         const names = myIds.map(id=>{ const g = groupOf(w, id); return g ? g.name : null; }).filter(Boolean);
@@ -1299,16 +1296,6 @@ function bindEdit(c){
     if (box.checked){ if (!c.groupIds.includes(gid)) c.groupIds.push(gid); }
     else c.groupIds = c.groupIds.filter(id=>id!==gid);
   });
-  const gn = $("grpNewBtn"); if (gn) gn.onclick=()=>{
-    const inp = $("grpNewName"); const name = inp ? inp.value.trim() : "";
-    if (!name) return;
-    const w = store[curWorld]; if (!w) return;
-    w.groups = w.groups || [];
-    const gid = "g_"+Math.random().toString(36).slice(2,10);
-    w.groups.push({id:gid, name, parentId:null, kind:"group"});
-    c.groupIds = c.groupIds || []; if (!c.groupIds.includes(gid)) c.groupIds.push(gid);
-    render();
-  };
   document.querySelectorAll(".draghandle").forEach(hnd=>{
     hnd.onpointerdown = (e)=>{
       e.preventDefault();

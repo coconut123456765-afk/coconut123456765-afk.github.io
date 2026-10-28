@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>cleanup3</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">정비 실행</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{};
+    const store = v.store||{};
+    const w = store["siblings"];
+    const before = JSON.stringify(w.groups||[]);
+    log("BEFORE siblings groups="+before);
+    const stray = (w.groups||[]).find(g=>g.id==="g_hvejqop1");
+    log("STRAY found="+(stray? stray.name:"none")+" members="+(w.chars||[]).filter(c=>Array.isArray(c.groupIds)&&c.groupIds.includes("g_hvejqop1")).length);
+    w.groups = (w.groups||[]).filter(g=>g.id!=="g_hvejqop1");
+    (w.chars||[]).forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!=="g_hvejqop1"); });
+    let stripped=0;
+    Object.values(store).forEach(ww=>{ (ww.groups||[]).forEach(g=>{ if ("topCount" in g){ delete g.topCount; stripped++; } }); });
+    log("STRIPPED topCount from groups="+stripped);
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("AFTER siblings groups="+JSON.stringify(w.groups));
+    log("AFTER total chars hotel="+(store.hotel.chars||[]).length+" siblings="+(w.chars||[]).length+" mybaby="+(store.w1792508654855.chars||[]).length);
+    log("DONE");
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
