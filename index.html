@@ -848,6 +848,7 @@ function render(){
     const ch = cw.chars.find(x=>x.id===b.dataset.promote); if (!ch) return;
     const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
     const sup = ch.groupSuperior[gid] || ch.superiorId || null; if (!sup) return;
+    if (sup === ch.id){ delete ch.groupSuperior[gid]; ch.superiorId = null; persist(); render(); return; }
     const supCh = cw.chars.find(x=>x.id===sup); if (!supCh) return;
     const supSup = (supCh.groupSuperior && supCh.groupSuperior[gid]) ? supCh.groupSuperior[gid] : (supCh.superiorId || null);
     if (supSup && supSup !== ch.id) ch.groupSuperior[gid] = supSup; else delete ch.groupSuperior[gid];
@@ -863,7 +864,7 @@ function render(){
     const flat = []; const visit = (m, d)=>{ if (d > 10) return; flat.push(m); (children[m.id] || []).forEach(x=>visit(x, d+1)); };
     members.filter(m=>{ const sv = getS(m); return !sv || !members.some(y=>y.id===sv); }).forEach(m=>visit(m, 0));
     const descendants = new Set(); const collectDesc = (m)=>{ (children[m.id] || []).forEach(x=>{ descendants.add(x.id); collectDesc(x); }); }; collectDesc(ch);
-    const idx = flat.findIndex(x=>x.id===ch.id); if (idx <= 0) return;
+    const idx = flat.findIndex(x=>x.id===ch.id); if (idx < 0){ delete ch.groupSuperior[gid]; ch.superiorId = null; persist(); render(); return; } if (idx <= 0) return;
     let target = null;
     for (let i = idx-1; i >= 0; i--){ if (flat[i].id !== ch.id && !descendants.has(flat[i].id)){ target = flat[i]; break; } }
     if (!target) return;
