@@ -45,7 +45,7 @@
   .chars button { text-align:left; display:flex; align-items:center; gap:10px; }
   .group-head { display:flex; align-items:center; gap:6px; margin:14px 0 6px; }
   .group-head:first-child { margin-top:4px; }
-  .group-head h4 { margin:0; font-size:13px; flex:1; min-width:0; }
+  .group-head h4 { margin:0 0 8px; font-size:15px; font-weight:700; flex:1; min-width:0; letter-spacing:.2px; }
   .group-head input.group-name { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:13px; }
   .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:8px; cursor:pointer; padding:7px 12px; font-size:13px; }
   .group-head input.group-name { font-size:14px; padding:7px 9px; }
@@ -59,7 +59,8 @@
   .gcard-select { display:flex; gap:6px; align-items:center; justify-content:center; font-size:12px; color:var(--dim); padding:4px 0 0; }
   .gcard-wrap.selected .gcard { outline:3px solid var(--acc); }
   .group-sub { margin-left:10px; border-left:2px solid var(--line); padding-left:10px; }
-  .group-block { margin-top:14px; padding-top:10px; border-top:1px dashed var(--line); }
+  .group-block { margin-top:16px; padding:12px 10px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+  .group-block:first-child { margin-top:0; }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
   button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
   .org-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 12px; }
@@ -67,17 +68,17 @@
   button.org-tile.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
   .org-tile-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .org-tile-img img { width:100%; height:100%; object-fit:cover; display:block; }
-  .org-tile-name { font-size:11px; padding:5px 3px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 10px; }
+  .org-tile-name { font-size:13px; font-weight:700; padding:8px 4px 9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:8px 0 12px; }
   .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
-  button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:10px; text-align:center; }
+  button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:12px; text-align:center; border:1px solid var(--line); box-shadow:0 2px 8px rgba(0,0,0,.08); }
   button.gcard.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
-  .gcard-pos { font-size:10px; color:var(--dim); padding:5px 4px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gcard-pos { font-size:11px; color:var(--dim); padding:7px 6px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   button.gcard.on .gcard-pos { color:var(--on-acc); opacity:0.85; }
   .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .gcard-img-empty { width:100%; height:100%; background:var(--plabel-bg); }
-  .gcard-name { font-size:12px; padding:5px 4px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gcard-name { font-size:14px; font-weight:700; padding:7px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   .gcard-order { display:flex; gap:4px; justify-content:center; }
   .gcard-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; }
   .group-editbar { display:flex; gap:8px; align-items:center; margin:0 0 10px; }
@@ -85,9 +86,10 @@
   .group-editbar button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
   .group-editbar span { font-size:11px; color:var(--dim); }
   .org-chart .org-top { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-  .tree-node { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; }
-  .tree-children { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px; }
-  .tree-conn { width:3px; height:16px; background:var(--dim); }
+  .tree-node { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
+  .tree-node .gcard-wrap { width:170px; }
+  .tree-children { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
+  .tree-conn { width:3px; height:20px; background:var(--dim); border-radius:2px; }
   .sup-select, .gtile-btn { width:100%; box-sizing:border-box; margin-top:4px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
   .gtile-row { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; justify-content:center; }
   .gtile-row button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:3px 7px; font-size:11px; }
@@ -95,7 +97,7 @@
   .org-chart .org-top .gcard-wrap { width:160px; flex:0 0 160px; }
   .org-top-count { display:flex; gap:6px; align-items:center; font-size:12px; color:var(--dim); margin:6px 0; }
   .org-top-count input { width:56px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:13px; }
-  .org-conn { width:3px; height:22px; background:var(--dim); margin:0 auto 6px; }
+  .org-conn { width:3px; height:22px; background:var(--dim); margin:0 auto 8px; border-radius:2px; }
   .gcard-drag { cursor:grab; text-align:center; font-size:12px; color:var(--dim); padding:2px 0 0; touch-action:none; user-select:none; }
   .gcard-wrap.dragging { opacity:.35; }
   .gcard-sub-input { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
