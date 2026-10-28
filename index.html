@@ -49,6 +49,9 @@
   .group-head input.group-name { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:13px; }
   .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:2px 7px; font-size:12px; }
   .group-sub { margin-left:10px; border-left:2px solid var(--line); padding-left:10px; }
+  .group-block { margin-top:14px; padding-top:10px; border-top:1px dashed var(--line); }
+  .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
+  button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
   .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 10px; }
   .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
   button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:10px; text-align:center; }
@@ -392,7 +395,9 @@ function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
     if (!Array.isArray(w.groups)) w.groups = [];
-    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; });
+    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; });
+    // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
+    if (!window.expandedOrgs) window.expandedOrgs = new Set();
     w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); });
   });
 }
@@ -632,30 +637,47 @@ function render(){
     return '<div class="gcard-wrap"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(c.position||"")+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+orderHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
-  const groupHeadHtml = (g, isSub)=>{
-    if (!isMaster) return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-gsub="'+g.id+'" title="하위그룹 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div>';
+  const groupHeadHtml = (g)=>{
+    const isOrg = g.kind === "org";
+    const expanded = !isOrg || window.expandedOrgs.has(g.id);
+    if (!isMaster){
+      if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button></div>';
+      return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
+    }
+    const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'</button>';
+    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+'<button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div><div class="group-head" style="margin-top:2px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div>';
+    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+'<button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div>';
+  };
+  // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
+  const renderGroupBlock = (g)=>{
+    const isOrg = g.kind === "org";
+    const expanded = !isOrg || window.expandedOrgs.has(g.id);
+    let html = '<div class="group-block">'+groupHeadHtml(g);
+    if (!expanded) return html + '</div>';
+    const children = groups.filter(x=>x.parentId===g.id);
+    const childIds = children.map(x=>x.id);
+    // 하위 그룹에 속한 캐릭터는 상위 직접 칸에 다시 뜨지 않게 (삼총사는 모니카반/청량고 직접 칸에 중복으로 안 뜸)
+    const descendantIds = new Set();
+    const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ descendantIds.add(x.id); collect(x.id); }); };
+    collect(g.id);
+    const direct = charList.filter(c=>charInGroup(c, g.id) && !childIds.some(id=>charInGroup(c, id)) && ![...descendantIds].some(id=>charInGroup(c, id)));
+    // 직접 소속이 아닌데 하위만 있는 경우(예: 삼총사만 있는 모니카반의 상위 조직)는 빈 그리드를 그리지 않음
+    if (direct.length) html += gridHtml(direct, g.id);
+    children.forEach(ch=>{
+      html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
+    });
+    return html + '</div>';
   };
   let charsHtml = "";
   if (!groups.length){
     charsHtml = gridHtml(charList, null);
   } else {
     const topGroups = groups.filter(g=>!g.parentId);
-    const subGroupsOf = (pid)=> groups.filter(g=>g.parentId===pid);
-    topGroups.forEach(g=>{
-      const subIds = subGroupsOf(g.id).map(x=>x.id);
-      const direct = charList.filter(c=>charInGroup(c, g.id) && !subIds.some(id=>charInGroup(c, id)));
-      charsHtml += groupHeadHtml(g, false);
-      charsHtml += gridHtml(direct, g.id);
-      subGroupsOf(g.id).forEach(sg=>{
-        const members = charList.filter(c=>charInGroup(c, sg.id));
-        charsHtml += '<div class="group-sub">'+groupHeadHtml(sg, true)+gridHtml(members, sg.id)+'</div>';
-      });
-    });
+    topGroups.forEach(g=>{ charsHtml += renderGroupBlock(g); });
     const groupedIds = new Set(groups.map(g=>g.id));
     const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
     if (ungrouped.length){
-      charsHtml += '<div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped");
+      charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
     }
   }
   if (isMaster){
@@ -666,9 +688,11 @@ function render(){
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gup, gid==="__all"?null:gid, -1);});
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gdown, gid==="__all"?null:gid, 1);});
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
+  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else window.expandedOrgs.add(gid); render(); });
+  document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
-  document.querySelectorAll("#chars [data-gsub]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.gsub; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name:"새 하위그룹", parentId:pid}); persist(); render(); });
-  const ga = $("groupAddBtn"); if (ga) ga.onclick=()=>{ const inp = $("groupAddName"); const name = inp.value.trim() || "새 그룹"; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name, parentId:null}); persist(); render(); };
+  document.querySelectorAll("#chars [data-gsub]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.gsub; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name:"새 하위그룹", parentId:pid, kind:"group"}); persist(); render(); });
+  const ga = $("groupAddBtn"); if (ga) ga.onclick=()=>{ const inp = $("groupAddName"); const name = inp.value.trim() || "새 그룹"; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name, parentId:null, kind:"group"}); persist(); render(); };
 
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
@@ -1027,7 +1051,8 @@ function renderTabInner(c){
         });
         h += `<div style="display:flex;gap:6px;margin-top:8px"><input id="grpNewName" placeholder="새 그룹 이름" style="flex:1"><button type="button" class="hdr-btn" id="grpNewBtn">그룹 추가</button></div></div>`;
       } else if (myIds.length){
-        const names = myIds.map(id=>{ const g = groupOf(w, id); if (!g) return null; const parent = g.parentId ? groupOf(w, g.parentId) : null; return parent ? parent.name+" › "+g.name : g.name; }).filter(Boolean);
+        // 보기에서는 그룹 이름만 (청량고랑 삼총사를 같이 적지 않음, 상위는 목록의 중첩으로 알 수 있음)
+        const names = myIds.map(id=>{ const g = groupOf(w, id); return g ? g.name : null; }).filter(Boolean);
         if (names.length) h += `<div class="field" style="margin-top:14px"><label>그룹 소속</label><div class="val">${esc(names.join(", "))}</div></div>`;
       }
     }
@@ -1124,7 +1149,7 @@ function bindEdit(c){
     const w = store[curWorld]; if (!w) return;
     w.groups = w.groups || [];
     const gid = "g_"+Math.random().toString(36).slice(2,10);
-    w.groups.push({id:gid, name, parentId:null});
+    w.groups.push({id:gid, name, parentId:null, kind:"group"});
     c.groupIds = c.groupIds || []; if (!c.groupIds.includes(gid)) c.groupIds.push(gid);
     render();
   };
