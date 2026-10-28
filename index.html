@@ -1192,12 +1192,12 @@ function renderTabInner(c){
       const myIds = Array.isArray(c.groupIds) ? c.groupIds : [];
       if (ed){
         h += `<div class="field" style="margin-top:14px"><label>그룹 소속 (목록에서 여러 그룹에 뜰 수 있어요)</label>`;
-        if (!gs.length) h += `<div class="val"><span class="empty">아직 그룹이 없어요. 목록 왼쪽 아래에서 그룹을 먼저 추가하세요.</span></div>`;
         gs.forEach(g=>{
           const parent = g.parentId ? groupOf(w, g.parentId) : null;
           const label = parent ? esc(parent.name)+" › "+esc(g.name) : esc(g.name);
           h += `<label style="display:block;font-weight:normal;margin:4px 0"><input type="checkbox" class="grp-check" data-gid="${g.id}" ${myIds.includes(g.id)?"checked":""}> ${label}</label>`;
         });
+        h += `<div style="margin-top:10px"><input id="grp-new-name" placeholder="새 소속 이름 (예: 안씨네)" style="width:60%"><button id="grp-new-btn" type="button" style="margin-left:6px">새 소속 추가</button><div style="font-size:12px;color:#666;margin-top:4px">새 소속은 평범한 그룹으로만 만들어요. 상위·하위나 상급자는 안 붙어요. 만들면 이 캐릭터에 바로 넣어요.</div></div>`;
         h += `</div>`;
       } else if (myIds.length){
         // 보기에서는 그룹 이름만 (청량고랑 삼총사를 같이 적지 않음, 상위는 목록의 중첩으로 알 수 있음)
@@ -1291,7 +1291,21 @@ function bindEdit(c){
     const gid = box.dataset.gid;
     if (box.checked){ if (!c.groupIds.includes(gid)) c.groupIds.push(gid); }
     else c.groupIds = c.groupIds.filter(id=>id!==gid);
+    persist();
   });
+  const grpNewBtn = document.getElementById("grp-new-btn");
+  if (grpNewBtn) grpNewBtn.onclick=()=>{
+    const inp = document.getElementById("grp-new-name");
+    const name = inp ? inp.value.trim() : "";
+    if (!name) return;
+    const w = store[curWorld]; if (!w) return;
+    if (!Array.isArray(w.groups)) w.groups = [];
+    const existing = w.groups.find(g=>g.name === name);
+    c.groupIds = c.groupIds || [];
+    if (existing){ if (!c.groupIds.includes(existing.id)) c.groupIds.push(existing.id); }
+    else { const gid = "g_" + Math.random().toString(36).slice(2,10); w.groups.push({id: gid, name: name, kind: "group", logo: ""}); c.groupIds.push(gid); }
+    persist(); render();
+  };
   document.querySelectorAll(".draghandle").forEach(hnd=>{
     hnd.onpointerdown = (e)=>{
       e.preventDefault();
