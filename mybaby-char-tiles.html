@@ -1,0 +1,43 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>mybaby-char-tiles</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">마이베이비 캐릭터 타일 실행</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{};
+    const store = v.store||{};
+    const mb = store["w1792508654855"];
+    const repOf = (c)=>{ if (c.repImg) return c.repImg; const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean); return lines[0]||""; };
+    (mb.groups||[]).forEach(g=>{
+      const mem = (mb.chars||[]).filter(c=>Array.isArray(c.groupIds)&&c.groupIds.includes(g.id));
+      if (mem.length===1){
+        const cname = mem[0].profile&&mem[0].profile.name;
+        if (cname && g.name!==cname){ log(g.name+" -> "+cname); g.name = cname; }
+        if (!g.logo) g.logo = repOf(mem[0]);
+      }
+    });
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("MyBaby groups="+mb.groups.map(g=>g.name).join("|"));
+    log("DONE chars="+(mb.chars||[]).length);
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
