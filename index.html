@@ -728,6 +728,8 @@ function render(){
     if (window.listEdit) charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><button id="groupAddBtn">그룹 추가</button></div>';
   }
   $("chars").innerHTML = charsHtml;
+  const leb = $("listEditBtn"); if (leb) leb.onclick=()=>{ window.listEdit = !window.listEdit; render(); };
+  document.querySelectorAll("#chars [data-gsub-char]").forEach(inp=>inp.onchange=()=>{ const ch = cw.chars.find(x=>x.id===inp.dataset.gsubChar); if (!ch) return; if (!ch.groupSubs) ch.groupSubs = {}; const gid = inp.dataset.gsubGid; if (gid === "__all" || gid === "__ungrouped"){ ch.position = inp.value.trim(); } else { if (inp.value.trim()) ch.groupSubs[gid] = inp.value.trim(); else delete ch.groupSubs[gid]; } persist(); render(); });
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
   // 그리드 드래그: 핸들을 잡으면 고스트가 커서를 따라오고, 다른 카드가 미끄러지듯 비켜남
   document.querySelectorAll("#chars [data-drag]").forEach(h=>{
