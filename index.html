@@ -19,13 +19,13 @@
     --bg:#101218; --panel:#232836; --line:#343b4f; --txt:#e8eaf0; --dim:#9aa3b8; --acc:#7fb4ff; --warm:#ffc98a;
     --input-bg:#141821; --plabel-bg:#1a2233; --paper:#1a2030; --ruled:rgba(140,170,220,0.09);
     --hole-in:#05080f; --hole-ring:#46536e; --badge-bg:#5a3d1e; --on-acc:#101623;
-    --pair-paper:#2a2418; --pair-ruled:rgba(255,255,255,0.09); --cover:#6e5f4a;
+    --pair-paper:#2a2418; --pair-ruled:rgba(255,255,255,0.09); --cover:#6e5f4a; --cover-bg:#3d3325; --ruled-strong:rgba(255,255,255,0.18);
   }
   html[data-theme="light"] {
     --bg:#e6dfd0; --panel:#ffffff; --line:#ddd6c8; --txt:#2c2822; --dim:#8a8172; --acc:#1a6fb5; --warm:#8a5a1e;
     --input-bg:#ffffff; --plabel-bg:#efe9db; --paper:#fffdf7; --ruled:rgba(120,100,70,0.10);
     --hole-in:#e6dfcf; --hole-ring:#b3a88f; --badge-bg:#f0e2c8; --on-acc:#ffffff;
-    --pair-paper:#fdf2cf; --pair-ruled:rgba(90,130,180,0.35); --cover:#8a6f4d;
+    --pair-paper:#fdf2cf; --pair-ruled:rgba(90,130,180,0.35); --cover:#8a6f4d; --cover-bg:#e2d0ae; --ruled-strong:rgba(90,130,180,0.35);
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--txt); font-family:"Pretendard","Apple SD Gothic Neo",sans-serif; line-height:1.6; }
@@ -59,7 +59,8 @@
   .gcard-select { display:flex; gap:6px; align-items:center; justify-content:center; font-size:12px; color:var(--dim); padding:4px 0 0; }
   .gcard-wrap.selected .gcard { outline:3px solid var(--acc); }
   .group-sub { margin-left:0; margin-top:20px; border-left:4px solid var(--acc); padding-left:14px; }
-  .group-block { margin-top:24px; padding:14px; border:2px solid var(--cover); border-radius:8px; background-color:var(--paper); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled) 27px, var(--ruled) 28px); box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  .group-block { margin-top:24px; padding:14px; border:2px solid var(--cover); border-radius:8px; background-color:var(--paper); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  .group-block.org-block { background-color:var(--cover-bg); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); }
   .group-block .group-head h4 { font-family:"Special Elite","Courier New",monospace; letter-spacing:1px; }
   .group-block:first-child { margin-top:0; }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
@@ -77,8 +78,7 @@
   .gcard-pos { font-size:11px; color:var(--dim); padding:7px 6px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   .gcard-sub { font-size:11px; color:var(--dim); padding:3px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
   button.gcard.on .gcard-pos, button.gcard.on .gcard-sub { color:inherit; opacity:0.85; }
-  .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; position:relative; }
-  .gcard-img::after { content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%) rotate(-2deg); width:48px; height:16px; background:rgba(255,232,154,0.75); border:1px solid rgba(200,180,100,0.5); box-shadow:0 1px 3px rgba(0,0,0,.15); pointer-events:none; z-index:2; }
+  .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .gcard-img-empty { width:100%; height:100%; background:var(--plabel-bg); }
   .gcard-name { font-size:14px; font-weight:700; padding:7px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
@@ -729,7 +729,7 @@ function render(){
   const renderGroupBlock = (g)=>{
     const isOrg = g.kind === "org";
     const expanded = !isOrg || window.expandedOrgs.has(g.id);
-    let html = '<div class="group-block">'+groupHeadHtml(g);
+    let html = '<div class="group-block '+(isOrg ? 'org-block' : 'grp-block')+'">'+groupHeadHtml(g);
     if (!expanded) return html + '</div>';
     const children = groups.filter(x=>x.parentId===g.id);
     const childIds = children.map(x=>x.id);
@@ -771,7 +771,7 @@ function render(){
         const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ descendantIds.add(x.id); collect(x.id); }); };
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
-        charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
+        charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
         if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:#888;margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
