@@ -47,7 +47,17 @@
   .group-head:first-child { margin-top:4px; }
   .group-head h4 { margin:0; font-size:13px; flex:1; min-width:0; }
   .group-head input.group-name { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:13px; }
-  .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:2px 7px; font-size:12px; }
+  .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:8px; cursor:pointer; padding:7px 12px; font-size:13px; }
+  .group-head input.group-name { font-size:14px; padding:7px 9px; }
+  .group-bigrow { display:flex; gap:8px; margin:8px 0 12px; flex-wrap:wrap; }
+  .group-bigrow button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; cursor:pointer; padding:9px 14px; font-size:14px; font-weight:700; }
+  .group-create-panel { border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:14px; background:var(--panel); }
+  .group-create-panel h4 { margin:0 0 6px; font-size:14px; }
+  .group-create-panel p { margin:0 0 8px; font-size:12px; color:var(--dim); }
+  .group-create-panel input, .group-create-panel select { width:100%; box-sizing:border-box; margin-bottom:8px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-size:14px; }
+  .group-create-panel button { width:100%; border:1px solid var(--line); background:var(--acc); color:var(--on-acc); border-radius:8px; cursor:pointer; padding:10px; font-size:14px; font-weight:700; }
+  .gcard-select { display:flex; gap:6px; align-items:center; justify-content:center; font-size:12px; color:var(--dim); padding:4px 0 0; }
+  .gcard-wrap.selected .gcard { outline:3px solid var(--acc); }
   .group-sub { margin-left:10px; border-left:2px solid var(--line); padding-left:10px; }
   .group-block { margin-top:14px; padding-top:10px; border-top:1px dashed var(--line); }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
@@ -652,7 +662,8 @@ function render(){
     const gidKey = gid===null ? "__all" : gid;
     const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
-    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+'</div>';
+    const selHtml = listEdit ? '<label class="gcard-select"><input type="checkbox" data-sel="'+c.id+'"'+(window.selectedChars && window.selectedChars.has(c.id)?" checked":"")+'> 그룹에 넣기</label>' : "";
+    return '<div class="gcard-wrap '+(window.selectedChars && window.selectedChars.has(c.id)?"selected":"")+'" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+selHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
   const orgChartHtml = (list, gid)=>{ if (list.length <= 1) return gridHtml(list, gid); return '<div class="org-chart"><div class="org-top">'+cardHtml(list[0], list, gid)+'</div><div class="org-conn"></div>'+gridHtml(list.slice(1), gid)+'</div>'; };
@@ -663,9 +674,10 @@ function render(){
       if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button></div>';
       return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
     }
-    const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'</button>';
-    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+'<button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div><div class="group-head" style="margin-top:2px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div>';
-    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+'<button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div>';
+    const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'으로 바꾸기</button>';
+    const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
+    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div>';
+    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
   const renderGroupBlock = (g)=>{
@@ -685,6 +697,7 @@ function render(){
     children.forEach(ch=>{
       html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
     });
+    if (listEdit) html += '<div class="group-bigrow"><button data-gsub="'+g.id+'">＋ 여기에 하위 그룹 만들기</button><button data-gdel="'+g.id+'">이 그룹 삭제</button></div>';
     return html + '</div>';
   };
   let charsHtml = "";
@@ -710,9 +723,10 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><input class="group-name" data-glogo="'+g.id+'" value="'+esc(g.logo||"")+'" placeholder="조직 로고 링크"><button data-gsub="'+g.id+'" title="하위 추가">＋하위</button><button data-gdel="'+g.id+'" title="조직 삭제">✕</button></div>';
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"></div>';
         if (direct.length) charsHtml += orgChartHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><button data-gsub="'+g.id+'">＋ 여기에 하위 그룹 만들기</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
         charsHtml += '</div>';
       });
     }
@@ -725,10 +739,19 @@ function render(){
   }
   if (isMaster){
     charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span></div>' + charsHtml;
-    if (window.listEdit) charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><button id="groupAddBtn">그룹 추가</button></div>';
+    if (window.listEdit){
+      const parentOpts = '<option value="">최상위 (어느 조직 아래도 아님)</option>' + groups.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join("");
+      charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><select id="groupAddParent">'+parentOpts+'</select><button id="groupAddBtn">＋ 그룹 추가</button></div>';
+      charsHtml += '<div class="group-create-panel"><h4>선택한 캐릭터로 그룹 만들기</h4><p>카드 아래 “그룹에 넣기”를 켠 캐릭터가 여기에 모여요. <span id="selCount">'+(window.selectedChars ? window.selectedChars.size : 0)+'명 선택됨</span></p><input id="selGroupName" placeholder="새 그룹 이름"><select id="selGroupParent">'+parentOpts+'</select><select id="selGroupKind"><option value="group">그룹</option><option value="org">조직</option></select><button id="selGroupBtn">선택한 캐릭터로 그룹 만들기</button></div>';
+    }
   }
   $("chars").innerHTML = charsHtml;
   const leb = $("listEditBtn"); if (leb) leb.onclick=()=>{ window.listEdit = !window.listEdit; render(); };
+  if (!window.selectedChars) window.selectedChars = new Set();
+  document.querySelectorAll("#chars [data-sel]").forEach(cb=>cb.onchange=()=>{ if (cb.checked) window.selectedChars.add(cb.dataset.sel); else window.selectedChars.delete(cb.dataset.sel); const sc = $("selCount"); if (sc) sc.textContent = window.selectedChars.size + "명 선택됨"; cb.closest(".gcard-wrap").classList.toggle("selected", cb.checked); });
+  document.querySelectorAll("#chars [data-glogo-btn]").forEach(b=>b.onclick=()=>{ const f = document.querySelector('[data-glogo-file="'+b.dataset.glogoBtn+'"]'); if (f) f.click(); });
+  document.querySelectorAll("#chars [data-glogo-file]").forEach(f=>f.onchange=async ()=>{ const file = f.files && f.files[0]; if (!file) return; try{ const url = await uploadToCloudinary(file); const g = groupOf(cw, f.dataset.glogoFile); if (g){ g.logo = url; persist(); render(); } }catch(e){ alert("로고 업로드 실패: " + (e && e.message)); } });
+  const sgb = $("selGroupBtn"); if (sgb) sgb.onclick=()=>{ const name = $("selGroupName").value.trim() || "새 그룹"; const pid = $("selGroupParent").value || null; const kind = $("selGroupKind").value; const id = "g_"+Math.random().toString(36).slice(2,10); cw.groups.push({id, name, parentId:pid, kind, logo:""}); cw.chars.forEach(c=>{ if (window.selectedChars.has(c.id)){ if (!Array.isArray(c.groupIds)) c.groupIds = []; if (!c.groupIds.includes(id)) c.groupIds.push(id); } }); window.selectedChars.clear(); persist(); render(); };
   document.querySelectorAll("#chars [data-gsub-char]").forEach(inp=>inp.onchange=()=>{ const ch = cw.chars.find(x=>x.id===inp.dataset.gsubChar); if (!ch) return; if (!ch.groupSubs) ch.groupSubs = {}; const gid = inp.dataset.gsubGid; if (gid === "__all" || gid === "__ungrouped"){ ch.position = inp.value.trim(); } else { if (inp.value.trim()) ch.groupSubs[gid] = inp.value.trim(); else delete ch.groupSubs[gid]; } persist(); render(); });
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
   // 그리드 드래그: 핸들을 잡으면 고스트가 커서를 따라오고, 다른 카드가 미끄러지듯 비켜남
@@ -766,7 +789,7 @@ function render(){
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
   document.querySelectorAll("#chars [data-gsub]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.gsub; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name:"새 하위그룹", parentId:pid, kind:"group"}); persist(); render(); });
-  const ga = $("groupAddBtn"); if (ga) ga.onclick=()=>{ const inp = $("groupAddName"); const name = inp.value.trim() || "새 그룹"; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name, parentId:null, kind:"group"}); persist(); render(); };
+  const ga = $("groupAddBtn"); if (ga) ga.onclick=()=>{ const inp = $("groupAddName"); const name = inp.value.trim() || "새 그룹"; const pid = $("groupAddParent") ? $("groupAddParent").value || null : null; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name, parentId:pid, kind:"group", logo:""}); persist(); render(); };
 
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
