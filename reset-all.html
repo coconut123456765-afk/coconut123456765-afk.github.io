@@ -1,0 +1,43 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>reset-all</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">전체 초기화 실행</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{};
+    const store = v.store||{};
+    let cleared=0;
+    Object.values(store).forEach(w=>{ (w.chars||[]).forEach(c=>{ if ((c.groupSuperior && Object.keys(c.groupSuperior).length) || c.superiorId){ cleared++; } c.groupSuperior={}; c.superiorId=null; }); });
+    log("CLEARED superiors count="+cleared);
+    const sib = store["siblings"];
+    const dm = (sib.chars||[]).find(c=>c.id==="c1792660050682");
+    if (dm){ log("BEFORE DoMalsuk groupIds="+JSON.stringify(dm.groupIds)+" name="+(dm.profile&&dm.profile.name)); dm.groupIds=["g-ahn"]; log("AFTER DoMalsuk groupIds="+JSON.stringify(dm.groupIds)); }
+    else log("DoMalsuk NOT FOUND");
+    const dy = (sib.chars||[]).find(c=>c.id==="c1792660214065");
+    if (dy) log("DoYuni groupIds="+JSON.stringify(dy.groupIds));
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("AFTER total hotel="+(store.hotel.chars||[]).length+" siblings="+(sib.chars||[]).length+" mybaby="+(store.w1792508654855.chars||[]).length);
+    Object.values(store).forEach(w=>{ (w.chars||[]).forEach(c=>{ log("  "+(c.profile&&c.profile.name)+" groupIds="+JSON.stringify(c.groupIds||[])); }); });
+    log("DONE");
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>

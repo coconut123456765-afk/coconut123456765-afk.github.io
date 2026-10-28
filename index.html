@@ -676,20 +676,7 @@ function render(){
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
     const supHtml = "";
     const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
-    let arrowHtml = "";
-    if (listEdit && gid && gid!=="__ungrouped"){
-      const supV = (c.groupSuperior && c.groupSuperior[gid]) ? c.groupSuperior[gid] : (c.superiorId || null);
-      const canDemote = !(list.findIndex(x=>x.id===c.id) === 0 && !supV);
-      const gi = groups.findIndex(g=>g.id===gid);
-      const prevG = gi > 0 ? groups[gi-1] : null;
-      const nextG = (gi >= 0 && gi < groups.length-1) ? groups[gi+1] : null;
-      arrowHtml = '<div class="arrow-row">'
-        + '<button data-promote="'+c.id+'" data-pgid="'+esc(gid)+'"'+(supV ? "" : " disabled")+'>▲ 승격</button>'
-        + '<button data-demote="'+c.id+'" data-pgid="'+esc(gid)+'"'+(canDemote ? "" : " disabled")+'>▼ 강등</button>'
-        + (prevG ? '<button data-gmove="'+c.id+'" data-pgid="'+esc(gid)+'" data-to="'+prevG.id+'">◀ '+esc(prevG.name)+'으로</button>' : "")
-        + (nextG ? '<button data-gmove="'+c.id+'" data-pgid="'+esc(gid)+'" data-to="'+nextG.id+'">'+esc(nextG.name)+'으로 ▶</button>' : "")
-        + '</div>';
-    }
+    const arrowHtml = "";
     return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(groupSubtitle(c, gid))+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
   };
   const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
@@ -842,43 +829,6 @@ function render(){
       };
       document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
     };
-  });
-  // 화살표: 상급자/하급자 (승격/강등, 순환이 생길 수 없는 구조) + 다른 그룹으로 이동
-  document.querySelectorAll("#chars [data-promote]").forEach(b=>b.onclick=()=>{
-    const ch = cw.chars.find(x=>x.id===b.dataset.promote); if (!ch) return;
-    const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
-    const sup = ch.groupSuperior[gid] || ch.superiorId || null; if (!sup) return;
-    if (sup === ch.id){ delete ch.groupSuperior[gid]; ch.superiorId = null; persist(); render(); return; }
-    const supCh = cw.chars.find(x=>x.id===sup); if (!supCh) return;
-    const supSup = (supCh.groupSuperior && supCh.groupSuperior[gid]) ? supCh.groupSuperior[gid] : (supCh.superiorId || null);
-    if (supSup && supSup !== ch.id) ch.groupSuperior[gid] = supSup; else delete ch.groupSuperior[gid];
-    persist(); render();
-  });
-  document.querySelectorAll("#chars [data-demote]").forEach(b=>b.onclick=()=>{
-    const ch = cw.chars.find(x=>x.id===b.dataset.demote); if (!ch) return;
-    const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
-    const members = cw.chars.filter(c=>charInGroup(c, gid));
-    const getS = (x)=> (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null);
-    // 화면 트리 순서(상위부터 깊이 우선)로 펼친 뒤, 바로 위 카드 아래로 들어간다. 자기 자손이면 건너뛴다.
-    const children = {}; members.forEach(m=>{ const sv = getS(m); if (sv && members.some(y=>y.id===sv)) (children[sv] = children[sv] || []).push(m); });
-    const flat = []; const visit = (m, d)=>{ if (d > 10) return; flat.push(m); (children[m.id] || []).forEach(x=>visit(x, d+1)); };
-    members.filter(m=>{ const sv = getS(m); return !sv || !members.some(y=>y.id===sv); }).forEach(m=>visit(m, 0));
-    const descendants = new Set(); const collectDesc = (m)=>{ (children[m.id] || []).forEach(x=>{ descendants.add(x.id); collectDesc(x); }); }; collectDesc(ch);
-    const idx = flat.findIndex(x=>x.id===ch.id); if (idx < 0){ delete ch.groupSuperior[gid]; ch.superiorId = null; persist(); render(); return; } if (idx <= 0) return;
-    let target = null;
-    for (let i = idx-1; i >= 0; i--){ if (flat[i].id !== ch.id && !descendants.has(flat[i].id)){ target = flat[i]; break; } }
-    if (!target) return;
-    ch.groupSuperior[gid] = target.id;
-    persist(); render();
-  });
-  document.querySelectorAll("#chars [data-gmove]").forEach(b=>b.onclick=()=>{
-    const ch = cw.chars.find(x=>x.id===b.dataset.gmove); if (!ch) return;
-    const gid = b.dataset.pgid, to = b.dataset.to;
-    if (!Array.isArray(ch.groupIds)) ch.groupIds = [];
-    ch.groupIds = ch.groupIds.filter(id=>id!==gid);
-    if (!ch.groupIds.includes(to)) ch.groupIds.push(to);
-    if (ch.groupSuperior) delete ch.groupSuperior[gid];
-    persist(); render();
   });
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
