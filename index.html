@@ -676,7 +676,7 @@ function render(){
     const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
     const supHtml = "";
-    const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
+    const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.filter(g=>g.kind==="org").map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
     const arrowHtml = "";
     const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
     return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'">'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
@@ -736,7 +736,7 @@ function render(){
     children.forEach(ch=>{
       html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
     });
-    if (listEdit) html += '<div class="group-bigrow"><button data-gdel="'+g.id+'">이 그룹 삭제</button></div>';
+    if (listEdit) html += '<div class="group-bigrow">'+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>';
     return html + '</div>';
   };
   let charsHtml = "";
@@ -768,7 +768,7 @@ function render(){
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"></div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
         charsHtml += '</div>';
       });
     }
@@ -841,9 +841,10 @@ function render(){
   });
   document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
-  document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ window.expandedUngrouped = !window.expandedUngrouped; render(); });
-  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
+  document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
+  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
+  document.querySelectorAll("#chars [data-sub-org]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.subOrg; const inp = document.querySelector('[data-sub-name="'+pid+'"]'); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 그룹 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "group", parentId: pid, logo: ""}); persist(); render(); });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
 
   // 탭 (무기 탭은 판타지 호텔에만)
