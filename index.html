@@ -747,6 +747,8 @@ function render(){
     const topOrgs = topGroups.filter(g=>g.kind==="org");
     const topNonOrgs = topGroups.filter(g=>g.kind!=="org");
     // 조직은 긴 바 대신 갤러리 타일(문양 위·이름 아래, 선택 시 파랑)로, 그 자리에서 펼침
+    const groupedIdsPre = new Set(groups.map(g=>g.id));
+    const ungroupedPre = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIdsPre.has(id)));
     if (topOrgs.length){
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
@@ -754,7 +756,7 @@ function render(){
         const tileImg = (members1.length === 1 ? groupPortrait(members1[0]) : "") || g.logo || "";
         const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(tileImg)+'" alt=""></span>' : '<span class="org-tile-img"></span>';
         return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
-      }).join("")+'</div>';
+      }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
       // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
       topOrgs.forEach(g=>{
         if (!window.expandedOrgs.has(g.id)) return;
@@ -776,9 +778,7 @@ function render(){
     const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
     if (ungrouped.length){
       const ungOn = !!window.expandedUngrouped;
-      const ungTile = '<button class="org-tile '+(ungOn?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungrouped.length+')</span></button>';
-      if (topOrgs.length){ charsHtml += '<div class="org-grid">'+ungTile+'</div>'; }
-      else { charsHtml += '<div class="group-block"><div class="group-head"><button class="group-org" data-ungrouped="1">'+(ungOn?"▾ ":"▸ ")+'미분류 ('+ungrouped.length+')</button></div></div>'; }
+      if (!topOrgs.length){ charsHtml += '<div class="group-block"><div class="group-head"><button class="group-org" data-ungrouped="1">'+(ungOn?"▾ ":"▸ ")+'미분류 ('+ungrouped.length+')</button></div></div>'; }
       if (ungOn) charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
     }
   }
