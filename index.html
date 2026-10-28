@@ -672,7 +672,7 @@ function render(){
     const img = groupPortrait(c);
     const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(img)+'" alt=""></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
     const gidKey = gid===null ? "__all" : gid;
-    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그: 위=상급자, 가운데=동급자, 아래=하급자</span>' : "";
+    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그: 카드 위쪽=상급자, 가운데=동급자, 아래쪽=하급자</span>' : "";
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
     const supHtml = "";
     const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
@@ -797,19 +797,22 @@ function render(){
         if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
         if (!moved){ moved = true; wrap.classList.add("dragging"); ghost = document.createElement("div"); ghost.className = "drag-ghost"; ghost.innerHTML = wrap.innerHTML; document.body.appendChild(ghost); }
         if (ghost){ ghost.style.left = (ev.clientX-80)+"px"; ghost.style.top = (ev.clientY-40)+"px"; }
-        if (lastTarget) lastTarget.style.outline = "";
+        if (lastTarget){ const pc = lastTarget.querySelector(".gcard"); if (pc){ pc.style.outline = ""; pc.style.boxShadow = ""; } }
         const el = document.elementFromPoint(ev.clientX, ev.clientY);
         const target = el ? el.closest(".gcard-wrap") : null;
         if (target && target !== wrap){
-          const r = target.getBoundingClientRect(); const yRel = (ev.clientY - r.top) / Math.max(1, r.height);
+          const cardEl = target.querySelector(".gcard") || target;
+          const r = cardEl.getBoundingClientRect(); const yRel = (ev.clientY - r.top) / Math.max(1, r.height);
           lastTarget = target; lastZone = yRel < 0.33 ? "above" : (yRel > 0.66 ? "below" : "peer");
-          target.style.outline = "3px solid var(--acc)";
+          if (lastZone === "above") cardEl.style.boxShadow = "0 -6px 0 var(--acc)";
+          else if (lastZone === "below") cardEl.style.boxShadow = "0 6px 0 var(--acc)";
+          else cardEl.style.outline = "3px solid var(--acc)";
         } else { lastTarget = null; }
       };
       const up = ()=>{
         document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
         if (ghost) ghost.remove();
-        if (lastTarget) lastTarget.style.outline = "";
+        if (lastTarget){ const pc = lastTarget.querySelector(".gcard"); if (pc){ pc.style.outline = ""; pc.style.boxShadow = ""; } }
         if (moved && lastTarget){
           window.lastDragEnd = Date.now();
           const dragged = cw.chars.find(x=>x.id===wrap.dataset.wrap);
