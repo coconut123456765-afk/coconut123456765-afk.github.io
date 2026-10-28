@@ -765,7 +765,7 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster) charsHtml += '<div class="group-head"><button data-addchar-org="'+g.id+'" type="button">이 조직에 캐릭터 추가</button></div>';
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><button data-addchar-org="'+g.id+'" type="button">이 조직에 캐릭터 추가</button></div>';
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"><button data-gup="'+g.id+'" title="조직 순서 위로">▲</button><button data-gdown="'+g.id+'" title="조직 순서 아래로">▼</button></div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
