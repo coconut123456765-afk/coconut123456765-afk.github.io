@@ -715,8 +715,9 @@ function render(){
     }
     const kindBtn = '<button data-gkind="'+g.id+'" title="조직/그룹 바꾸기">'+(isOrg?"조직":"그룹")+'으로 바꾸기</button>';
     const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
-    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"></div>';
-    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+'</div>';
+    const orderBtn = '<button data-gup="'+g.id+'" title="그룹 순서 위로">▲</button><button data-gdown="'+g.id+'" title="그룹 순서 아래로">▼</button>';
+    if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+kindBtn+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+kindBtn+orderBtn+'</div>';
   };
   // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
   const renderGroupBlock = (g)=>{
@@ -765,7 +766,8 @@ function render(){
         collect(g.id);
         const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
         charsHtml += '<div class="group-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"></div>';
+        if (isMaster) charsHtml += '<div class="group-head"><button data-addchar-org="'+g.id+'" type="button">이 조직에 캐릭터 추가</button></div>';
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'"><button data-gup="'+g.id+'" title="조직 순서 위로">▲</button><button data-gdown="'+g.id+'" title="조직 순서 아래로">▼</button></div>';
         if (direct.length) charsHtml += treeHtml(direct, g.id);
         children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
         if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
@@ -844,6 +846,9 @@ function render(){
   document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   document.querySelectorAll("#chars [data-gkind]").forEach(b=>b.onclick=()=>{ const g = groupOf(cw, b.dataset.gkind); if (g){ g.kind = (g.kind==="org" ? "group" : "org"); persist(); render(); } });
+  document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gup; const idx = cw.groups.findIndex(g=>g.id===gid); if (idx > 0){ const tmp = cw.groups[idx-1]; cw.groups[idx-1] = cw.groups[idx]; cw.groups[idx] = tmp; persist(); render(); } });
+  document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdown; const idx = cw.groups.findIndex(g=>g.id===gid); if (idx >= 0 && idx < cw.groups.length-1){ const tmp = cw.groups[idx+1]; cw.groups[idx+1] = cw.groups[idx]; cw.groups[idx] = tmp; persist(); render(); } });
+  document.querySelectorAll("#chars [data-addchar-org]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.addcharOrg; cancelEdit(); const id = "c"+Date.now(); if (!cw.chars) cw.chars = []; cw.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[gid], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""}); curChar=id; persist(); render(); });
   document.querySelectorAll("#chars [data-sub-org]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.subOrg; const inp = document.querySelector('[data-sub-name="'+pid+'"]'); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 그룹 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "group", parentId: pid, logo: ""}); persist(); render(); });
   document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
 
@@ -1671,7 +1676,7 @@ $("addChar").onclick = ()=>{
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
   w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
-  curChar=id; persist(); render();
+  curChar=id; window.expandedUngrouped = true; window.expandedOrgs.clear(); persist(); render();
 };
 $("delChar").onclick = ()=>{
   const w = store[curWorld], c = cur();
