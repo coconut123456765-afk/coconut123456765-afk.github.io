@@ -1321,7 +1321,18 @@ function renderTabInner(c){
           return html;
         };
         if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
-        h += `<div class="orgchart-tree">` + (roots.length ? roots.map(m=>nodeHtml(m, 0, new Set())).join("") : members.map(m=>nodeHtml(m, 0, new Set())).join("")) + `</div>`;
+        // 레벨 방식: 최상위 줄 -> 하급자 줄 -> ... (부부 최상위도 한 줄에 묶인다)
+        {
+          const levelCard = (m)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
+          let levels = []; let curLevel = roots.length ? roots : members; let seenLevel = new Set();
+          for (let lv=0; lv<10 && curLevel.length; lv++){
+            const filtered = curLevel.filter(m=>!seenLevel.has(m.id)); filtered.forEach(m=>seenLevel.add(m.id));
+            if (!filtered.length) break; levels.push(filtered);
+            let next = []; filtered.forEach(m=>{ (childrenMap[m.id]||[]).forEach(ch=>{ if (!seenLevel.has(ch.id)) next.push(ch); }); }); curLevel = next;
+          }
+          if (!levels.length && members.length) levels = [members];
+          h += levels.map(lv=>`<div class="orgchart-tree" style="justify-content:center">` + lv.map(m=>levelCard(m)).join("") + `</div>`).join(`<div style="text-align:center;color:var(--line);font-size:18px;line-height:1">│</div>`);
+        }
         // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
         const childGroups = gs.filter(x=>x.parentId===selOrgId);
         if (childGroups.length){ h += `<div style="margin-top:10px;font-size:12px;color:var(--dim)">하위 그룹: ` + childGroups.map(x=>esc(x.name)).join(", ") + `</div>`; }

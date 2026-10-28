@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>cha-ungroup</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">안씨네 상급자 적용</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{}; const store = v.store||{};
+    const sib = store["siblings"];
+    if (!sib) { log("NOT FOUND siblings"); return; }
+    const oryong = (sib.chars||[]).find(x=>x.id==="c1792660051543");
+    const malsuk = (sib.chars||[]).find(x=>x.id==="c1792660050682");
+    if (!oryong || !malsuk){ log("NOT FOUND parents"); return; }
+    log("parents=" + oryong.profile.name + ", " + malsuk.profile.name);
+    log("oryong ahn superior=" + JSON.stringify((oryong.groupSuperior||{})["g-ahn"]||null));
+    log("malsuk ahn superior=" + JSON.stringify((malsuk.groupSuperior||{})["g-ahn"]||null));
+    const ids = ["c1792343036533","c1792394387441","c1792313574027","c1792350034365"];
+    ids.forEach(id=>{
+      const ch = (sib.chars||[]).find(x=>x.id===id);
+      if (!ch){ log("NOT FOUND "+id); return; }
+      if (!ch.groupSuperior || typeof ch.groupSuperior !== "object") ch.groupSuperior = {};
+      log("before " + (ch.profile.name||id) + " ahn superior=" + JSON.stringify(ch.groupSuperior["g-ahn"]||null));
+      ch.groupSuperior["g-ahn"] = oryong.id;
+      log("set superior " + (ch.profile.name||id) + " -> 안오룡 (안씨네, 부부 최상위 대표)");
+    });
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("DONE siblings chars=" + sib.chars.length);
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
