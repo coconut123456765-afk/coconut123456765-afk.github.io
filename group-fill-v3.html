@@ -1,0 +1,44 @@
+<!doctype html><meta charset="utf-8"><title>조직 로고 채우기 v3</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<body style="font-family:sans-serif;padding:20px">
+<h3>조직 로고 채우기 v3 (임시)</h3>
+<p>이메일 <input id="em" value="dossier@don.local"> 비밀번호 <input id="pw" type="password">
+<button id="go">로그인 후 실행</button></p>
+<pre id="log" style="white-space:pre-wrap"></pre>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const log = s => { document.getElementById('log').textContent += s + "\n"; };
+document.getElementById('go').onclick = async () => {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    log('LOGIN OK ' + firebase.auth().currentUser.email);
+    const ref = firebase.database().ref('wiki');
+    const snap = await ref.get();
+    const v = snap.val() || {};
+    const store = v.store || {};
+    const sib = store['siblings'];
+    sib.chars.forEach(c => log('CHAR ' + c.profile.name + ' thumb=' + (c.thumb||'') + ' groups=' + JSON.stringify(c.groupIds||[])));
+    const orgs = sib.groups.filter(g => g.kind === 'org');
+    orgs.forEach(g => {
+      const members = sib.chars.filter(c => (c.groupIds||[]).includes(g.id));
+      const thumbs = [...new Set(members.map(c => c.thumb).filter(Boolean))];
+      log('ORG ' + g.name + ' members=' + members.map(c=>c.profile.name).join(',') + ' thumbs=' + thumbs.length);
+      if (thumbs.length === 1) { g.logo = thumbs[0]; log('SET LOGO ' + g.name); }
+      else { g.logo = ''; log('LOGO EMPTY ' + g.name + ' (thumbs differ or none)'); }
+    });
+    await ref.set(v);
+    log('DONE orgs=' + orgs.length);
+  } catch(e) { log('ERROR ' + (e && e.message)); }
+};
+</script></body>
