@@ -1,0 +1,65 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>audit3</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">점검 실행</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const snap = await firebase.database().ref("wiki").once("value");
+    const v = snap.val()||{};
+    const store = v.store||{};
+    log("backups count="+(v.backups? Object.keys(v.backups).length:0)+" keys="+(v.backups? Object.keys(v.backups).join(","):"none"));
+    for (const wk of Object.keys(store)) {
+      const w = store[wk];
+      const gids = new Set((w.groups||[]).map(g=>g.id));
+      log("WORLD "+wk+" name="+(w.name||"")+" chars="+(w.chars||[]).length+" groups="+(w.groups||[]).length);
+      (w.groups||[]).forEach(g=>{
+        const members = (w.chars||[]).filter(c=>Array.isArray(c.groupIds)&&c.groupIds.includes(g.id));
+        log("  GROUP "+g.name+" id="+g.id+" kind="+g.kind+" parent="+(g.parentId||"")+" topCount="+(g.topCount===undefined?"-":g.topCount)+" members="+members.length+" names="+members.map(c=>c.profile&&c.profile.name).join("|"));
+        if (g.parentId && !gids.has(g.parentId)) log("    !! ORPHAN PARENT");
+        if (!members.length) log("    !! EMPTY GROUP");
+      });
+      const nameCount={};
+      (w.chars||[]).forEach(c=>{ const n=c.profile&&c.profile.name; nameCount[n]=(nameCount[n]||0)+1; });
+      Object.entries(nameCount).forEach(([n,c])=>{ if(c>1) log("  !! DUP NAME "+n+" x"+c); });
+      (w.chars||[]).forEach(c=>{
+        const bad=(c.groupIds||[]).filter(id=>!gids.has(id));
+        if (bad.length) log("  !! ORPHAN GROUPIDS "+(c.profile&&c.profile.name)+" "+JSON.stringify(bad));
+        const sups=[];
+        if (c.superiorId) sups.push(["global",c.superiorId]);
+        Object.entries(c.groupSuperior||{}).forEach(([gid,sid])=>sups.push([gid,sid]));
+        sups.forEach(([gid,sid])=>{
+          const target=(w.chars||[]).find(x=>x.id===sid);
+          if (!target) log("  !! ORPHAN SUPERIOR "+(c.profile&&c.profile.name)+" gid="+gid+" sid="+sid);
+          else if (sid===c.id) log("  !! SELF SUPERIOR "+(c.profile&&c.profile.name));
+        });
+        // cycle check per group
+        Object.keys(c.groupSuperior||{}).forEach(gid=>{
+          const seen=new Set(); let cur=c.id;
+          const getSup=(ch)=>{ if(ch.groupSuperior&&ch.groupSuperior[gid]) return ch.groupSuperior[gid]; return ch.superiorId||null; };
+          while(cur && !seen.has(cur)){ seen.add(cur); const ch=(w.chars||[]).find(x=>x.id===cur); cur=ch?getSup(ch):null; }
+          if (cur && seen.has(cur)) log("  !! CYCLE in "+gid+" starting "+(c.profile&&c.profile.name));
+        });
+        if (!c.groupIds||!c.groupIds.length) log("  UNGROUPED "+(c.profile&&c.profile.name)+" id="+c.id);
+        if (!(c.profile&&c.profile.name)) log("  !! NO NAME id="+c.id);
+      });
+    }
+    log("DONE");
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
