@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>cha-ungroup</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">리아 상급자 되돌리기</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{}; const store = v.store||{};
+    const hotel = store["hotel"];
+    if (!hotel) { log("NOT FOUND hotel"); return; }
+    const mc = (hotel.chars||[]).find(x=>x.id==="c1793217181877");
+    if (!mc){ log("NOT FOUND mc"); return; }
+    const ids = ["c1792308022062","c1792343484050","c1792311336476","c1792343506127","c1792343506979"];
+    ids.forEach(id=>{
+      const ch = (hotel.chars||[]).find(x=>x.id===id);
+      if (!ch){ log("NOT FOUND "+id); return; }
+      if (!ch.groupSuperior || typeof ch.groupSuperior !== "object") ch.groupSuperior = {};
+      log("before " + (ch.profile.name||id) + " superior=" + JSON.stringify(ch.groupSuperior["g-saloon-new"]||null));
+      ch.groupSuperior["g-saloon-new"] = mc.id;
+      log("set superior " + (ch.profile.name||id) + " -> 맥버튼 캬라멜");
+    });
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("DONE hotel chars=" + hotel.chars.length);
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
