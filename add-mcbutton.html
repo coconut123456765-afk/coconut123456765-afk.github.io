@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>cha-ungroup</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head><body>
+<input id="em" placeholder="email"><input id="pw" type="password" placeholder="password">
+<button id="go">맥버튼 캬라멜 추가</button><pre id="log"></pre><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+firebase.initializeApp(firebaseConfig);
+const logEl=document.getElementById('log');
+function log(s){ logEl.textContent += "\n" + s; }
+document.getElementById('go').onclick = async ()=>{
+  try{
+    await firebase.auth().signInWithEmailAndPassword(document.getElementById('em').value, document.getElementById('pw').value);
+    const ref = firebase.database().ref("wiki");
+    const snap = await ref.once("value");
+    const v = snap.val()||{}; const store = v.store||{};
+    const hotel = store["hotel"];
+    if (!hotel) { log("NOT FOUND hotel world"); return; }
+    log("hotel worlds=" + Object.keys(store).join(","));
+    log("hotel chars before=" + (hotel.chars||[]).length);
+    const existing = (hotel.chars||[]).find(x=>x.profile && x.profile.name==="맥버튼 캬라멜");
+    if (existing){ log("ALREADY EXISTS id="+existing.id); return; }
+    const id = "c"+Date.now();
+    const lev = (hotel.chars||[]).find(x=>x.id==="c1792308022062");
+    const ch = {id, profile:{name:"맥버튼 캬라멜",age:"",height:"",birthday:""}, rels:[], groupIds:["g-saloon-new"], groupSubs:{"g-saloon-new":"총지배인"}, groupSuperior:{}, illust:"", repImg:"", thumb:"", logo:"", position:"총지배인", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"레비테리아 캬라멜과 리아의 아빠. 살룬 라군의 총지배인.", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""};
+    if (lev){ ch.rels.push({to: lev.id, kind:"family"}); if (!Array.isArray(lev.rels)) lev.rels=[]; lev.rels.push({to: id, kind:"family"}); log("leviteria found, family rel added both ways"); }
+    else log("leviteria NOT FOUND, rel skipped");
+    hotel.chars.push(ch);
+    log("new id="+id);
+    v.store = store; v.storeUpdatedAt = Date.now();
+    await ref.set(v);
+    log("DONE hotel chars=" + hotel.chars.length);
+  }catch(e){ log("ERR "+e.message); }
+};
+</script></body></html>
