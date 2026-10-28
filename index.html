@@ -679,9 +679,7 @@ function render(){
     let arrowHtml = "";
     if (listEdit && gid && gid!=="__ungrouped"){
       const supV = (c.groupSuperior && c.groupSuperior[gid]) ? c.groupSuperior[gid] : (c.superiorId || null);
-      const peers = list.filter(x=>{ const sv = (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null); return sv === supV; });
-      const pi = peers.findIndex(x=>x.id===c.id);
-      const canDemote = pi > 0;
+      const canDemote = !(list.findIndex(x=>x.id===c.id) === 0 && !supV);
       const gi = groups.findIndex(g=>g.id===gid);
       const prevG = gi > 0 ? groups[gi-1] : null;
       const nextG = (gi >= 0 && gi < groups.length-1) ? groups[gi+1] : null;
@@ -852,17 +850,24 @@ function render(){
     const sup = ch.groupSuperior[gid] || ch.superiorId || null; if (!sup) return;
     const supCh = cw.chars.find(x=>x.id===sup); if (!supCh) return;
     const supSup = (supCh.groupSuperior && supCh.groupSuperior[gid]) ? supCh.groupSuperior[gid] : (supCh.superiorId || null);
-    if (supSup) ch.groupSuperior[gid] = supSup; else delete ch.groupSuperior[gid];
+    if (supSup && supSup !== ch.id) ch.groupSuperior[gid] = supSup; else delete ch.groupSuperior[gid];
     persist(); render();
   });
   document.querySelectorAll("#chars [data-demote]").forEach(b=>b.onclick=()=>{
     const ch = cw.chars.find(x=>x.id===b.dataset.demote); if (!ch) return;
     const gid = b.dataset.pgid; if (!ch.groupSuperior) ch.groupSuperior = {};
-    const sup = ch.groupSuperior[gid] || ch.superiorId || null;
     const members = cw.chars.filter(c=>charInGroup(c, gid));
-    const peers = members.filter(x=>{ const sv = (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null); return sv === sup; });
-    const pi = peers.findIndex(x=>x.id===ch.id); if (pi <= 0) return;
-    ch.groupSuperior[gid] = peers[pi-1].id;
+    const getS = (x)=> (x.groupSuperior && x.groupSuperior[gid]) ? x.groupSuperior[gid] : (x.superiorId || null);
+    // 화면 트리 순서(상위부터 깊이 우선)로 펼친 뒤, 바로 위 카드 아래로 들어간다. 자기 자손이면 건너뛴다.
+    const children = {}; members.forEach(m=>{ const sv = getS(m); if (sv && members.some(y=>y.id===sv)) (children[sv] = children[sv] || []).push(m); });
+    const flat = []; const visit = (m, d)=>{ if (d > 10) return; flat.push(m); (children[m.id] || []).forEach(x=>visit(x, d+1)); };
+    members.filter(m=>{ const sv = getS(m); return !sv || !members.some(y=>y.id===sv); }).forEach(m=>visit(m, 0));
+    const descendants = new Set(); const collectDesc = (m)=>{ (children[m.id] || []).forEach(x=>{ descendants.add(x.id); collectDesc(x); }); }; collectDesc(ch);
+    const idx = flat.findIndex(x=>x.id===ch.id); if (idx <= 0) return;
+    let target = null;
+    for (let i = idx-1; i >= 0; i--){ if (flat[i].id !== ch.id && !descendants.has(flat[i].id)){ target = flat[i]; break; } }
+    if (!target) return;
+    ch.groupSuperior[gid] = target.id;
     persist(); render();
   });
   document.querySelectorAll("#chars [data-gmove]").forEach(b=>b.onclick=()=>{
