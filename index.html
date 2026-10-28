@@ -39,10 +39,31 @@
   .worlds button, .tabs button, .chars button { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
   .worlds button.on, .tabs button.on, .chars button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
   main { display:flex; min-height:calc(100vh - 70px); }
-  aside { width:230px; border-right:1px solid var(--line); padding:14px; }
+  aside { width:280px; border-right:1px solid var(--line); padding:14px; }
   aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
   .chars { display:flex; flex-direction:column; gap:6px; }
   .chars button { text-align:left; display:flex; align-items:center; gap:10px; }
+  .group-head { display:flex; align-items:center; gap:6px; margin:14px 0 6px; }
+  .group-head:first-child { margin-top:4px; }
+  .group-head h4 { margin:0; font-size:13px; flex:1; min-width:0; }
+  .group-head input.group-name { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:13px; }
+  .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:2px 7px; font-size:12px; }
+  .group-sub { margin-left:10px; border-left:2px solid var(--line); padding-left:10px; }
+  .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 10px; }
+  .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:10px; text-align:center; }
+  button.gcard.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .gcard-pos { font-size:10px; color:var(--dim); padding:5px 4px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  button.gcard.on .gcard-pos { color:var(--on-acc); opacity:0.85; }
+  .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
+  .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .gcard-img-empty { width:100%; height:100%; background:var(--plabel-bg); }
+  .gcard-name { font-size:12px; padding:5px 4px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .gcard-order { display:flex; gap:4px; justify-content:center; }
+  .gcard-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; }
+  .group-add { display:flex; gap:6px; margin-top:10px; }
+  .group-add input { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:12px; }
+  .group-add button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 9px; font-size:12px; }
   .char-row { display:flex; align-items:center; gap:4px; }
   .char-row .char-sel { flex:1; min-width:0; }
   .char-order { display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
@@ -370,8 +391,31 @@ function loadLocal(){
 function normalizeStore(){
   Object.values(store).forEach(w=>{
     if (!w || !Array.isArray(w.chars)) return;
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; });
+    if (!Array.isArray(w.groups)) w.groups = [];
+    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); });
   });
+}
+function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; }
+function groupOf(w, id){ return worldGroups(w).find(g=>g.id===id) || null; }
+function charInGroup(c, gid){ return Array.isArray(c.groupIds) && c.groupIds.includes(gid); }
+function groupPortrait(c){
+  const rep = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+  if (rep) return rep;
+  if (c.thumb) return c.thumb;
+  return "";
+}
+function moveCharInGroup(charId, groupId, dir){
+  const w = store[curWorld]; if (!w || !Array.isArray(w.chars)) return;
+  let list;
+  if (groupId === null) list = w.chars.slice();
+  else if (groupId === "__ungrouped") list = w.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0);
+  else list = w.chars.filter(c=>charInGroup(c, groupId));
+  const idx = list.findIndex(c=>c.id===charId); const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= list.length) return;
+  const a = w.chars.findIndex(c=>c.id===list[idx].id); const b = w.chars.findIndex(c=>c.id===list[j].id);
+  const t = w.chars[a]; w.chars[a] = w.chars[b]; w.chars[b] = t;
+  persist(); render();
 }
 function setSyncStatus(txt, color){
   const el = document.getElementById("syncStatus");
@@ -574,27 +618,57 @@ function render(){
     curTab="profile";
     render();
   });
-  // 캐릭터 목록
+  // 캐릭터 목록 (그룹 격자: 세계관 > 그룹 > 하위그룹, 한 캐릭터는 여러 그룹에 뜰 수 있음)
   const cw = store[curWorld];
   const charList = (cw && cw.chars) ? cw.chars : [];
-  $("chars").innerHTML = charList.map((c,i,arr)=>{
-    const sub = c.position || "";
-    const img = c.repImg || (c.illust||"").split("\n").find(x=>x.trim()) || c.thumb;
-    const subHtml = sub ? '<span class="char-sub">'+esc(sub)+'</span>' : "";
-    const imgHtml = (c.id===curChar && img) ? '<div class="char-item-img"><img src="'+esc(img)+'" alt=""></div>' : "";
-    const selOn = c.id===curChar ? "on" : "";
-    const disUp = i===0 ? " disabled" : "";
-    const disDown = i===arr.length-1 ? " disabled" : "";
-    const cname = esc(c.profile.name||"(이름 없음)");
+  const groups = worldGroups(cw);
+  const cardHtml = (c, list, gid)=>{
+    const img = groupPortrait(c);
+    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(img)+'" alt=""></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
+    const idx = list.findIndex(x=>x.id===c.id);
     const orderHtml = isMaster
-      ? '<span class="char-order"><button data-up="'+c.id+'" title="위로"'+disUp+'>▲</button><button data-down="'+c.id+'" title="아래로"'+disDown+'>▼</button></span>'
+      ? '<span class="gcard-order"><button data-gup="'+c.id+'" data-gid="'+esc(gid===null?"__all":gid)+'" title="위로"'+(idx===0?" disabled":"")+'>▲</button><button data-gdown="'+c.id+'" data-gid="'+esc(gid===null?"__all":gid)+'" title="아래로"'+(idx===list.length-1?" disabled":"")+'>▼</button></span>'
       : "";
-    return '<div class="char-row"><button class="char-sel '+selOn+'" data-c="'+c.id+'">'+charThumb(c)+'<span class="char-meta"><span class="char-name">'+cname+'</span>'+subHtml+'</span></button>'+
-    orderHtml+'</div>'+imgHtml;
-  }).join("");
+    return '<div class="gcard-wrap"><button class="gcard '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'"><span class="gcard-pos">'+esc(c.position||"")+'</span>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span></button>'+orderHtml+'</div>';
+  };
+  const gridHtml = (list, gid)=> '<div class="group-grid">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
+  const groupHeadHtml = (g, isSub)=>{
+    if (!isMaster) return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
+    return '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-gsub="'+g.id+'" title="하위그룹 추가">＋하위</button><button data-gdel="'+g.id+'" title="그룹 삭제">✕</button></div>';
+  };
+  let charsHtml = "";
+  if (!groups.length){
+    charsHtml = gridHtml(charList, null);
+  } else {
+    const topGroups = groups.filter(g=>!g.parentId);
+    const subGroupsOf = (pid)=> groups.filter(g=>g.parentId===pid);
+    topGroups.forEach(g=>{
+      const subIds = subGroupsOf(g.id).map(x=>x.id);
+      const direct = charList.filter(c=>charInGroup(c, g.id) && !subIds.some(id=>charInGroup(c, id)));
+      charsHtml += groupHeadHtml(g, false);
+      charsHtml += gridHtml(direct, g.id);
+      subGroupsOf(g.id).forEach(sg=>{
+        const members = charList.filter(c=>charInGroup(c, sg.id));
+        charsHtml += '<div class="group-sub">'+groupHeadHtml(sg, true)+gridHtml(members, sg.id)+'</div>';
+      });
+    });
+    const groupedIds = new Set(groups.map(g=>g.id));
+    const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
+    if (ungrouped.length){
+      charsHtml += '<div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped");
+    }
+  }
+  if (isMaster){
+    charsHtml += '<div class="group-add"><input id="groupAddName" placeholder="새 그룹 이름"><button id="groupAddBtn">그룹 추가</button></div>';
+  }
+  $("chars").innerHTML = charsHtml;
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{cancelEdit(); curChar=b.dataset.c; curTab="profile";  render();});
-  document.querySelectorAll("#chars [data-up]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.up,-1);});
-  document.querySelectorAll("#chars [data-down]").forEach(b=>b.onclick=e=>{e.stopPropagation(); moveChar(b.dataset.down,1);});
+  document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gup, gid==="__all"?null:gid, -1);});
+  document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=e=>{e.stopPropagation(); const gid = b.dataset.gid; moveCharInGroup(b.dataset.gdown, gid==="__all"?null:gid, 1);});
+  document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
+  document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
+  document.querySelectorAll("#chars [data-gsub]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.gsub; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name:"새 하위그룹", parentId:pid}); persist(); render(); });
+  const ga = $("groupAddBtn"); if (ga) ga.onclick=()=>{ const inp = $("groupAddName"); const name = inp.value.trim() || "새 그룹"; cw.groups.push({id:"g_"+Math.random().toString(36).slice(2,10), name, parentId:null}); persist(); render(); };
 
   // 탭 (무기 탭은 판타지 호텔에만)
   const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
@@ -939,6 +1013,24 @@ function renderTabInner(c){
     }
     h += `</div>`;
     }
+    // 그룹 소속 (세계관 단위 그룹 목록에서 고르기, 여러 개 가능)
+    {
+      const w = store[curWorld]; const gs = worldGroups(w);
+      const myIds = Array.isArray(c.groupIds) ? c.groupIds : [];
+      if (ed){
+        h += `<div class="field" style="margin-top:14px"><label>그룹 소속 (목록에서 여러 그룹에 뜰 수 있어요)</label>`;
+        if (!gs.length) h += `<div class="val"><span class="empty">아직 그룹이 없어요. 목록 왼쪽 아래에서 그룹을 먼저 추가하세요.</span></div>`;
+        gs.forEach(g=>{
+          const parent = g.parentId ? groupOf(w, g.parentId) : null;
+          const label = parent ? esc(parent.name)+" › "+esc(g.name) : esc(g.name);
+          h += `<label style="display:block;font-weight:normal;margin:4px 0"><input type="checkbox" class="grp-check" data-gid="${g.id}" ${myIds.includes(g.id)?"checked":""}> ${label}</label>`;
+        });
+        h += `<div style="display:flex;gap:6px;margin-top:8px"><input id="grpNewName" placeholder="새 그룹 이름" style="flex:1"><button type="button" class="hdr-btn" id="grpNewBtn">그룹 추가</button></div></div>`;
+      } else if (myIds.length){
+        const names = myIds.map(id=>{ const g = groupOf(w, id); if (!g) return null; const parent = g.parentId ? groupOf(w, g.parentId) : null; return parent ? parent.name+" › "+g.name : g.name; }).filter(Boolean);
+        if (names.length) h += `<div class="field" style="margin-top:14px"><label>그룹 소속</label><div class="val">${esc(names.join(", "))}</div></div>`;
+      }
+    }
     return `<div class="notebook">${h}</div>`;
   }
   if (curTab==="relations"){
@@ -1020,6 +1112,22 @@ function bindEdit(c){
     if (!v || v === inp.dataset.def) delete c.rowLabels[inp.dataset.cell];
     else c.rowLabels[inp.dataset.cell] = v;
   });
+  document.querySelectorAll(".grp-check").forEach(box=>box.onchange=()=>{
+    c.groupIds = c.groupIds || [];
+    const gid = box.dataset.gid;
+    if (box.checked){ if (!c.groupIds.includes(gid)) c.groupIds.push(gid); }
+    else c.groupIds = c.groupIds.filter(id=>id!==gid);
+  });
+  const gn = $("grpNewBtn"); if (gn) gn.onclick=()=>{
+    const inp = $("grpNewName"); const name = inp ? inp.value.trim() : "";
+    if (!name) return;
+    const w = store[curWorld]; if (!w) return;
+    w.groups = w.groups || [];
+    const gid = "g_"+Math.random().toString(36).slice(2,10);
+    w.groups.push({id:gid, name, parentId:null});
+    c.groupIds = c.groupIds || []; if (!c.groupIds.includes(gid)) c.groupIds.push(gid);
+    render();
+  };
   document.querySelectorAll(".draghandle").forEach(hnd=>{
     hnd.onpointerdown = (e)=>{
       e.preventDefault();
@@ -1377,7 +1485,7 @@ $("addChar").onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], illust:"", repImg:"", thumb:"", logo:"", position:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; persist(); render();
 };
 $("delChar").onclick = ()=>{
