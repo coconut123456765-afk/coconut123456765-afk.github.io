@@ -81,10 +81,11 @@
   .group-block:first-child { margin-top:0; }
   .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
   button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
-  .org-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:6px 0 12px; }
+  .org-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 12px; }
   button.org-tile { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:10px; text-align:center; background:var(--panel); color:var(--txt); border:1px solid var(--line); cursor:pointer; }
   button.org-tile.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
-  .org-tile-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
+  .org-tile-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; position:relative; }
+  .org-tile-zoom { position:absolute; top:6px; right:6px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.88); color:#333; display:flex; align-items:center; justify-content:center; font-size:15px; z-index:2; box-shadow:0 1px 4px rgba(0,0,0,.25); }
   .org-tile-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .org-tile-name { font-size:12px; font-weight:700; padding:6px 3px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 8px; }
@@ -795,7 +796,7 @@ function render(){
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
         const tileImg = g.logo || "";
-        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"></span>' : '<span class="org-tile-img"></span>';
+        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"><span class="org-tile-zoom" data-orgzoom="'+esc(imgS(tileImg))+'">🔍</span></span>' : '<span class="org-tile-img"></span>';
         return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
       }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
       // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
@@ -886,6 +887,7 @@ function render(){
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
+  document.querySelectorAll("#chars [data-orgzoom]").forEach(z=>z.onclick=(e)=>{ e.stopPropagation(); openLightbox(z.dataset.orgzoom); });
   const moveGroup = (gid, dir)=>{ const g = cw.groups.find(x=>x.id===gid); if (!g) return; const sibs = cw.groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind); const pos = sibs.findIndex(x=>x.id===gid); const target = sibs[pos+dir]; if (!target) return; const i1 = cw.groups.findIndex(x=>x.id===gid); const i2 = cw.groups.findIndex(x=>x.id===target.id); const tmp = cw.groups[i1]; cw.groups[i1] = cw.groups[i2]; cw.groups[i2] = tmp; persist(); render(); };
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gup, -1));
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gdown, 1));
