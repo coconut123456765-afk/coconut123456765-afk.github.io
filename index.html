@@ -612,13 +612,32 @@ function cancelEdit(){
 }
 const $ = id => document.getElementById(id);
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Cloudinary display sizing: show a small transformed copy, keep the
+// original URL in data untouched. Only res.cloudinary.com URLs are
+// transformed; base64 / other hosts pass through unchanged.
+// c_limit never upscales beyond the original, so a 1024px source stays
+// 1024px even when asked for 1600. f_auto/q_auto serve WebP/AVIF where
+// supported, at a visually clean quality.
+function cloudImg(url, w){
+  if (!url) return url;
+  const m = String(url).match(/^(https:\/\/res\.cloudinary\.com\/[^\/]+\/image\/upload\/)(.*)$/);
+  if (!m) return url;
+  let rest = m[2];
+  const segs = rest.split('/');
+  if (segs.length > 1 && !/^v\d+$/.test(segs[0])) segs.shift();
+  rest = segs.join('/');
+  return m[1] + 'w_' + w + ',c_limit,q_auto,f_auto/' + rest;
+}
+const imgS = u => cloudImg(u, 400);
+const imgM = u => cloudImg(u, 800);
+const imgL = u => cloudImg(u, 1600);
 const cur = () => { const w = store[curWorld]; return (w && w.chars) ? w.chars.find(c=>c.id===curChar) : null; };
 const nameOf = id => { for (const w of Object.values(store)){ if(!w||!Array.isArray(w.chars)) continue; const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
 function charThumb(c){
   const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
   const initial = clean.charAt(0) || "?";
   const bg = c.color ? ` style="background:${esc(c.color)};color:${pickText(c.color)}"` : "";
-  if (c.thumb) return `<span class="char-thumb"${bg}><img src="${esc(c.thumb)}" alt=""></span>`;
+  if (c.thumb) return `<span class="char-thumb"${bg}><img src="${esc(imgS(c.thumb))}" alt="" loading="lazy"></span>`;
   return `<span class="char-thumb"${bg}>${esc(initial)}</span>`;
 }
 function findCharById(id){
@@ -689,7 +708,7 @@ function render(){
   const listEdit = !!(isMaster && window.listEdit);
   const cardHtml = (c, list, gid)=>{
     const img = groupPortrait(c);
-    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(img)+'" alt=""></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
+    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
     const gidKey = gid===null ? "__all" : gid;
     const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
     const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
@@ -776,7 +795,7 @@ function render(){
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
         const tileImg = g.logo || "";
-        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(tileImg)+'" alt=""></span>' : '<span class="org-tile-img"></span>';
+        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"></span>' : '<span class="org-tile-img"></span>';
         return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
       }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
       // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
@@ -977,7 +996,7 @@ function galleryField(c, label, textKey, imgKey, ed){
     if (imgs.length){
       h += '<div class="gal-grid">';
       imgs.forEach(g=>{
-        h += '<div class="gal-item"><img src="'+esc(g.img)+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
+        h += '<div class="gal-item"><img src="'+esc(imgS(g.img))+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in" loading="lazy">';
         if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
         h += '</div>';
       });
@@ -988,7 +1007,7 @@ function galleryField(c, label, textKey, imgKey, ed){
   h += '<div class="gal-edit" id="gal-'+imgKey+'">';
   imgs.forEach((g,i)=>{
     h += '<div class="gal-edrow" data-i="'+i+'">';
-    h += '<img src="'+esc(g.img)+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">';
+    h += '<img src="'+esc(imgS(g.img))+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in" loading="lazy">';
     h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
     h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
     h += '</div>';
@@ -1009,7 +1028,7 @@ function wardrobeField(c, ed){
     h += `<div class="pair-list"><div class="pair-row${pc ? " copybox" : ""}"${pc ? ` onclick="copyBox(this, event)"` : ""}>`;
     h += `<div class="pair-head"><span class="pair-no">No. 01</span><span class="pair-name">신체정보</span></div>`;
     h += `<div class="pair-body">`;
-    if (bodyImg) h += `<div class="pair-frame"><img src="${esc(bodyImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
+    if (bodyImg) h += `<div class="pair-frame"><img src="${esc(imgM(bodyImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
     h += `<div class="pair-side">`;
     if (ap) h += `<div class="pair-desc">${esc(ap)}</div>`;
     if (pc) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(pc)}</div>`;
@@ -1018,7 +1037,7 @@ function wardrobeField(c, ed){
     h += `<div class="pair-list"><div class="pair-row${defPrompt ? " copybox" : ""}"${defPrompt ? ` onclick="copyBox(this, event)"` : ""}>`;
     h += `<div class="pair-head"><span class="pair-no">No. 02</span><span class="pair-name">기본복장</span></div>`;
     h += `<div class="pair-body">`;
-    if (repImg) h += `<div class="pair-frame"><img src="${esc(repImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
+    if (repImg) h += `<div class="pair-frame"><img src="${esc(imgM(repImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
     h += `<div class="pair-side">`;
     if (defDesc) h += `<div class="pair-desc">${esc(defDesc)}</div>`;
     if (defPrompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(defPrompt)}</div>`;
@@ -1031,7 +1050,7 @@ function wardrobeField(c, ed){
         h += `<div class="pair-row${g.prompt ? " copybox" : ""}"${g.prompt ? ` onclick="copyBox(this, event)"` : ""}>`;
         h += `<div class="pair-head"><span class="pair-no">No. ${num(i)}</span><span class="pair-name">${esc(name)}</span></div>`;
         h += `<div class="pair-body">`;
-        h += `<div class="pair-frame"><img src="${esc(g.img)}" alt="" onclick="openLightbox(this.src)"></div>`;
+        h += `<div class="pair-frame"><img src="${esc(imgM(g.img))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
         h += `<div class="pair-side">`;
         if (g.desc) h += `<div class="pair-desc">${esc(g.desc)}</div>`;
         if (g.prompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(g.prompt)}</div>`;
@@ -1046,7 +1065,7 @@ function wardrobeField(c, ed){
   h += `<div class="pair-list"><div class="pair-row">`;
   h += `<div class="pair-head"><span class="pair-no">No. 01</span><span class="pair-name">신체정보</span></div>`;
   h += `<div class="pair-body"><div style="flex-shrink:0">`;
-  if (bodyImg) h += `<img id="bodyImgPreview" src="${esc(bodyImg)}" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px;display:block;margin-bottom:8px">`;
+  if (bodyImg) h += `<img id="bodyImgPreview" src="${esc(imgS(bodyImg))}" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px;display:block;margin-bottom:8px">`;
   h += `<div><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="bodyImgFile" accept="image/*" style="display:none"></label>`;
   if (bodyImg) h += ` <button class="hdr-btn" id="bodyImgClear" type="button">지우기</button>`;
   h += `</div></div>`;
@@ -1055,14 +1074,14 @@ function wardrobeField(c, ed){
   h += `<div class="pair-list"><div class="pair-row">`;
   h += `<div class="pair-head"><span class="pair-no">No. 02</span><span class="pair-name">기본복장</span></div>`;
   h += `<div class="pair-body">`;
-  if (repImg) h += `<div class="pair-frame"><img src="${esc(repImg)}" alt="" onclick="openLightbox(this.src)"></div>`;
+  if (repImg) h += `<div class="pair-frame"><img src="${esc(imgM(repImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
   h += `<div style="flex:1;min-width:0"><div class="copyhint" style="margin:0 0 8px">대표 일러스트를 따라갑니다</div><textarea data-k="defaultDesc" class="desc-note" rows="3" placeholder="기본복장 설명" style="width:100%;box-sizing:border-box">${esc(defDesc)}</textarea><textarea data-k="promptOutfit" rows="3" placeholder="옷 포함 프롬" style="width:100%;box-sizing:border-box">${esc(defPrompt)}</textarea></div>`;
   h += `</div></div></div>`;
   h += `<div class="pair-list" id="pairList">`;
   pairs.forEach((g,i)=>{
     h += `<div class="pair-row" data-i="${i}">`;
     h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
-    h += `<div class="pair-body"><div style="flex-shrink:0"><img src="${esc(g.img)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px"><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 변경<input type="file" class="pair-imgfile" accept="image/*" style="display:none"></label></div></div><div style="flex:1;min-width:0"><textarea class="pair-desc desc-note" rows="2" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)">${esc(g.desc||"")}</textarea><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
+    h += `<div class="pair-body"><div style="flex-shrink:0"><img src="${esc(imgS(g.img))}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px" loading="lazy"><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 변경<input type="file" class="pair-imgfile" accept="image/*" style="display:none"></label></div></div><div style="flex:1;min-width:0"><textarea class="pair-desc desc-note" rows="2" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)">${esc(g.desc||"")}</textarea><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
     h += `</div>`;
   });
   h += `</div>`;
@@ -1134,32 +1153,32 @@ function renderTabInner(c){
     let h = `<div class="field"><label>대표 일러스트</label>`;
     if (ed){
       const repPreview = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
-      if (repPreview) h += `<img id="repPreview" src="${esc(repPreview)}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
+      if (repPreview) h += `<img id="repPreview" src="${esc(imgM(repPreview))}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
       h += `<input data-k="repImg" value="${esc(c.repImg||"")}" placeholder="대표 이미지 링크 또는 파일 첨부">`;
       h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
       h += `</div>`;
       h += `<div class="field" style="margin-top:10px"><label>썸네일 (목록용)</label>`;
-      if (c.thumb) h += `<img id="thumbPreview" src="${esc(c.thumb)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px">`;
+      if (c.thumb) h += `<img id="thumbPreview" src="${esc(imgS(c.thumb))}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px">`;
       h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="thumbFile" accept="image/*" style="display:none"></label>`;
       if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
       h += `</div></div>`;
       h += `<div class="field" style="margin-top:10px"><label>로고 / 사인</label>`;
-      if (c.logo) h += `<img id="logoPreview" src="${esc(c.logo)}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
+      if (c.logo) h += `<img id="logoPreview" src="${esc(imgM(c.logo))}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
       h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
       if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
       h += `</div></div>`;
     } else if (c.repImg || c.illust){
       const firstIllust = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
-      h += `<div class="polaroid"><img src="${esc(firstIllust)}" alt="대표 일러스트"></div>`;
+      h += `<div class="polaroid"><img src="${esc(imgM(firstIllust))}" alt="대표 일러스트" loading="lazy"></div>`;
     } else {
       h += `<div class="val"><span class="empty">—</span></div>`;
     }
     h += `</div>`;
     if (c.logo && !ed){
-      h += `<div class="field"><label>로고 / 사인</label><img src="${esc(c.logo)}" alt="로고" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
+      h += `<div class="field"><label>로고 / 사인</label><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
     }
     if (ed || c.quote){
     h += `<div class="field"><label>명대사</label>`;
@@ -1314,7 +1333,7 @@ function renderTabInner(c){
           const img = groupPortrait(m);
           const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId);
           const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null;
-          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`;
+          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`;
           const chs = childrenMap[m.id] || [];
           if (chs.length) html = `<div class="orgchart-tree-node"><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
           else html = `<div class="orgchart-tree-node">${html}</div>`;
@@ -1323,7 +1342,7 @@ function renderTabInner(c){
         if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
         // 레벨 방식: 최상위 줄 -> 하급자 줄 -> ... (부부 최상위도 한 줄에 묶인다)
         {
-          const levelCard = (m)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(img)}" alt="">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
+          const levelCard = (m)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
           let levels = []; let curLevel = roots.length ? roots : members; let seenLevel = new Set();
           for (let lv=0; lv<10 && curLevel.length; lv++){
             const filtered = curLevel.filter(m=>!seenLevel.has(m.id)); filtered.forEach(m=>seenLevel.add(m.id));
@@ -1353,17 +1372,17 @@ function renderTabInner(c){
       const txts = rest.filter(ln => !isImgLn(ln));
       const grid = imgs.length
         ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px">`+
-          imgs.map(ln=>`<img src="${esc(ln)}" class="zoomable" onclick="openLightbox(this.src)" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
+          imgs.map(ln=>`<img src="${esc(imgS(ln))}" class="zoomable" onclick="openLightbox(this.src)" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
           `</div>`
         : "";
       const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
-      const repHtml = rep ? `<div class="polaroid"><img src="${esc(rep)}" alt="대표 일러스트"></div>` : "";
+      const repHtml = rep ? `<div class="polaroid"><img src="${esc(imgM(rep))}" alt="대표 일러스트" loading="lazy"></div>` : "";
       return `<div class="field"><label>일러스트</label>${repHtml}${grid}${tparts}</div>`;
     }
     return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
       lines.map((ln,i)=>{
         const isRep = (c.repImg||"") && ln === c.repImg;
-        return `<div class="gal-edrow" data-i="${i}"><img src="${esc(ln)}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in">`+
+        return `<div class="gal-edrow" data-i="${i}"><img src="${esc(imgS(ln))}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" loading="lazy" style="cursor:zoom-in">`+
         (isRep ? `<span style="font-size:12px;color:var(--acc);font-weight:700">★대표</span>` : ``)+
         `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
         `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`;
@@ -1715,7 +1734,7 @@ function openLightbox(src){
   if (window.__pairDragEnd && Date.now() - window.__pairDragEnd < 300) return;
   const lb = document.getElementById("lightbox");
   const im = document.getElementById("lightboxImg");
-  if (lb && im){ im.src = src; lb.style.display = "flex"; }
+  if (lb && im){ im.src = imgL(src); lb.style.display = "flex"; }
 }
 async function copyPrompt(btn){
   const box = btn.closest(".promptbox");
