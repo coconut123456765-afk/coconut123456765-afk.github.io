@@ -65,6 +65,13 @@
   .img-preview.show{display:block}
   .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .style-head{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:900;letter-spacing:2px;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--accent);display:inline-block}
+  .style-tiles{display:flex;flex-direction:column;gap:10px}
+  .style-tile{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .style-tile:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(155,58,58,.12)}
+  .style-tile-name{font-family:'Noto Serif KR',serif;font-weight:700;font-size:14px;margin-bottom:6px}
+  .style-tile-prompt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
   @media(max-width:760px){.wrap{flex-direction:column}.left{width:100%;position:static}}
 </style>
 </head>
@@ -99,6 +106,8 @@
       <div class="base-name">아나스타샤</div>
       <div class="base-note">베이스 캐릭터. 오른쪽 타일을 누르면 그 옷의 프롬이 복사돼요. 타일은 Firebase에 저장돼, 다른 기기에서도 실시간으로 보여요.</div>
     </div>
+    <div class="style-head">그림체</div>
+    <div class="style-tiles" id="styleTiles"></div>
   </div>
   <div class="right">
     <div class="right-head">
@@ -176,6 +185,32 @@
       }, err=>{ setSyncDot('offline'); console.error(err); });
     }catch(e){ alert('Firebase 초기화 실패: ' + e.message); }
   }
+
+
+  const styleTiles = [{"name": "그림체 1", "prompt": "4.1::artist: kagari liroi::,, 0.96::uncensored ::, 1.5::gogalking ::, 0.4::akiyama_enma ::, 0.9::ratatatat74 ::, 1.1::null (nyanpyoun)::, 1.2::artist:channel (caststation) ::, 0.5::freng ::, 0.4::artist:momo_no_sukebe ::, 2.0::artist:ie (raarami) ::, 0.8::artist:ayuma_sayu ::, year 2024, year 2025, 1.34::high detail ::, best illustration, novel illustration, -3::simple illustration, monochrome::, -1::censored::, -3::artist collaboration:::,-3::multiple views :: , very aesthetic, masterpiece, no text\n\n4::thick lineart, white outline, thick outline, lineart, light gray background, simple background::, 2::cowboy shot::,"}, {"name": "그림체 2", "prompt": "1.5::oekaki, jaggy lines::, 0.9::artist:try (lsc), artist:null (nyanpyoun)::, 0.5::artist:ciloranko::, 0.8::artist:muchi maro::, 1.2::artist:henriiku (ahemaru)::, 1.2::artist:ratatatat74 ::, 1.5::artist:channel (caststation)::, 0.8::artist:ie (raarami)::, ::artist:sho (sho lwlw)::, 1::artist:ms. tsu::, 0.3::artist:pottsness::,\n\n year 2025, year 2024, -1::very big eyes::,, high detail, masterpiece, best quality, amazing quality, very aesthetic, highres, incredibly absurdres, , -3::simple illustration::, -1::censored, blurry, breasts apart::, -3::artist collaboration, anatomical nonsense::, -1::simple background, monochrome::, -2::flat color, multiple views::, exact angle, , very aesthetic, masterpiece, no text\n\n4::thick lineart, white outline, thick outline, lineart, light gray background, simple background::, 2::cowboy shot::,"}, {"name": "그림체 3", "prompt": "4.1::artist: kagari liroi::,\n,1.2::artist:yamamoto souichirou ::, 0.7::artist:ciloranko ::, 1.0::artist:channel (caststation)::, 1.1::artist:ratatatat74 ::, 1.1::artist:gogalking ::, 0.5::artist:ohisashiburi::, 0.9::artist:kyo-hei (kyouhei)::,\n\nnewest, year 2025, year 2024, -4::artist collaboration::, -3::simple illustration, jaggy lines, oekaki, multiple shots, unfinished, blurry, dead eyes, blank eyes::, 1.2::shiny skin, dot nose::, 3.45::official style, pixiv commission::, perfect anatomy, commission, highly finished, amazing quality, top aesthetic, masterpiece, very aesthetic, absurdres, highres, best quality, best illustration, beautiful eyes,\n\n4::thick lineart, white outline, thick outline, lineart, light gray background, simple background::, 2::cowboy shot::,"}];
+  function renderStyleTiles(){
+    const el = document.getElementById('styleTiles');
+    if (!el) return;
+    el.innerHTML = styleTiles.map((t, i)=>`
+      <div class="style-tile" onclick="copyStyleTile(${i})">
+        <div class="style-tile-name">${esc(t.name)}</div>
+        <div class="style-tile-prompt">${esc(t.prompt)}</div>
+      </div>`).join('');
+  }
+  window.copyStyleTile = async function(i){
+    const t = styleTiles[i];
+    if (!t) return;
+    try{ await navigator.clipboard.writeText(t.prompt); }
+    catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = t.prompt; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1600);
+  };
+  renderStyleTiles();
 
   function render(){
     const el = document.getElementById('tiles');
