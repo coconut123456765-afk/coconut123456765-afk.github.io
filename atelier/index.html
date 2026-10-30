@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<!-- Atelier:Don build -->
+<!-- Trunk:Don build -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atelier:Don</title>
+<title>Trunk:Don</title>
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Noto+Serif+KR:wght@600;700;900&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f7f3f0;--surface:#fffdf8;--border:#ddd5cf;--accent:#9b3a3a;--text:#2a1f1f;--muted:#9c8a84;--danger:#c0392b}
+  :root{--bg:#f6f3fa;--surface:#fffdf8;--border:#ddd6e8;--accent:#7b5aa6;--text:#2a1f1f;--muted:#9c8a84;--danger:#c0392b}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh}
   header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:10}
@@ -43,7 +43,7 @@
   .btn-random:hover{background:#fdf0f0}
   .btn-random:disabled{opacity:.5;cursor:default}
   .suitcase{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;padding:12px 16px;margin-bottom:18px;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
-  .suitcase:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(155,58,58,.12)}
+  .suitcase:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(123,90,166,.12)}
   .suitcase.disabled{cursor:default;opacity:.6}
   .suitcase.disabled:hover{border-color:var(--border);transform:none;box-shadow:none}
   .suitcase-icon{width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:#f0ebe7;border-radius:8px}
@@ -53,7 +53,7 @@
   .suitcase-copy{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
   .tile{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;position:relative;transition:border-color .15s,transform .15s,box-shadow .15s}
-  .tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(155,58,58,.12)}
+  .tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(123,90,166,.12)}
   .tile-img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#eee}
   .tile-img-empty{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:#f0ebe7}
   .tile-body{padding:12px 14px}
@@ -82,7 +82,7 @@
   .style-head{font-family:'Noto Serif KR',serif;font-size:14px;font-weight:900;letter-spacing:2px;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--accent);display:inline-block}
   .style-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .style-tile{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
-  .style-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(155,58,58,.12)}
+  .style-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(123,90,166,.12)}
   .style-tile-img{width:100%;aspect-ratio:1;object-fit:cover;object-position:top;display:block;background:#eee}
   .style-tile-body{padding:10px 12px}
   .style-tile-name{font-family:'Noto Serif KR',serif;font-weight:700;font-size:13px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -92,7 +92,7 @@
 </head>
 <body>
 <div id="setupScreen">
-  <h2><span class="brand">Atelier<span class="c">:</span><span class="d">Don</span></span> 설정</h2>
+  <h2><span class="brand">Trunk<span class="c">:</span><span class="d">Don</span></span> 설정</h2>
   <p>Firebase를 연결하면 어느 기기에서도 같은 옷장 타일을 쓸 수 있어요.<br>Scroll:Don을 이미 설정한 브라우저라면, 아래 값은 Scroll과 같은 값이에요.</p>
   <div class="setup-label">apiKey</div>
   <input class="setup-input" id="f_apiKey" placeholder="AIzaSy...">
@@ -106,7 +106,7 @@
 
 <div id="app">
 <header>
-  <div><div class="brand">Atelier<span class="c">:</span><span class="d">Don</span></div><div class="sub">WARDROBE · ONLINE</div></div>
+  <div><div class="brand">Trunk<span class="c">:</span><span class="d">Don</span></div><div class="sub">WARDROBE · ONLINE</div></div>
   <div style="display:flex;align-items:center;gap:8px">
     <div class="sync-dot" id="syncDot" title="동기화 상태"></div>
     <button class="hdr-btn" onclick="exportTiles()">내보내기</button>
@@ -198,7 +198,7 @@
     initApp({ apiKey, authDomain, projectId });
   };
   window.resetConfig = function(){
-    if (!confirm('Atelier 연결을 해제할까요? Scroll 설정은 건드리지 않아요.')) return;
+    if (!confirm('Trunk 연결을 해제할까요? Scroll 설정은 건드리지 않아요.')) return;
     localStorage.removeItem(CONFIG_KEY);
     location.reload();
   };
@@ -500,7 +500,7 @@
       for (const t of data.tiles){
         await addDoc(collection(db, 'atelierTiles'), { name: t.name || '이름 없음', prompt: t.prompt || '', img: t.img || '', createdAt: serverTimestamp() });
       }
-    }catch(err){ alert('가져오기 실패: Atelier 내보내기 파일이 아니에요.'); }
+    }catch(err){ alert('가져오기 실패: Trunk 내보내기 파일이 아니에요.'); }
     e.target.value = '';
   });
 
