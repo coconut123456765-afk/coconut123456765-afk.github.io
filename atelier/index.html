@@ -38,6 +38,18 @@
   .sec-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:inline-block}
   .btn-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
   .btn-add:hover{background:#7a2d2d}
+  .suitcase{background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:16px 18px;margin-bottom:18px;box-shadow:0 2px 10px rgba(155,58,58,.08)}
+  .suitcase-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .suitcase-title{font-family:'Noto Serif KR',serif;font-weight:900;font-size:16px;letter-spacing:1px}
+  .suitcase-sub{color:var(--muted);font-size:12px;line-height:1.7;margin-top:4px}
+  .btn-suitcase{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .btn-suitcase:disabled{background:#cbbfba;cursor:default}
+  .suitcase-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .suitcase-chip{border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;background:#fff}
+  .suitcase-chip.excluded{color:var(--danger);text-decoration:line-through}
+  .suitcase-details{margin-top:12px}
+  .suitcase-details summary{font-size:12px;color:var(--muted);cursor:pointer}
+  .suitcase-prompt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);line-height:1.6;word-break:break-all;white-space:pre-wrap;margin-top:8px;background:#f0ebe7;border-radius:8px;padding:10px 12px;max-height:180px;overflow-y:auto}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
   .tile{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;position:relative;transition:border-color .15s,transform .15s,box-shadow .15s}
   .tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(155,58,58,.12)}
@@ -112,6 +124,20 @@
     <div class="style-tiles" id="styleTiles"></div>
   </div>
   <div class="right">
+    <div class="suitcase" id="suitcaseBox">
+      <div class="suitcase-head">
+        <div>
+          <div class="suitcase-title">🧳 슈트케이스 · 랜덤 옷장</div>
+          <div class="suitcase-sub" id="suitcaseSub">아직 옷 타일이 없어요.</div>
+        </div>
+        <button class="btn-suitcase" id="suitcaseCopyBtn" onclick="copySuitcase()" disabled>랜덤 프롬 복사</button>
+      </div>
+      <div class="suitcase-names" id="suitcaseNames"></div>
+      <details class="suitcase-details">
+        <summary>랜덤 문법 전체 보기</summary>
+        <div class="suitcase-prompt" id="suitcasePrompt"></div>
+      </details>
+    </div>
     <div class="right-head">
       <div class="sec-title">옷장</div>
       <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
@@ -217,7 +243,56 @@
   };
   renderStyleTiles();
 
+  let suitcaseRandom = '';
+  function cleanSuitcasePrompt(p){
+    let s = String(p || '').replace(/\s+/g, ' ').trim();
+    while (s.endsWith(',')) s = s.slice(0, -1).trim();
+    return s;
+  }
+  function buildSuitcase(){
+    const included = [], excluded = [];
+    tiles.forEach(t=>{
+      const prompt = cleanSuitcasePrompt(t.prompt);
+      if (!prompt) return;
+      if (prompt.includes('|')) { excluded.push(t.name || '이름 없음'); return; }
+      included.push({ name: t.name || '이름 없음', prompt });
+    });
+    suitcaseRandom = included.length ? '||' + included.map(x=>x.prompt).join('|') + '||' : '';
+    return { included, excluded };
+  }
+  function renderSuitcase(){
+    const sub = document.getElementById('suitcaseSub');
+    const namesEl = document.getElementById('suitcaseNames');
+    const promptEl = document.getElementById('suitcasePrompt');
+    const btn = document.getElementById('suitcaseCopyBtn');
+    if (!sub || !namesEl || !promptEl || !btn) return;
+    const { included, excluded } = buildSuitcase();
+    if (!included.length){
+      sub.textContent = '아직 옷 타일이 없어요. 옷 타일을 추가하면 여기에 자동으로 모여요.';
+      namesEl.innerHTML = '';
+      promptEl.textContent = '';
+      btn.disabled = true;
+      return;
+    }
+    sub.textContent = '옷 ' + included.length + '벌이 랜덤으로 뽑혀요. 클릭하면 아래 랜덤 문법이 복사돼요.' + (excluded.length ? ' · ' + excluded.length + '벌은 프롬 안에 | 가 있어서 랜덤에서 제외됐어요.' : '');
+    namesEl.innerHTML = included.map(x=>'<span class="suitcase-chip">' + esc(x.name) + '</span>').join('') + excluded.map(n=>'<span class="suitcase-chip excluded">' + esc(n) + '</span>').join('');
+    promptEl.textContent = suitcaseRandom;
+    btn.disabled = false;
+  }
+  window.copySuitcase = async function(){
+    if (!suitcaseRandom) return;
+    try{ await navigator.clipboard.writeText(suitcaseRandom); }
+    catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = suitcaseRandom; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1600);
+  };
   function render(){
+    renderSuitcase();
     const el = document.getElementById('tiles');
     if (!tiles.length){
       el.innerHTML = '<div class="empty">아직 옷 타일이 없어요.<br>오른쪽 위 ＋ 타일 추가로, 옷 이름·프롬·이미지를 넣어보세요.</div>';
