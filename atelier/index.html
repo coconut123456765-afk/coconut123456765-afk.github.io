@@ -38,6 +38,9 @@
   .sec-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:inline-block}
   .btn-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
   .btn-add:hover{background:#7a2d2d}
+  .btn-random{background:#fff;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
+  .btn-random:hover{background:#fdf0f0}
+  .btn-random:disabled{opacity:.5;cursor:default}
   .suitcase{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;padding:12px 16px;margin-bottom:18px;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
   .suitcase:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(155,58,58,.12)}
   .suitcase.disabled{cursor:default;opacity:.6}
@@ -131,7 +134,10 @@
     </div>
     <div class="right-head">
       <div class="sec-title">옷장</div>
-      <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
+        <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
+      </div>
     </div>
     <div class="tiles" id="tiles"></div>
   </div>
@@ -297,10 +303,14 @@
     if (!candidates.length){
       sub.textContent = '아직 옷 타일이 없어요.';
       box.classList.add('disabled');
+      const randomBtnEmpty = document.getElementById('randomTileBtn');
+      if (randomBtnEmpty) randomBtnEmpty.disabled = true;
       return;
     }
     sub.textContent = (candidates.length === tileCount ? '옷 ' + candidates.length + '벌 랜덤' : '타일 ' + tileCount + '개 · 후보 ' + candidates.length + '개 랜덤') + (excluded.length ? ' · ' + excluded.length + '벌 제외' : '');
     box.classList.remove('disabled');
+    const randomBtn = document.getElementById('randomTileBtn');
+    if (randomBtn) randomBtn.disabled = !tiles.some(x=>(x.prompt || '').trim());
   }
   window.copySuitcase = async function(){
     if (!suitcaseRandom) return;
@@ -313,6 +323,30 @@
     const toast = document.getElementById('toast');
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'), 1600);
+  };
+  window.copyRandomTile = async function(){
+    const candidates = tiles.filter(x=>(x.prompt || '').trim());
+    const toast = document.getElementById('toast');
+    if (!candidates.length){
+      if (toast){
+        toast.textContent = '아직 옷 타일이 없어요.';
+        toast.classList.add('show');
+        setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
+      }
+      return;
+    }
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    try{ await navigator.clipboard.writeText(picked.prompt); }
+    catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = picked.prompt; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    if (toast){
+      toast.textContent = '🎲 ' + (picked.name || '이름 없음') + ' 복사됨';
+      toast.classList.add('show');
+      setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
+    }
   };
   function render(){
     renderSuitcase();
