@@ -240,28 +240,66 @@
     while (s.endsWith(',')) s = s.slice(0, -1).trim();
     return s;
   }
+  function expandSuitcasePrompt(prompt){
+    const base = cleanSuitcasePrompt(prompt);
+    if (!base) return null;
+    const parts = [];
+    const re = /\|\|([^|]+(?:\|[^|]+)*)\|\|/g;
+    let last = 0, m;
+    while ((m = re.exec(base)) !== null){
+      if (m.index > last) parts.push({ text: base.slice(last, m.index) });
+      parts.push({ choice: m[1].split('|').map(s=>s.trim()) });
+      last = m.index + m[0].length;
+    }
+    if (last < base.length) parts.push({ text: base.slice(last) });
+    const rest = parts.filter(x=>x.text).map(x=>x.text).join('');
+    if (rest.includes('|')) return null;
+    let results = [''];
+    for (const part of parts){
+      if (part.text){
+        results = results.map(r=>r + part.text);
+      } else {
+        const next = [];
+        for (const r of results){
+          for (const opt of part.choice) next.push(r + opt);
+        }
+        results = next;
+        if (results.length > 50) return null;
+      }
+    }
+    const cleaned = [];
+    for (const r of results){
+      let s = cleanSuitcasePrompt(r);
+      while (s.startsWith(',')) s = s.slice(1).trim();
+      if (s && !s.includes('|') && !cleaned.includes(s)) cleaned.push(s);
+    }
+    return cleaned.length ? cleaned : null;
+  }
   function buildSuitcase(){
-    const included = [], excluded = [];
+    const candidates = [];
+    let tileCount = 0;
+    const excluded = [];
     tiles.forEach(t=>{
-      const prompt = cleanSuitcasePrompt(t.prompt);
-      if (!prompt) return;
-      if (prompt.includes('|')) { excluded.push(t.name || '이름 없음'); return; }
-      included.push({ name: t.name || '이름 없음', prompt });
+      if (!(t.prompt || '').trim()) return;
+      const expanded = expandSuitcasePrompt(t.prompt);
+      if (!expanded) { excluded.push(t.name || '이름 없음'); return; }
+      tileCount++;
+      expanded.forEach(x=>candidates.push(x));
     });
-    suitcaseRandom = included.length ? '||' + included.map(x=>x.prompt).join('|') + '||' : '';
-    return { included, excluded };
+    suitcaseRandom = candidates.length ? '||' + candidates.join('|') + '||' : '';
+    return { candidates, tileCount, excluded };
   }
   function renderSuitcase(){
     const box = document.getElementById('suitcaseBox');
     const sub = document.getElementById('suitcaseSub');
     if (!box || !sub) return;
-    const { included, excluded } = buildSuitcase();
-    if (!included.length){
+    const { candidates, tileCount, excluded } = buildSuitcase();
+    if (!candidates.length){
       sub.textContent = '아직 옷 타일이 없어요.';
       box.classList.add('disabled');
       return;
     }
-    sub.textContent = '옷 ' + included.length + '벌 랜덤' + (excluded.length ? ' · ' + excluded.length + '벌 제외' : '');
+    sub.textContent = (candidates.length === tileCount ? '옷 ' + candidates.length + '벌 랜덤' : '타일 ' + tileCount + '개 · 후보 ' + candidates.length + '개 랜덤') + (excluded.length ? ' · ' + excluded.length + '벌 제외' : '');
     box.classList.remove('disabled');
   }
   window.copySuitcase = async function(){
