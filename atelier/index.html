@@ -35,6 +35,7 @@
   .base-note{padding:0 16px 14px;color:var(--muted);font-size:12px;line-height:1.7}
   .right{flex:1;min-width:0}
   .right-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .random-head{display:flex;align-items:center;justify-content:space-between;margin:24px 0 14px}
   .sec-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:inline-block}
   .btn-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
   .btn-add:hover{background:#7a2d2d}
@@ -140,6 +141,13 @@
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
+    <div id="randomSection" style="display:none">
+      <div class="random-head">
+        <div class="sec-title">|| 랜덤 타일</div>
+        <button class="btn-random" id="randomRandomBtn" onclick="copyRandomRandomTile()" disabled>🎲 랜덤 타일 1벌</button>
+      </div>
+      <div class="tiles" id="randomTiles"></div>
+    </div>
   </div>
 </div>
 </div>
@@ -281,11 +289,14 @@
     }
     return cleaned.length ? cleaned : null;
   }
+  function isRandomTile(t){ return (t.prompt || '').includes('||'); }
+  function getNormalTiles(){ return tiles.filter(t=>!isRandomTile(t)); }
+  function getRandomTiles(){ return tiles.filter(t=>isRandomTile(t)); }
   function buildSuitcase(){
     const candidates = [];
     let tileCount = 0;
     const excluded = [];
-    tiles.forEach(t=>{
+    getNormalTiles().forEach(t=>{
       if (!(t.prompt || '').trim()) return;
       const expanded = expandSuitcasePrompt(t.prompt);
       if (!expanded) { excluded.push(t.name || '이름 없음'); return; }
@@ -300,17 +311,17 @@
     const sub = document.getElementById('suitcaseSub');
     if (!box || !sub) return;
     const { candidates, tileCount, excluded } = buildSuitcase();
+    const normalBtnEmpty = document.getElementById('randomTileBtn');
+    if (normalBtnEmpty) normalBtnEmpty.disabled = !getNormalTiles().some(x=>(x.prompt || '').trim());
     if (!candidates.length){
       sub.textContent = '아직 옷 타일이 없어요.';
       box.classList.add('disabled');
-      const randomBtnEmpty = document.getElementById('randomTileBtn');
-      if (randomBtnEmpty) randomBtnEmpty.disabled = true;
       return;
     }
     sub.textContent = (candidates.length === tileCount ? '옷 ' + candidates.length + '벌 랜덤' : '타일 ' + tileCount + '개 · 후보 ' + candidates.length + '개 랜덤') + (excluded.length ? ' · ' + excluded.length + '벌 제외' : '');
     box.classList.remove('disabled');
     const randomBtn = document.getElementById('randomTileBtn');
-    if (randomBtn) randomBtn.disabled = !tiles.some(x=>(x.prompt || '').trim());
+    if (randomBtn) randomBtn.disabled = !getNormalTiles().some(x=>(x.prompt || '').trim());
   }
   window.copySuitcase = async function(){
     if (!suitcaseRandom) return;
@@ -324,8 +335,7 @@
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'), 1600);
   };
-  window.copyRandomTile = async function(){
-    const candidates = tiles.filter(x=>(x.prompt || '').trim());
+  async function copyRandomFromList(candidates){
     const toast = document.getElementById('toast');
     if (!candidates.length){
       if (toast){
@@ -347,15 +357,15 @@
       toast.classList.add('show');
       setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
     }
+  }
+  window.copyRandomTile = async function(){
+    await copyRandomFromList(getNormalTiles().filter(x=>(x.prompt || '').trim()));
   };
-  function render(){
-    renderSuitcase();
-    const el = document.getElementById('tiles');
-    if (!tiles.length){
-      el.innerHTML = '<div class="empty">아직 옷 타일이 없어요.<br>오른쪽 위 ＋ 타일 추가로, 옷 이름·프롬·이미지를 넣어보세요.</div>';
-      return;
-    }
-    el.innerHTML = tiles.map(t=>`
+  window.copyRandomRandomTile = async function(){
+    await copyRandomFromList(getRandomTiles().filter(x=>(x.prompt || '').trim()));
+  };
+  function tileHTML(t){
+    return `
       <div class="tile" onclick="copyTile('${t.id}', event)">
         ${t.img ? `<img class="tile-img" src="${esc(t.img)}" alt="" loading="lazy">` : '<div class="tile-img-empty">이미지 없음</div>'}
         <div class="tile-body">
@@ -366,7 +376,30 @@
           <button class="icon-btn" title="수정" onclick="openTileModal('${t.id}')">✏️</button>
           <button class="icon-btn" title="삭제" onclick="deleteTile('${t.id}')">✕</button>
         </div>
-      </div>`).join('');
+      </div>`;
+  }
+  function render(){
+    renderSuitcase();
+    const el = document.getElementById('tiles');
+    const normal = getNormalTiles();
+    const random = getRandomTiles();
+    const randomSection = document.getElementById('randomSection');
+    const randomEl = document.getElementById('randomTiles');
+    const randomBtn = document.getElementById('randomRandomBtn');
+    if (randomSection){
+      if (random.length){
+        randomSection.style.display = 'block';
+        if (randomBtn) randomBtn.disabled = !random.some(x=>(x.prompt || '').trim());
+        if (randomEl) randomEl.innerHTML = random.map(tileHTML).join('');
+      } else {
+        randomSection.style.display = 'none';
+      }
+    }
+    if (!normal.length){
+      el.innerHTML = '<div class="empty">아직 옷 타일이 없어요.<br>오른쪽 위 ＋ 타일 추가로, 옷 이름·프롬·이미지를 넣어보세요.</div>';
+      return;
+    }
+    el.innerHTML = normal.map(tileHTML).join('');
   }
   window.copyTile = async function(id, ev){
     const t = tiles.find(x=>x.id===id);
