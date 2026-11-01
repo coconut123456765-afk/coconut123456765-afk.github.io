@@ -117,7 +117,7 @@
     <div class="sync-dot" id="syncDot" title="동기화 상태"></div>
     <button class="hdr-btn" onclick="exportTiles()">내보내기</button>
     <label class="hdr-btn" style="cursor:pointer">가져오기<input type="file" id="importFile" accept="application/json" style="display:none"></label>
-    <button class="hdr-btn" onclick="resetConfig()">연결 해제</button>
+    <button class="hdr-btn" onclick="resetConfig()">연결 해제</button> <button class="hdr-btn" id="cleanupBtn" onclick="cleanupAndFill()">🧹 채우기·정리</button>
   </div>
 </header>
 <div class="wrap">
@@ -520,7 +520,43 @@ window.copyTile = async function(id, ev){
     if (!confirm('이 타일을 삭제할까요? 프롬과 이미지가 함께 지워져요.')) return;
     await deleteDoc(doc(db, 'atelierTiles', id));
   };
-  window.exportTiles = function(){
+  window.cleanupAndFill = async function(){
+const btn = document.getElementById('cleanupBtn');
+if (!btn || btn.disabled) return;
+if (!confirm('빠진 타일을 채우고, 같은 이름·프롬이 두 개인 중복 타일을 하나만 남기고 지울까요? 기존 타일은 그대로 남아요. 진행 중에는 새로고침하지 마세요.')) return;
+btn.disabled = true; btn.textContent = '진행 중…';
+try{
+const initial = tiles.slice();
+const byKey = new Map();
+let deleted = 0;
+for (const tt of initial){
+const key = (tt.name || '') + '\n' + (tt.prompt || '');
+if (!byKey.has(key)) byKey.set(key, tt);
+else { await deleteDoc(doc(db, 'atelierTiles', tt.id)); deleted++; }
+}
+const seen = new Set(initial.map(tt=> (tt.name || '') + '\n' + (tt.prompt || '')));
+let added = 0, skipped = 0;
+const files = ['remaining-outfit.json', 'remaining-hair.json', 'remaining-pose.json'];
+for (const f of files){
+const res = await fetch(f);
+if (!res.ok) throw new Error(f + ' 불러오기 실패');
+const data = await res.json();
+if (!Array.isArray(data.tiles)) throw new Error(f + ' 형식 오류');
+for (const tt of data.tiles){
+const key = (tt.name || '') + '\n' + (tt.prompt || '');
+if (seen.has(key)){ skipped++; continue; }
+await addDoc(collection(db, 'atelierTiles'), { name: tt.name || '이름 없음', prompt: tt.prompt || '', img: tt.img || '', cat: tt.cat || 'outfit', createdAt: serverTimestamp() });
+seen.add(key); added++;
+}
+}
+alert('완료! 추가 ' + added + '개, 중복 삭제 ' + deleted + '개, 이미 있던 거 ' + skipped + '개 건너뜀');
+} catch(e){
+alert('채우기·정리 실패: ' + e.message);
+} finally {
+btn.disabled = false; btn.textContent = '🧹 채우기·정리';
+}
+};
+window.exportTiles = function(){
     const blob = new Blob([JSON.stringify({ tiles }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

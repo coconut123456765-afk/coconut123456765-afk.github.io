@@ -1,0 +1,268 @@
+{
+  "tiles": [
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H079 狐耳",
+      "prompt": "fox ears, animal ears"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H080 耳机",
+      "prompt": "headphones"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H081 发缝",
+      "prompt": "hair intakes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H082 三角巾",
+      "prompt": "head scarf"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H083 星星发饰",
+      "prompt": "star hair ornament"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H084 爱心发饰",
+      "prompt": "heart hair ornament"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H085 双马尾(偏低・短)",
+      "prompt": "low twintails, short hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H086 马尾(蓬松)",
+      "prompt": "ponytail, wavy hair, long hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H087 丸子头(侧)",
+      "prompt": "side bun, hair bun"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H088 半双马尾",
+      "prompt": "two side up, twintails, hair down"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H089 波波头(外翘)",
+      "prompt": "bob cut, flipped hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H090 短发(推剪)",
+      "prompt": "short hair, undercut"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H091 长款(卷发)",
+      "prompt": "long hair, wavy hair, curly hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H092 麻花辫(侧单束)",
+      "prompt": "side braid, long hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H093 双马尾(大波浪)",
+      "prompt": "twintails, wavy hair, long hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H094 公主切(短发)",
+      "prompt": "hime cut, short hair"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H095 棕色眼",
+      "prompt": "brown eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H096 黑眼",
+      "prompt": "black eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H097 蓝色眼",
+      "prompt": "blue eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H098 水蓝眼",
+      "prompt": "light blue eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H099 绿色眼",
+      "prompt": "green eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H100 金色眼",
+      "prompt": "yellow eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H101 红色眼",
+      "prompt": "red eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H102 紫色眼",
+      "prompt": "purple eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H103 粉色眼",
+      "prompt": "pink eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H104 橙色眼",
+      "prompt": "orange eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H105 灰色眼",
+      "prompt": "grey eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H106 银色眼",
+      "prompt": "silver eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H107 水蓝眼",
+      "prompt": "aqua eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H108 琥珀眼",
+      "prompt": "amber eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H109 白色眼",
+      "prompt": "white eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H110 异色瞳(蓝×金)",
+      "prompt": "heterochromia, blue eyes, yellow eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H111 异色瞳(红×蓝)",
+      "prompt": "heterochromia, red eyes, blue eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H112 渐变眼",
+      "prompt": "gradient eyes, blue eyes, purple eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H113 多彩眼(虹)",
+      "prompt": "multicolored eyes, rainbow eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H114 爱心瞳",
+      "prompt": "heart-shaped pupils, pink eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H115 星星瞳",
+      "prompt": "star-shaped pupils, yellow eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H116 猫眼(竖瞳)",
+      "prompt": "slit pupils, green eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H117 发光眼",
+      "prompt": "glowing eyes, red eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H118 无高光(病态)",
+      "prompt": "empty eyes, brown eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H119 死鱼眼",
+      "prompt": "jitome, half-closed eyes, brown eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H120 下垂眼",
+      "prompt": "tareme, brown eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H121 上吊眼",
+      "prompt": "tsurime, brown eyes"
+    },
+    {
+      "cat": "hair",
+      "img": "",
+      "name": "H122 水汪眼",
+      "prompt": "tearing up, sparkling eyes, brown eyes"
+    }
+  ]
+}

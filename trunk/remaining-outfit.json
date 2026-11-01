@@ -1,0 +1,1498 @@
+{
+  "tiles": [
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O116 抓绒家居服",
+      "prompt": "fleece, room wear, loungewear, shorts, winter, indoors"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O117 暖桌旁针织",
+      "prompt": "sweater, kotatsu, winter, indoors, sitting"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O118 雪天(撑伞)",
+      "prompt": "coat, umbrella, snow, scarf, winter"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O119 圣诞节毛衣",
+      "prompt": "christmas sweater, sweater, red sweater, winter"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O120 情人节(围裙＋针织)",
+      "prompt": "sweater, apron, heart, valentine"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O122 西装(灰・长裤)",
+      "prompt": "business suit, grey jacket, pants, formal, office lady"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O125 罩衫＋蝴蝶结领结",
+      "prompt": "blouse, ribbon, bowtie, skirt, office"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O127 长裤西装(白)",
+      "prompt": "white suit, pantsuit, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O128 外套＋连衣裙",
+      "prompt": "jacket, dress, office, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O129 受付(制服)",
+      "prompt": "receptionist, uniform, vest, scarf, office"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O130 就活西装",
+      "prompt": "business suit, black suit, white shirt, pencil skirt, black hair"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O133 衬衫＋西装裤",
+      "prompt": "collared shirt, slacks, belt, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O135 针织＋半身裙(通勤)",
+      "prompt": "sweater, skirt, office, commuting, shoulder bag"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O136 罩衫(短袖・清凉商务)",
+      "prompt": "blouse, short sleeves, skirt, office, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O137 风衣＋通勤",
+      "prompt": "trench coat, office lady, bag, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O138 成熟便服",
+      "prompt": "blouse, wide pants, formal, elegant"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O140 自然(亚麻)",
+      "prompt": "linen, blouse, long skirt, natural"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O142 职场女性",
+      "prompt": "business suit, high heels, holding briefcase, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O143 看護師風(白大褂长裤)",
+      "prompt": "nurse, scrubs, white uniform, pants"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O144 主播",
+      "prompt": "news anchor, newscaster, blazer, white blouse, pencil skirt, holding microphone, name tag, formal, standing"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O145 银行員",
+      "prompt": "uniform, vest, scarf, office, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O152 公主礼服",
+      "prompt": "princess, ball gown, pink dress, tiara"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O156 古典萝莉塔",
+      "prompt": "classic lolita, brown dress, lace, lolita fashion"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O161 派对礼服(闪亮)",
+      "prompt": "sequin dress, dress, sparkle, party"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O162 成人式(振袖)",
+      "prompt": "furisode, kimono, floral print, obi, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O163 卒業式(袴)",
+      "prompt": "hakama, kimono, hakama skirt, graduation"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O164 夜间礼服",
+      "prompt": "slip dress, satin, nightgown, elegant"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O165 万圣节(魔女礼服)",
+      "prompt": "witch, witch hat, black dress, halloween"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O166 万圣节(小悪魔)",
+      "prompt": "demon girl, demon horns, demon tail, black dress, halloween"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O167 万圣节(吸血鬼)",
+      "prompt": "vampire, cape, black dress, fangs, halloween"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O168 圣诞节(圣诞装)",
+      "prompt": "santa costume, santa hat, red dress, fur trim, christmas"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O169 圣诞节(驯鹿)",
+      "prompt": "reindeer costume, antlers, brown dress, christmas"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O170 兔女郎(古典)",
+      "prompt": "playboy bunny, rabbit ears, leotard, black leotard, pantyhose, bowtie"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O171 兔女郎(白)",
+      "prompt": "playboy bunny, rabbit ears, white leotard, fishnets, bowtie"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O176 浴衣(藏青・朝顔)",
+      "prompt": "yukata, blue kimono, floral print, obi, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O177 浴衣(白・金魚)",
+      "prompt": "yukata, white kimono, goldfish print, obi, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O178 浴衣(红)",
+      "prompt": "yukata, red kimono, floral print, obi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O179 浴衣(花火)",
+      "prompt": "yukata, kimono, fireworks, summer festival, obi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O180 和服(振袖)",
+      "prompt": "furisode, kimono, long sleeves, floral print, obi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O181 和服(訪問着)",
+      "prompt": "kimono, floral print, obi, formal"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O182 和服(無地)",
+      "prompt": "kimono, plain kimono, obi, elegant"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O185 袴(大正)",
+      "prompt": "hakama, meiji schoolgirl uniform, hakama skirt, taishou roman"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O186 大正浪漫(和服＋靴子)",
+      "prompt": "kimono, hakama, boots, taishou roman"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O187 和風女仆",
+      "prompt": "wa maid, kimono, maid headdress, apron"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O188 忍者",
+      "prompt": "ninja, shinobi, black outfit, mask, kunai"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O189 女忍",
+      "prompt": "kunoichi, ninja, fishnets, short kimono"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O190 剣道着",
+      "prompt": "kendo, hakama, dougi, shinai"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O191 道着(空手)",
+      "prompt": "karate gi, dougi, black belt, martial arts"
+    },
+    {
+      "name": "O192 弓道着",
+      "prompt": "kyuudou, hakama, white kimono, holding bow (weapon)",
+      "img": "",
+      "cat": "outfit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O193 和服(露肩・变体)",
+      "prompt": "kimono, off-shoulder kimono, bare shoulders, obi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O194 和服(短丈)",
+      "prompt": "short kimono, kimono, thighhighs, obi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O195 遊女風",
+      "prompt": "oiran, kimono, off-shoulder kimono, kanzashi, elaborate"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O197 和服＋撑伞",
+      "prompt": "kimono, oil-paper umbrella, obi, elegant"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O198 甚平",
+      "prompt": "jinbei, japanese clothes, shorts, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O199 半被(祭典)",
+      "prompt": "happi, festival, headband, shorts"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O200 和装花嫁",
+      "prompt": "uchikake, wedding kimono, white kimono, tsunokakushi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O201 比基尼(白)",
+      "prompt": "bikini, white bikini, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O202 比基尼(黑)",
+      "prompt": "bikini, black bikini, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O203 比基尼(三角・水蓝)",
+      "prompt": "bikini, light blue bikini, string bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O204 比基尼(花柄)",
+      "prompt": "bikini, floral print bikini, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O205 比基尼(条纹)",
+      "prompt": "bikini, striped bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O206 荷叶边比基尼",
+      "prompt": "frilled bikini, bikini, pink bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O207 高叉・连衣裙",
+      "prompt": "one-piece swimsuit, highleg swimsuit, white swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O208 競泳泳装",
+      "prompt": "competition swimsuit, one-piece swimsuit, blue swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O211 分体泳装",
+      "prompt": "tankini, swimsuit, swim shorts"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O212 防晒衣",
+      "prompt": "rash guard, bikini, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O213 挂脖",
+      "prompt": "halterneck, bikini, red bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O214 乐队风比基尼",
+      "prompt": "bandeau, bikini, strapless, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O215 高腰比基尼",
+      "prompt": "high-waist bikini, bikini, retro, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O216 单肩连体泳装",
+      "prompt": "monokini, swimsuit, black swimsuit, cutout"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O217 侧领结",
+      "prompt": "side-tie bikini bottom, bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O218 泳装裹裙",
+      "prompt": "sarong, bikini, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O219 泳装＋卫衣",
+      "prompt": "bikini, hoodie, open hoodie, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O220 泳装＋泳圈",
+      "prompt": "bikini, innertube, swimsuit, pool"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O221 运动比基尼",
+      "prompt": "sports bikini, bikini, swimsuit, athletic"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O222 泳装(横条)",
+      "prompt": "striped swimsuit, one-piece swimsuit, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O224 泳装(透视)",
+      "prompt": "see-through, bikini, swimsuit, cover-up"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O225 泳装＋草帽",
+      "prompt": "bikini, straw hat, sun hat, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O226 比基尼(紐・黑)",
+      "prompt": "string bikini, black bikini, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O227 连衣裙(露背)",
+      "prompt": "one-piece swimsuit, backless swimsuit, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O228 泳装(冲浪)",
+      "prompt": "swimsuit, surfboard, bikini, beach, sporty"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O229 泳装(吊带露肤风・保守款)",
+      "prompt": "slingshot swimsuit, swimsuit, highleg"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O230 泳装(湿身西装)",
+      "prompt": "wetsuit, diving suit, swimsuit, black bodysuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O231 极简比基尼",
+      "prompt": "micro bikini, bikini, swimsuit, string bikini"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O232 泳装(拉链)",
+      "prompt": "zipper, one-piece swimsuit, front zipper, swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O233 泳装(多荷叶边)",
+      "prompt": "frilled swimsuit, one-piece swimsuit, pink swimsuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O234 泳装(卫衣風)",
+      "prompt": "swimsuit, hooded swimsuit, bikini, cute"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O235 泳装＋墨镜",
+      "prompt": "bikini, sunglasses, swimsuit, beach"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O236 网球服",
+      "prompt": "tennis uniform, tennis dress, white dress, visor, holding racket"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O238 排球部",
+      "prompt": "volleyball uniform, sportswear, shorts, knee pads"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O239 篮球部",
+      "prompt": "basketball uniform, jersey, shorts, sneakers"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O240 陸上(分体)",
+      "prompt": "track uniform, sports bra, buruma, athletic"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O241 水泳(競泳)",
+      "prompt": "competition swimsuit, swim cap, goggles"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O242 瑜伽服",
+      "prompt": "yoga pants, sports bra, yoga, yoga mat, barefoot, stretching, standing on one leg"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O243 健身房服",
+      "prompt": "gym uniform, tank top, bike shorts, sneakers, towel around neck, holding dumbbell"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O244 足球",
+      "prompt": "soccer uniform, jersey, shorts, soccer ball"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O245 野球(队服)",
+      "prompt": "baseball uniform, baseball cap, pants"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O246 剣道",
+      "prompt": "kendo, dougi, hakama, shinai"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O247 弓道",
+      "prompt": "kyuudou, hakama, holding bow (weapon), single weapon"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O248 体操(紧身衣)",
+      "prompt": "gymnastics, leotard, white leotard, ribbon"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O249 新体操",
+      "prompt": "rhythmic gymnastics, leotard, holding ribbon baton, ribbon"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O250 羽毛球",
+      "prompt": "badminton, sportswear, skirt, racket"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O251 高尔夫",
+      "prompt": "golf, polo shirt, skirt, visor, golf club"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O252 骑行服",
+      "prompt": "cycling jersey, bike shorts, helmet"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O253 跑步",
+      "prompt": "running, sportswear, tank top, shorts, sneakers"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O255 滑雪服",
+      "prompt": "ski suit, snow, goggles, winter"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O256 滑冰(花滑)",
+      "prompt": "figure skating, leotard, skirt, ice skates"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O257 乗馬",
+      "prompt": "equestrian, riding boots, riding jacket, riding helmet, riding crop"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O258 空手",
+      "prompt": "karate gi, dougi, black belt"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O259 长曲棍球",
+      "prompt": "lacrosse, sportswear, skirt, holding lacrosse stick"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O260 电竞(运动服)",
+      "prompt": "gaming, jersey, headphones, casual"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O264 护士(白)",
+      "prompt": "nurse, nurse cap, white dress, short dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O265 护士(粉)",
+      "prompt": "nurse, pink dress, nurse cap, stethoscope"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O266 警察官",
+      "prompt": "police, police uniform, police hat, pencil skirt"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O267 婦警(迷你)",
+      "prompt": "police uniform, police hat, miniskirt, holding handcuffs"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O270 调酒师",
+      "prompt": "bartender, vest, white shirt, bowtie, black pants"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O271 主厨",
+      "prompt": "chef, chef hat, chef uniform, apron"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O272 甜点师",
+      "prompt": "patissier, chef hat, white uniform, apron"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O274 研究者(白大褂＋眼鏡)",
+      "prompt": "labcoat, glasses, turtleneck, scientist"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O276 保育士",
+      "prompt": "childcare worker, apron, t-shirt, pants, name tag"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O277 図書館司書",
+      "prompt": "librarian, cardigan, glasses, long skirt, book"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O279 军装",
+      "prompt": "military uniform, military jacket, peaked cap, belt"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O280 海軍",
+      "prompt": "naval uniform, sailor hat, white uniform"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O281 飞行员",
+      "prompt": "pilot, flight jacket, aviator sunglasses, pants"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O285 配達員",
+      "prompt": "delivery, uniform, cap, package"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O286 便利店店员",
+      "prompt": "convenience store uniform, striped shirt, apron, name tag"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O287 咖啡店店员",
+      "prompt": "barista, apron, green apron, shirt"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O288 花屋",
+      "prompt": "florist, apron, flowers, bouquet"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O290 主播",
+      "prompt": "news anchor, jacket, dress, microphone"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O292 魔法师",
+      "prompt": "witch, witch hat, cape, staff, long dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O295 執事(女)",
+      "prompt": "butler, tailcoat, vest, white gloves, bowtie"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O298 枪手(西部劇)",
+      "prompt": "western, cowboy hat, poncho, boots"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O299 探偵",
+      "prompt": "detective, trench coat, deerstalker, magnifying glass"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O300 特工",
+      "prompt": "spy, black bodysuit, catsuit, sunglasses"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O301 赛博朋克",
+      "prompt": "cyberpunk, jacket, neon, techwear, visor"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O302 宇宙飛行士",
+      "prompt": "astronaut, spacesuit, helmet"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O303 赛车女郎",
+      "prompt": "race queen, racing suit, boots, hand on hip"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O306 勇者(軽装)",
+      "prompt": "hero, armor, breastplate, cape, sword"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O307 骑士(全身板甲)",
+      "prompt": "knight, full armor, plate armor, helmet off, holding sword"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O308 女骑士",
+      "prompt": "female knight, armor, breastplate, skirt armor, holding sword, holding shield"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O309 聖骑士",
+      "prompt": "paladin, white armor, cape, holy, sword"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O310 魔術師",
+      "prompt": "mage, robe, wizard hat, staff, long robe"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O311 黑魔道士",
+      "prompt": "black mage, dark robe, hood, holding staff"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O312 僧侶・治疗师",
+      "prompt": "priestess, white robe, holding staff, holy"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O313 精灵弓手",
+      "prompt": "elf, pointy ears, holding bow (weapon), leather armor, cape"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O314 暗精灵",
+      "prompt": "dark elf, dark skin, pointy ears, white hair, armor"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O315 盗賊",
+      "prompt": "thief, hood, leather armor, holding dagger, cloak"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O316 忍者(奇幻)",
+      "prompt": "ninja, mask, scarf, kunai, dark outfit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O317 侍",
+      "prompt": "samurai, japanese armor, holding katana, hakama"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O318 王女",
+      "prompt": "princess, crown, ball gown, elegant"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O319 女王",
+      "prompt": "queen, crown, long dress, cape, throne"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O320 魔王(女)",
+      "prompt": "demon lord, horns, black dress, cape, crown"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O321 魅魔(保守款)",
+      "prompt": "succubus, demon horns, demon wings, demon tail, black dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O322 天使",
+      "prompt": "angel, angel wings, halo, white dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O323 堕天使",
+      "prompt": "fallen angel, black wings, halo, black dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O324 龙娘",
+      "prompt": "dragon girl, dragon horns, dragon tail, scales, armor"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O325 獣人(狼)",
+      "prompt": "wolf girl, wolf ears, wolf tail, fur, leather armor"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O326 猫兽人",
+      "prompt": "cat girl, cat ears, cat tail, paw pose, dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O327 狐妖",
+      "prompt": "fox girl, fox ears, multiple tails, kimono"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O328 人魚",
+      "prompt": "mermaid, fish tail, seashell bra, underwater"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O329 妖精",
+      "prompt": "fairy, fairy wings, flower dress, small"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O330 魔女(現代)",
+      "prompt": "witch, witch hat, black dress, broom"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O331 錬金術師",
+      "prompt": "alchemist, apron, goggles, vial, gloves"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O332 冒険者(初期装備)",
+      "prompt": "adventurer, tunic, belt, boots, backpack, holding sword"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O333 剣士(着斜分)",
+      "prompt": "swordswoman, kimono, holding katana, sarashi"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O334 女武神",
+      "prompt": "valkyrie, winged helmet, armor, holding spear"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O336 机械少女",
+      "prompt": "mecha musume, mechanical parts, armor, headgear, mechanical arms, thighhighs"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O337 SF(紧身西装)",
+      "prompt": "bodysuit, sci-fi, skin tight, glowing lines"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O339 魔像使",
+      "prompt": "mage, book, glowing, robe, hood"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O340 吟遊詩人",
+      "prompt": "bard, lute, feather hat, cape"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O396 睡衣(粉・长袖)",
+      "prompt": "pajamas, pink pajamas, long sleeves, buttons"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O398 睡裙風家居服",
+      "prompt": "nightgown, white nightgown, long dress, loungewear"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O399 卫衣套装",
+      "prompt": "sweatpants, sweatshirt, grey sweater, loungewear"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O400 卫衣＋短裤(家居服)",
+      "prompt": "hoodie, shorts, loungewear, barefoot"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O401 吊带＋短裤",
+      "prompt": "camisole, shorts, loungewear, barefoot"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O402 大号T恤",
+      "prompt": "oversized t-shirt, bare legs, loungewear"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O403 运动服(家居服)",
+      "prompt": "track suit, loungewear, indoors"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O405 毛绒家居服",
+      "prompt": "fleece, fluffy, loungewear, pajamas, animal hood"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O406 连体睡衣(猫)",
+      "prompt": "kigurumi, cat costume, pajamas, hood"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O407 连体睡衣(兔子)",
+      "prompt": "kigurumi, rabbit costume, pajamas, hood"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O408 浴袍",
+      "prompt": "bathrobe, white robe, towel on head"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O409 浴衣(寝間着)",
+      "prompt": "yukata, sleepwear, loose, indoors"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O410 背心+卫裤",
+      "prompt": "tank top, sweatpants, loungewear"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O411 针织＋短裤(部屋)",
+      "prompt": "sweater, shorts, loungewear, socks"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O412 围裙(家事)",
+      "prompt": "apron, t-shirt, jeans, housework"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O413 围裙(做饭)",
+      "prompt": "apron, long sleeves, cooking, kitchen"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O414 发带＋家居服(洗顔)",
+      "prompt": "hairband, loungewear, t-shirt, washing face"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O415 裹毯子",
+      "prompt": "blanket, wrapped in blanket, pajamas, indoors"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O416 万圣节(南瓜)",
+      "prompt": "halloween costume, pumpkin, orange dress, witch hat"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O417 万圣节(猫)",
+      "prompt": "halloween, cat costume, cat ears, black dress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O418 万圣节(僵尸护士)",
+      "prompt": "halloween, zombie, nurse, torn clothes"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O419 万圣节(木乃伊)",
+      "prompt": "halloween, mummy costume, bandages"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O420 圣诞节(圣诞装迷你)",
+      "prompt": "santa costume, santa hat, red dress, fur trim, thighhighs"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O421 圣诞节(精灵)",
+      "prompt": "christmas, elf costume, green dress, pointy hat"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O422 圣诞节(针织＋蛋糕)",
+      "prompt": "christmas sweater, cake, winter, indoors"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O423 大晦日(暖桌＋橘子)",
+      "prompt": "kotatsu, sweater, mandarin orange, winter"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O424 正月(节日正装)",
+      "prompt": "kimono, furisode, new year, hatsumoude"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O426 成人式",
+      "prompt": "furisode, kimono, formal, ceremony"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O427 節分(鬼)",
+      "prompt": "oni costume, oni horns, tiger print, setsubun"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O428 情人节(围裙＋巧克力)",
+      "prompt": "apron, chocolate, valentine, heart"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O429 女儿节(十二単風)",
+      "prompt": "junihitoe, kimono, hinamatsuri, layered"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O430 入学式(西装)",
+      "prompt": "suit, formal, entrance ceremony, corsage"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O431 卒業式(袴)",
+      "prompt": "hakama, graduation, kimono"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O432 花見(和服＋桜)",
+      "prompt": "kimono, cherry blossoms, spring, picnic"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O433 梅雨(雨衣)",
+      "prompt": "raincoat, hood up, rain, boots, puddle, water drop"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O434 夏日祭(浴衣＋苹果糖)",
+      "prompt": "yukata, candy apple, summer festival"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O435 海(比基尼＋泳装裹裙)",
+      "prompt": "bikini, sarong, beach, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O437 運動会(体操服)",
+      "prompt": "gym uniform, headband, sports festival"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O439 紅葉(针织＋披肩)",
+      "prompt": "sweater, shawl, autumn leaves, autumn"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O440 滑雪场",
+      "prompt": "ski suit, goggles, snow, winter"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O441 温泉(浴衣)",
+      "prompt": "yukata, onsen, towel, hot spring"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O442 誕生日(礼服＋蛋糕)",
+      "prompt": "party dress, birthday cake, party hat"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O443 結婚式(赴宴礼服)",
+      "prompt": "party dress, formal, wedding guest"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O444 祭典(法被)",
+      "prompt": "happi, festival, headband, summer festival"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O445 七夕(浴衣＋短冊)",
+      "prompt": "yukata, tanabata, bamboo, summer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O447 偶像(白×蓝)",
+      "prompt": "idol clothes, white dress, blue trim, frills"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O450 偶像(黑・冷艳)",
+      "prompt": "idol clothes, black dress, silver trim, cool"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O451 偶像(军装風)",
+      "prompt": "idol clothes, military uniform, peaked cap, mini skirt"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O452 地下偶像(T恤＋半身裙)",
+      "prompt": "t-shirt, pleated skirt, idol, stage"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O453 乐队(吉他)",
+      "prompt": "holding guitar, electric guitar, playing guitar, leather jacket, shorts, band"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O454 乐队(架子鼓)",
+      "prompt": "drum, t-shirt, headband, band"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O455 哥特乐队",
+      "prompt": "gothic, black dress, lace, band, holding microphone"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O456 歌手(长款礼服)",
+      "prompt": "evening gown, microphone, stage, singer"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O458 芭蕾(芭蕾短裙)",
+      "prompt": "ballet, tutu, leotard, ballet shoes"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O460 魔术师",
+      "prompt": "magician, top hat, tailcoat, playing card"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O465 哥特萝莉(黑)",
+      "prompt": "gothic lolita, black dress, lace, bonnet"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O466 哥特萝莉(红)",
+      "prompt": "gothic lolita, red dress, black lace, headdress"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O469 朋克",
+      "prompt": "punk, leather jacket, plaid skirt, chains"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O470 病娇可爱(包腰带)",
+      "prompt": "yamikawa, bandages, pastel, oversized hoodie"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O471 梦幻可爱",
+      "prompt": "yumekawa, pastel colors, frills, star, hairclips"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O472 花哨可爱(独角兽)",
+      "prompt": "pastel, unicorn, frills, hair bow"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O476 亚文化(贝雷帽)",
+      "prompt": "beret, oversized shirt, suspender skirt, subculture"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O477 V系",
+      "prompt": "visual kei, black outfit, lace, chains, dark makeup"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O479 萝莉塔(和風)",
+      "prompt": "wa lolita, kimono, frills, lolita fashion"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O481 军装(黑・将校)",
+      "prompt": "military uniform, black jacket, peaked cap, gloves"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O482 军装(绿・野戦)",
+      "prompt": "military uniform, camouflage, helmet, boots"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O483 海軍(白)",
+      "prompt": "naval uniform, white uniform, sailor hat"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O484 空軍飞行员",
+      "prompt": "pilot suit, flight jacket, helmet"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O485 特殊部隊",
+      "prompt": "tactical gear, bulletproof vest, balaclava"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O486 SF西装(白)",
+      "prompt": "bodysuit, sci-fi, white bodysuit, glowing lines"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O487 SF西装(黑)",
+      "prompt": "bodysuit, sci-fi, black bodysuit, armor plates"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O488 宇宙服",
+      "prompt": "spacesuit, helmet, space"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O489 赛博朋克(外套)",
+      "prompt": "cyberpunk, jacket, neon, techwear, goggles"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O490 机械少女(軽装)",
+      "prompt": "mecha musume, mechanical parts, light armor, headgear, bodysuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O491 人造人",
+      "prompt": "android, joints, mechanical parts, bodysuit"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O492 機動兵器飞行员",
+      "prompt": "plugsuit, pilot suit, skin tight"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O493 骑士(SF)",
+      "prompt": "sci-fi armor, knight, energy sword"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O494 傭兵",
+      "prompt": "mercenary, tank top, cargo pants, dog tags"
+    },
+    {
+      "cat": "outfit",
+      "img": "",
+      "name": "O495 狙击手",
+      "prompt": "ghillie suit, camouflage, rifle"
+    }
+  ]
+}
