@@ -184,7 +184,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const CONFIG_KEY = 'atelier_firebase_config';
   const SCROLL_KEY = 'yurang_firebase_config';
@@ -526,7 +526,8 @@ if (!btn || btn.disabled) return;
 if (!confirm('빠진 타일을 채우고, 같은 이름·프롬이 두 개인 중복 타일을 하나만 남기고 지울까요? 기존 타일은 그대로 남아요. 진행 중에는 새로고침하지 마세요.')) return;
 btn.disabled = true; btn.textContent = '진행 중…';
 try{
-const initial = tiles.slice();
+const snap = await getDocs(collection(db, 'atelierTiles'));
+const initial = snap.docs.map(d=>({ id: d.id, ...d.data() }));
 const byKey = new Map();
 let deleted = 0;
 for (const tt of initial){
