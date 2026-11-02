@@ -182,7 +182,7 @@
       <div style="display:flex;gap:8px">
         <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
         <button class="btn-random" id="organizeBtn" onclick="toggleOrganize()">정리 모드</button>
-        <button class="btn-random" id="themeFillBtn" onclick="fillThemesByName()">이름→테마</button>
+        <button class="btn-random" id="themeFillBtn" onclick="fillThemes()">테마 채우기</button>
         <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
       </div>
     </div>
@@ -553,40 +553,43 @@ window.copyTile = async function(id, ev){
     try{ await updateDoc(doc(db, 'atelierTiles', id), { themes: next }); }
     catch(e){ alert('테마 저장 실패: ' + e.message); }
   };
-  function themesFromName(name){
+  function themesFromText(name, prompt){
     const n = name || '';
+    const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
     const out = [];
-    const has = (...keys)=>keys.some(k=>n.includes(k));
-    if (has('메이드','maid')) out.push('maid');
-    if (has('한복','hanbok')) out.push('hanbok');
-    if (has('변태')) out.push('pervert');
-    if (has('스타벅스','맥도날드','로손','코베야','승무원','간호사','소방관','우편','배달','정비사','딸버이츠')) out.push('staff');
-    if (has('교복','세라복','호그와트')) out.push('school');
-    if (has('수녀','nun')) out.push('nun');
-    if (has('바니','bunny')) out.push('bunny');
-    if (has('고양이','cat')) out.push('cat');
+    if (s.includes('maid') || n.includes('메이드')) out.push('maid');
+    if (s.includes('hanbok') || n.includes('한복')) out.push('hanbok');
+    if (n.includes('변태')) out.push('pervert');
+    if (['starbucks','mcdonald','lawson','kobeya','flight attendant','nurse','firefighter','mailman','mechanic','delivery','waitress','carhop','employee uniform','fast food uniform'].some(k=>s.includes(k)) || ['스타벅스','맥도날드','로손','코베야','승무원','간호사','소방관','우편','배달','정비사','웨이트리스'].some(k=>n.includes(k))) out.push('staff');
+    if (['school uniform','serafuku','hogwarts'].some(k=>s.includes(k)) || ['교복','세라복','호그와트'].some(k=>n.includes(k))) out.push('school');
+    if (s.includes('nun') || n.includes('수녀')) out.push('nun');
+    if (s.includes('bunny') || s.includes('bunnysuit') || n.includes('바니')) out.push('bunny');
+    if (/\bcat\b/.test(s) || n.includes('고양이') || s.includes('kittysuit')) out.push('cat');
     return out;
   }
-  window.fillThemesByName = async function(){
+  window.fillThemes = async function(){
     const btn = document.getElementById('themeFillBtn');
     if (!btn || btn.disabled) return;
-    if (!confirm('타일 이름에 메이드/한복/변태/직원 등이 있으면, 그 테마를 자동으로 붙일까요? 이름만 보고, 이미 붙은 테마는 그대로 두고, 이름에 없는 테마는 건드리지 않아요.')) return;
+    if (!confirm('이름과 프롬을 보고 테마를 자동으로 붙일까요? 이미 붙은 테마는 그대로 두고, 메이드 테마가 붙은 타일은 종류를 유니폼으로 통일할게요. 다른 종류는 건드리지 않아요.')) return;
     btn.disabled = true; btn.textContent = '채우는 중…';
     try{
       const snap = await getDocs(collection(db, 'atelierTiles'));
-      let updated = 0, already = 0;
+      let updated = 0, already = 0, maidUniform = 0;
       for (const d of snap.docs){
         const tt = { id: d.id, ...d.data() };
         if (tileCat(tt) !== 'outfit') continue;
         const cur = tileThemes(tt);
-        const add = themesFromName(tt.name).filter(x=>!cur.includes(x));
-        if (add.length === 0){ already++; continue; }
-        await updateDoc(doc(db, 'atelierTiles', tt.id), { themes: [...cur, ...add] });
+        const add = themesFromText(tt.name, tt.prompt).filter(x=>!cur.includes(x));
+        const finalThemes = [...cur, ...add];
+        let newSub = tt.sub || '';
+        if (finalThemes.includes('maid') && newSub !== 'uniform'){ newSub = 'uniform'; maidUniform++; }
+        if (add.length === 0 && newSub === (tt.sub || '')){ already++; continue; }
+        await updateDoc(doc(db, 'atelierTiles', tt.id), { themes: finalThemes, sub: newSub });
         updated++;
       }
-      alert('테마 채우기 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개');
+      alert('테마 채우기 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 메이드→유니폼으로 바뀐 타일 ' + maidUniform + '개');
     }catch(e){ alert('테마 채우기 실패: ' + e.message); }
-    btn.disabled = false; btn.textContent = '이름→테마';
+    btn.disabled = false; btn.textContent = '테마 채우기';
   };
   window.openTileModal = function(id){
     editId = id || null;
