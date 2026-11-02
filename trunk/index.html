@@ -39,6 +39,7 @@
   .right{flex:1;min-width:0}
   .right-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
   .random-head{display:flex;align-items:center;justify-content:space-between;margin:24px 0 14px}
+  #randomSection{scroll-margin-top:100px}
   .sec-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:inline-block}
   .cat-tabs{display:flex;gap:8px;margin-bottom:14px}
 .cat-tab{background:#fff;color:var(--muted);border:1px solid #ddd;border-radius:20px;padding:11px 20px;font-weight:700;font-size:16px;cursor:pointer}
@@ -197,6 +198,7 @@
 <div class="sec-title" id="catTitle">옷장</div>
       <div style="display:flex;gap:8px">
         <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
+        <button class="btn-random" id="randomZoneBtn" onclick="scrollToRandomZone()" disabled>🎲 랜덤존 ↓</button>
         <button class="btn-random" id="organizeBtn" onclick="toggleOrganize()">정리 모드</button>
         <button class="btn-random" id="themeFillBtn" onclick="fillThemes()">전체 정리</button>
         <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
@@ -205,7 +207,7 @@
     <div class="tiles" id="tiles"></div>
     <div id="randomSection" style="display:none">
       <div class="random-head">
-        <div class="sec-title">|| 랜덤 타일</div>
+        <div class="sec-title">랜덤존</div>
         <button class="btn-random" id="randomRandomBtn" onclick="copyRandomRandomTile()" disabled>🎲 랜덤 타일 1벌</button>
       </div>
       <div class="tiles" id="randomTiles"></div>
@@ -388,7 +390,7 @@ render();
   }
   function isRandomTile(t){ return (t.prompt || '').includes('||'); }
   function getNormalTiles(){ return filteredOutfit().filter(t=>!isRandomTile(t)); }
-  function getRandomTiles(){ return filteredOutfit().filter(t=>isRandomTile(t)); }
+  function getRandomTiles(){ return catTiles('outfit').filter(t=>isRandomTile(t)); }
   function buildSuitcase(){
     const candidates = [];
     let tileCount = 0;
@@ -458,6 +460,7 @@ render();
   window.copyRandomTile = async function(){
     await copyRandomFromList((currentCat==='outfit' ? getNormalTiles() : catTiles(currentCat)).filter(x=>(x.prompt || '').trim()));
   };
+  window.scrollToRandomZone = function(){ const el = document.getElementById('randomSection'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); };
   window.copyRandomRandomTile = async function(){
     await copyRandomFromList(getRandomTiles().filter(x=>(x.prompt || '').trim()));
   };
@@ -499,6 +502,8 @@ const btn = document.getElementById('randomTileBtn');
 if (btn) btn.textContent = currentCat==='hair' ? '🎲 랜덤 헤어 1개' : currentCat==='pose' ? '🎲 랜덤 포즈 1개' : '🎲 랜덤 1벌';
 if (currentCat!=='outfit'){
 if (randomSection) randomSection.style.display = 'none';
+const zoneBtn0 = document.getElementById('randomZoneBtn');
+if (zoneBtn0) zoneBtn0.style.display = 'none';
 const list = catTiles(currentCat);
 if (btn) btn.disabled = !list.some(x=>(x.prompt || '').trim());
 if (!list.length){
@@ -517,9 +522,13 @@ if (randomSection){
 if (random.length){
 randomSection.style.display = 'block';
 if (randomBtn) randomBtn.disabled = !random.some(x=>(x.prompt || '').trim());
+const zoneBtn = document.getElementById('randomZoneBtn');
+if (zoneBtn) { zoneBtn.style.display = ''; zoneBtn.disabled = !random.length; }
 if (randomEl) randomEl.innerHTML = random.map(tileHTML).join('');
 } else {
 randomSection.style.display = 'none';
+const zoneBtn2 = document.getElementById('randomZoneBtn');
+if (zoneBtn2) { zoneBtn2.style.display = ''; zoneBtn2.disabled = true; }
 }
 }
 if (!normal.length){
@@ -625,10 +634,11 @@ window.copyTile = async function(id, ev){
     btn.disabled = true; btn.textContent = '채우는 중…';
     try{
       const snap = await getDocs(collection(db, 'atelierTiles'));
-      let updated = 0, already = 0, kindChanged = 0, maidUniform = 0;
+      let updated = 0, already = 0, kindChanged = 0, maidUniform = 0, randomSkipped = 0;
       for (const d of snap.docs){
         const tt = { id: d.id, ...d.data() };
         if (tileCat(tt) !== 'outfit') continue;
+        if (isRandomTile(tt)) { randomSkipped++; continue; }
         const cur = tileThemes(tt);
         const add = themesFromText(tt.name, tt.prompt).filter(x=>!cur.includes(x));
         const finalThemes = [...cur, ...add];
@@ -641,7 +651,7 @@ window.copyTile = async function(id, ev){
         await updateDoc(doc(db, 'atelierTiles', tt.id), { themes: finalThemes, sub: newSub });
         updated++;
       }
-      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 복장 바뀐 타일 ' + kindChanged + '개, 메이드→유니폼 ' + maidUniform + '개');
+      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 복장 바뀐 타일 ' + kindChanged + '개, 메이드→유니폼 ' + maidUniform + '개' + (randomSkipped ? ' · 랜덤 타일 ' + randomSkipped + '개 제외' : ''));
     }catch(e){ alert('전체 정리 실패: ' + e.message); }
     btn.disabled = false; btn.textContent = '전체 정리';
   };
