@@ -173,6 +173,7 @@
 <button class="theme-tab" data-theme="maid" onclick="switchTheme('maid')">메이드</button>
 <button class="theme-tab" data-theme="hanbok" onclick="switchTheme('hanbok')">한복</button>
 <button class="theme-tab" data-theme="pervert" onclick="switchTheme('pervert')">변태</button>
+<button class="theme-tab" data-theme="special" onclick="switchTheme('special')">특수</button>
 <button class="theme-tab" data-theme="staff" onclick="switchTheme('staff')">직원 유니폼</button>
 <button class="theme-tab" data-theme="school" onclick="switchTheme('school')">교복</button>
 <button class="theme-tab" data-theme="nun" onclick="switchTheme('nun')">수녀</button>
@@ -212,7 +213,7 @@
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
     <div id="tileSubRow"><label>복장</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="dress">드레스</option><option value="swim">수영복</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
-    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
+    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
@@ -236,7 +237,7 @@
 let currentCat = 'outfit';
 let currentOutfitSub = 'all';
 let currentTheme = 'all';
-const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이'],['swim','수영복'],['jirai','지뢰계'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티']];
+const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['special','특수'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이'],['swim','수영복'],['jirai','지뢰계'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티']];
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
 function tileCat(x){ return x.cat || 'outfit'; }
 function catTiles(cat){ return tiles.filter(x=>tileCat(x)===cat); }
@@ -568,6 +569,7 @@ window.copyTile = async function(id, ev){
     if (s.includes('maid') || n.includes('메이드')) out.push('maid');
     if (s.includes('hanbok') || n.includes('한복')) out.push('hanbok');
     if (n.includes('변태')) out.push('pervert');
+    if (n.includes('특수')) out.push('special');
     if (['starbucks','mcdonald','lawson','kobeya','flight attendant','nurse','firefighter','mailman','mechanic','delivery','waitress','carhop','employee uniform','fast food uniform'].some(k=>s.includes(k)) || ['스타벅스','맥도날드','로손','코베야','승무원','간호사','소방관','우편','배달','정비사','웨이트리스'].some(k=>n.includes(k))) out.push('staff');
     if (['school uniform','serafuku','hogwarts'].some(k=>s.includes(k)) || ['교복','세라복','호그와트'].some(k=>n.includes(k))) out.push('school');
     if (s.includes('nun') || n.includes('수녀')) out.push('nun');
@@ -587,14 +589,16 @@ window.copyTile = async function(id, ev){
   // 속옷 = 속옷·란제리라고 적힌 것. bra가 보인다고 속옷이 아님.
   // 코스튬 = 일상에서는 안 입고 행사·코스프레·판타지·전통 의상으로만 입는 것.
   // 드레스 = 원피스 계열. 단 전통·코스프레 드레스는 코스튬이 먼저.
-  // 특수 = 변태라고 적힌 것, 또는 노출이 목적인 것.
+  // 특수 = 변태·특수라고 이름에 적힌 것, 또는 노출이 목적인 것.
+  // Don 약속: 이 뒤로 특이한 타일은 이름에 특수나 변태라고 적고, 전체 정리가 복장·테마를 알아서 붙인다.
+  // 특수 → 복장 특수 + 테마 특수, 변태 → 복장 특수 + 테마 변태.
   // 수영복은 속옷이 아니라 복장 수영복으로 따로 본다.
   // 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 수영복 → 드레스 → 사복, 없으면 그대로.
   function kindFromText(name, prompt){
     const n = name || '';
     const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
     if (['lingerie','babydoll','negligee','pasties'].some(k=>s.includes(k)) || n.includes('란제리')) return 'underwear';
-    if (n.includes('변태') || n.includes('동정살인') || n.includes('동정 박살') || ['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'].some(k=>s.includes(k))) return 'special';
+    if (n.includes('변태') || n.includes('특수') || n.includes('동정살인') || n.includes('동정 박살') || ['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'].some(k=>s.includes(k))) return 'special';
     if (['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','starbucks','mcdonald','lawson','kobeya','waitress','carhop','cheerleader','office lady','kindergarten','military','hooters','uber eats'].some(k=>s.includes(k)) || ['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','스타벅스','맥도날드','로손','코베야','웨이트리스','치어리더','유치원','군복','후터스','딸버이츠'].some(k=>n.includes(k))) return 'uniform';
     if (['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco'].some(k=>s.includes(k)) || ['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고'].some(k=>n.includes(k))) return 'costume';
     if (['swimsuit','bikini'].some(k=>s.includes(k)) || ['스쿠미즈','비키니','수영복'].some(k=>n.includes(k))) return 'swim';
