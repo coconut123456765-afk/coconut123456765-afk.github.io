@@ -164,6 +164,7 @@
 <button class="sub-tab" data-sub="uniform" onclick="switchOutfitSub('uniform')">유니폼</button>
 <button class="sub-tab" data-sub="costume" onclick="switchOutfitSub('costume')">코스튬</button>
 <button class="sub-tab" data-sub="dress" onclick="switchOutfitSub('dress')">드레스</button>
+<button class="sub-tab" data-sub="swim" onclick="switchOutfitSub('swim')">수영복</button>
 <button class="sub-tab" data-sub="underwear" onclick="switchOutfitSub('underwear')">속옷</button>
 <button class="sub-tab" data-sub="special" onclick="switchOutfitSub('special')">특수</button>
 </div>
@@ -210,7 +211,7 @@
     <h3 id="tileModalTitle">타일 추가</h3>
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
-    <div id="tileSubRow"><label>복장</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="dress">드레스</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
+    <div id="tileSubRow"><label>복장</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="dress">드레스</option><option value="swim">수영복</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
     <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
@@ -454,7 +455,7 @@ render();
   };
   let organizeMode = false;
   function subSelectHTML(t){
-    const opts = [['','미분류'],['casual','사복'],['uniform','유니폼'],['costume','코스튬'],['dress','드레스'],['underwear','속옷'],['special','특수']];
+    const opts = [['','미분류'],['casual','사복'],['uniform','유니폼'],['costume','코스튬'],['dress','드레스'],['swim','수영복'],['underwear','속옷'],['special','특수']];
     return `<select class="tile-sub-select" onclick="event.stopPropagation()" onchange="setTileSub('${t.id}', this.value)">` + opts.map(o=>`<option value="${o[0]}" ${((t.sub || '') === o[0]) ? 'selected' : ''}>${o[1]}</option>`).join('') + `</select>`;
   }
   function themeChipsHTML(t){
@@ -545,7 +546,7 @@ window.copyTile = async function(id, ev){
       await updateDoc(doc(db, 'atelierTiles', id), { sub: sub || '' });
       const toast = document.getElementById('toast');
       if (toast){
-        const label = sub === 'casual' ? '사복' : sub === 'uniform' ? '유니폼' : sub === 'costume' ? '코스튬' : sub === 'dress' ? '드레스' : sub === 'underwear' ? '속옷' : sub === 'special' ? '특수' : '미분류';
+        const label = sub === 'casual' ? '사복' : sub === 'uniform' ? '유니폼' : sub === 'costume' ? '코스튬' : sub === 'dress' ? '드레스' : sub === 'swim' ? '수영복' : sub === 'underwear' ? '속옷' : sub === 'special' ? '특수' : '미분류';
         toast.textContent = (t.name || '이름 없음') + ' → ' + label;
         toast.classList.add('show');
         setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
@@ -587,8 +588,8 @@ window.copyTile = async function(id, ev){
   // 코스튬 = 일상에서는 안 입고 행사·코스프레·판타지·전통 의상으로만 입는 것.
   // 드레스 = 원피스 계열. 단 전통·코스프레 드레스는 코스튬이 먼저.
   // 특수 = 변태라고 적힌 것, 또는 노출이 목적인 것.
-  // 수영복은 복장으로는 미분류로 남기고 테마 수영복으로 본다.
-  // 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 드레스 → 사복, 없으면 그대로.
+  // 수영복은 속옷이 아니라 복장 수영복으로 따로 본다.
+  // 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 수영복 → 드레스 → 사복, 없으면 그대로.
   function kindFromText(name, prompt){
     const n = name || '';
     const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
@@ -596,6 +597,7 @@ window.copyTile = async function(id, ev){
     if (n.includes('변태') || n.includes('동정살인') || n.includes('동정 박살') || ['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'].some(k=>s.includes(k))) return 'special';
     if (['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','starbucks','mcdonald','lawson','kobeya','waitress','carhop','cheerleader','office lady','kindergarten','military','hooters','uber eats'].some(k=>s.includes(k)) || ['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','스타벅스','맥도날드','로손','코베야','웨이트리스','치어리더','유치원','군복','후터스','딸버이츠'].some(k=>n.includes(k))) return 'uniform';
     if (['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco'].some(k=>s.includes(k)) || ['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고'].some(k=>n.includes(k))) return 'costume';
+    if (['swimsuit','bikini'].some(k=>s.includes(k)) || ['스쿠미즈','비키니','수영복'].some(k=>n.includes(k))) return 'swim';
     const sNoShirt = s.replace(/dress shirt/g, '');
     if (/\bdress\b/.test(sNoShirt) || sNoShirt.includes('gown')) return 'dress';
     if (['jeans','t-shirt','sweater','coat','skirt','shirt','jacket','pants','hoodie','knit','blouse','camisole','cardigan','pajama'].some(k=>s.includes(k))) return 'casual';
