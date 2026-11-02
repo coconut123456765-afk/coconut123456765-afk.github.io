@@ -569,7 +569,7 @@ window.copyTile = async function(id, ev){
     if (s.includes('maid') || n.includes('메이드')) out.push('maid');
     if (s.includes('hanbok') || n.includes('한복')) out.push('hanbok');
     if (n.includes('변태')) out.push('pervert');
-    if (n.includes('특수')) out.push('special');
+    // 특수는 자동이 아님. Don이 별도로 직접 고른다. (스타벅스 특수 같은 이름이 자동으로 특수으로 가는 걸 막기 위해)
     if (['starbucks','mcdonald','lawson','kobeya','flight attendant','nurse','firefighter','mailman','mechanic','delivery','waitress','carhop','employee uniform','fast food uniform'].some(k=>s.includes(k)) || ['스타벅스','맥도날드','로손','코베야','승무원','간호사','소방관','우편','배달','정비사','웨이트리스'].some(k=>n.includes(k))) out.push('staff');
     if (['school uniform','serafuku','hogwarts'].some(k=>s.includes(k)) || ['교복','세라복','호그와트'].some(k=>n.includes(k))) out.push('school');
     if (s.includes('nun') || n.includes('수녀')) out.push('nun');
@@ -589,16 +589,17 @@ window.copyTile = async function(id, ev){
   // 속옷 = 속옷·란제리라고 적힌 것. bra가 보인다고 속옷이 아님.
   // 코스튬 = 일상에서는 안 입고 행사·코스프레·판타지·전통 의상으로만 입는 것.
   // 드레스 = 원피스 계열. 단 전통·코스프레 드레스는 코스튬이 먼저.
-  // 특수 = 변태·특수라고 이름에 적힌 것, 또는 노출이 목적인 것.
-  // Don 약속: 이 뒤로 특이한 타일은 이름에 특수나 변태라고 적고, 전체 정리가 복장·테마를 알아서 붙인다.
-  // 특수 → 복장 특수 + 테마 특수, 변태 → 복장 특수 + 테마 변태.
+  // 특수 = 변태라고 이름에 적힌 것, 또는 노출이 목적인 것.
+  // Don 약속 변경: 특수는 별도로 직접 고르고, 변태만 자동이다.
+  // 변태 → 복장 특수 + 테마 변태. 특수는 전체 정리가 자동으로 안 붙인다.
+  // 그래서 스타벅스 특수는 유니폼으로 남는다.
   // 수영복은 속옷이 아니라 복장 수영복으로 따로 본다.
   // 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 수영복 → 드레스 → 사복, 없으면 그대로.
   function kindFromText(name, prompt){
     const n = name || '';
     const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
     if (['lingerie','babydoll','negligee','pasties'].some(k=>s.includes(k)) || n.includes('란제리')) return 'underwear';
-    if (n.includes('변태') || n.includes('특수') || n.includes('동정살인') || n.includes('동정 박살') || ['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'].some(k=>s.includes(k))) return 'special';
+    if (n.includes('변태') || n.includes('동정살인') || n.includes('동정 박살') || ['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'].some(k=>s.includes(k))) return 'special';
     if (['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','starbucks','mcdonald','lawson','kobeya','waitress','carhop','cheerleader','office lady','kindergarten','military','hooters','uber eats'].some(k=>s.includes(k)) || ['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','스타벅스','맥도날드','로손','코베야','웨이트리스','치어리더','유치원','군복','후터스','딸버이츠'].some(k=>n.includes(k))) return 'uniform';
     if (['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco'].some(k=>s.includes(k)) || ['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고'].some(k=>n.includes(k))) return 'costume';
     if (['swimsuit','bikini'].some(k=>s.includes(k)) || ['스쿠미즈','비키니','수영복'].some(k=>n.includes(k))) return 'swim';
