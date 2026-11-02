@@ -208,7 +208,10 @@
     <div id="randomSection" style="display:none">
       <div class="random-head">
         <div class="sec-title">랜덤존</div>
+        <div style="display:flex;gap:8px">
         <button class="btn-random" id="randomRandomBtn" onclick="copyRandomRandomTile()" disabled>🎲 랜덤 타일 1벌</button>
+        <button class="btn-random" onclick="scrollToTrunkTop()">위로 ↑</button>
+        </div>
       </div>
       <div class="tiles" id="randomTiles"></div>
     </div>
@@ -461,6 +464,7 @@ render();
     await copyRandomFromList((currentCat==='outfit' ? getNormalTiles() : catTiles(currentCat)).filter(x=>(x.prompt || '').trim()));
   };
   window.scrollToRandomZone = function(){ const el = document.getElementById('randomSection'); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); };
+  window.scrollToTrunkTop = function(){ window.scrollTo({top:0, behavior:'smooth'}); };
   window.copyRandomRandomTile = async function(){
     await copyRandomFromList(getRandomTiles().filter(x=>(x.prompt || '').trim()));
   };
