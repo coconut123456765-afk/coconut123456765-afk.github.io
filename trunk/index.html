@@ -176,13 +176,19 @@
 <button class="theme-tab" data-theme="nun" onclick="switchTheme('nun')">수녀</button>
 <button class="theme-tab" data-theme="bunny" onclick="switchTheme('bunny')">바니걸</button>
 <button class="theme-tab" data-theme="cat" onclick="switchTheme('cat')">고양이</button>
+<button class="theme-tab" data-theme="swim" onclick="switchTheme('swim')">수영복</button>
+<button class="theme-tab" data-theme="jirai" onclick="switchTheme('jirai')">지뢰계</button>
+<button class="theme-tab" data-theme="military" onclick="switchTheme('military')">군복</button>
+<button class="theme-tab" data-theme="china" onclick="switchTheme('china')">중국</button>
+<button class="theme-tab" data-theme="fantasy" onclick="switchTheme('fantasy')">판타지</button>
+<button class="theme-tab" data-theme="party" onclick="switchTheme('party')">파티</button>
 </div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
       <div style="display:flex;gap:8px">
         <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
         <button class="btn-random" id="organizeBtn" onclick="toggleOrganize()">정리 모드</button>
-        <button class="btn-random" id="themeFillBtn" onclick="fillThemes()">테마 채우기</button>
+        <button class="btn-random" id="themeFillBtn" onclick="fillThemes()">전체 정리</button>
         <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
       </div>
     </div>
@@ -204,7 +210,7 @@
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
     <div id="tileSubRow"><label>하위 분류</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
-    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label></div></div>
+    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
@@ -228,7 +234,7 @@
 let currentCat = 'outfit';
 let currentOutfitSub = 'all';
 let currentTheme = 'all';
-const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이']];
+const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이'],['swim','수영복'],['jirai','지뢰계'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티']];
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
 function tileCat(x){ return x.cat || 'outfit'; }
 function catTiles(cat){ return tiles.filter(x=>tileCat(x)===cat); }
@@ -565,31 +571,50 @@ window.copyTile = async function(id, ev){
     if (s.includes('nun') || n.includes('수녀')) out.push('nun');
     if (s.includes('bunny') || s.includes('bunnysuit') || n.includes('바니')) out.push('bunny');
     if (/\bcat\b/.test(s) || n.includes('고양이') || s.includes('kittysuit')) out.push('cat');
+    if (s.includes('swimsuit') || s.includes('bikini') || n.includes('스쿠미즈') || n.includes('비키니') || n.includes('수영복')) out.push('swim');
+    if (s.includes('jirai') || n.includes('지뢰')) out.push('jirai');
+    if (s.includes('military') || n.includes('군복')) out.push('military');
+    if (['china dress','chinese clothes','qi lolita','jiangshi'].some(k=>s.includes(k)) || ['치파오','강시','차이나'].some(k=>n.includes(k))) out.push('china');
+    if (['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate'].some(k=>s.includes(k)) || ['하렘','기사','전사','마법소녀','유우령','해적'].some(k=>n.includes(k))) out.push('fantasy');
+    if (s.includes('party') || n.includes('파티')) out.push('party');
     return out;
+  }
+  // 종류 대충 정리 규칙, 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 사복, 없으면 그대로.
+  function kindFromText(name, prompt){
+    const n = name || '';
+    const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
+    if (['lingerie','babydoll','negligee','pasties'].some(k=>s.includes(k)) || n.includes('란제리')) return 'underwear';
+    if (n.includes('변태') || ['lewd','topless','talisman on nipples','areola'].some(k=>s.includes(k))) return 'special';
+    if (['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','starbucks','mcdonald','lawson','kobeya','waitress','carhop','cheerleader','office lady','kindergarten','military','hooters'].some(k=>s.includes(k)) || ['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','스타벅스','맥도날드','로손','코베야','웨이트리스','치어리더','유치원','군복','후터스'].some(k=>n.includes(k))) return 'uniform';
+    if (['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit'].some(k=>s.includes(k)) || ['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사'].some(k=>n.includes(k))) return 'costume';
+    if (['jeans','t-shirt','sweater','coat','dress','skirt','shirt','jacket','pants','hoodie','knit','blouse','camisole','cardigan','pajama'].some(k=>s.includes(k))) return 'casual';
+    return null;
   }
   window.fillThemes = async function(){
     const btn = document.getElementById('themeFillBtn');
     if (!btn || btn.disabled) return;
-    if (!confirm('이름과 프롬을 보고 테마를 자동으로 붙일까요? 이미 붙은 테마는 그대로 두고, 메이드 테마가 붙은 타일은 종류를 유니폼으로 통일할게요. 다른 종류는 건드리지 않아요.')) return;
+    if (!confirm('이름과 프롬을 보고 테마와 종류를 대충 정리할까요? 이미 붙은 테마는 그대로 두고, 메이드 테마가 붙은 타일은 종류를 유니폼으로 통일할게요. 규칙에 안 걸리는 타일은 종류를 건드리지 않아요.')) return;
     btn.disabled = true; btn.textContent = '채우는 중…';
     try{
       const snap = await getDocs(collection(db, 'atelierTiles'));
-      let updated = 0, already = 0, maidUniform = 0;
+      let updated = 0, already = 0, kindChanged = 0, maidUniform = 0;
       for (const d of snap.docs){
         const tt = { id: d.id, ...d.data() };
         if (tileCat(tt) !== 'outfit') continue;
         const cur = tileThemes(tt);
         const add = themesFromText(tt.name, tt.prompt).filter(x=>!cur.includes(x));
         const finalThemes = [...cur, ...add];
-        let newSub = tt.sub || '';
-        if (finalThemes.includes('maid') && newSub !== 'uniform'){ newSub = 'uniform'; maidUniform++; }
+        let newSub = kindFromText(tt.name, tt.prompt) || (tt.sub || '');
+        if (finalThemes.includes('maid') && newSub !== 'special' && newSub !== 'underwear') newSub = 'uniform';
+        if (newSub !== (tt.sub || '')) kindChanged++;
+        if (finalThemes.includes('maid') && newSub === 'uniform' && (tt.sub || '') !== 'uniform') maidUniform++;
         if (add.length === 0 && newSub === (tt.sub || '')){ already++; continue; }
         await updateDoc(doc(db, 'atelierTiles', tt.id), { themes: finalThemes, sub: newSub });
         updated++;
       }
-      alert('테마 채우기 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 메이드→유니폼으로 바뀐 타일 ' + maidUniform + '개');
-    }catch(e){ alert('테마 채우기 실패: ' + e.message); }
-    btn.disabled = false; btn.textContent = '테마 채우기';
+      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 종류 바뀐 타일 ' + kindChanged + '개, 메이드→유니폼 ' + maidUniform + '개');
+    }catch(e){ alert('전체 정리 실패: ' + e.message); }
+    btn.disabled = false; btn.textContent = '전체 정리';
   };
   window.openTileModal = function(id){
     editId = id || null;
