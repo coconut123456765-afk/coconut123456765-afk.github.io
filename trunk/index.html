@@ -41,11 +41,12 @@
   .random-head{display:flex;align-items:center;justify-content:space-between;margin:24px 0 14px}
   .sec-title{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;letter-spacing:2px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:inline-block}
   .cat-tabs{display:flex;gap:8px;margin-bottom:14px}
-.cat-tab{background:#fff;color:var(--muted);border:1px solid #ddd;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer}
+.cat-tab{background:#fff;color:var(--muted);border:1px solid #ddd;border-radius:20px;padding:11px 20px;font-weight:700;font-size:16px;cursor:pointer}
 .cat-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.sub-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-.sub-tab{background:#fff;color:var(--muted);border:1px solid #ddd;border-radius:16px;padding:6px 13px;font-weight:700;font-size:12px;cursor:pointer}
+.sub-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sub-tab{background:#fff;color:var(--muted);border:1px solid #ddd;border-radius:16px;padding:8px 16px;font-weight:700;font-size:14px;cursor:pointer}
 .sub-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tile-sub-select{width:100%;margin-top:8px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:13px;font-family:'Noto Sans KR',sans-serif}
 .btn-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
   .btn-add:hover{background:#7a2d2d}
   .btn-random{background:#fff;color:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer}
@@ -78,7 +79,7 @@
   .modal{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px;width:420px;max-width:94vw;max-height:92vh;overflow-y:auto}
   .modal h3{font-size:16px;font-weight:800;margin-bottom:16px}
   .modal label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:6px}
-  .modal input,.modal textarea{width:100%;background:#f0ebe7;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;margin-bottom:14px;font-family:'Noto Sans KR',sans-serif}
+  .modal input,.modal textarea,.modal select{width:100%;background:#f0ebe7;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;outline:none;margin-bottom:14px;font-family:'Noto Sans KR',sans-serif}
   .modal textarea{font-family:'JetBrains Mono',monospace;line-height:1.6;min-height:110px;resize:vertical}
   .modal-btns{display:flex;gap:8px;justify-content:flex-end}
   .btn-cancel{background:#f0ebe7;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer}
@@ -148,16 +149,19 @@
 <button class="cat-tab" data-cat="pose" onclick="switchCat('pose')">🧍 포즈</button>
 </div>
 <div class="sub-tabs" id="outfitSubTabs" style="display:none">
-<button class="sub-tab active" data-sub="all" onclick="switchOutfitSub('all')">전체보기</button>
-<button class="sub-tab" data-sub="original" onclick="switchOutfitSub('original')">원본</button>
-<button class="sub-tab" data-sub="sleepyzone" onclick="switchOutfitSub('sleepyzone')">슬립존</button>
-<button class="sub-tab" data-sub="general" onclick="switchOutfitSub('general')">일반</button>
+<button class="sub-tab active" data-sub="all" onclick="switchOutfitSub('all')">전체</button>
+<button class="sub-tab" data-sub="unclassified" onclick="switchOutfitSub('unclassified')">미분류</button>
+<button class="sub-tab" data-sub="casual" onclick="switchOutfitSub('casual')">사복</button>
+<button class="sub-tab" data-sub="uniform" onclick="switchOutfitSub('uniform')">유니폼</button>
+<button class="sub-tab" data-sub="costume" onclick="switchOutfitSub('costume')">코스튬</button>
 <button class="sub-tab" data-sub="underwear" onclick="switchOutfitSub('underwear')">속옷</button>
+<button class="sub-tab" data-sub="special" onclick="switchOutfitSub('special')">특수</button>
 </div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
       <div style="display:flex;gap:8px">
         <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
+        <button class="btn-random" id="organizeBtn" onclick="toggleOrganize()">정리 모드</button>
         <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
       </div>
     </div>
@@ -178,7 +182,7 @@
     <h3 id="tileModalTitle">타일 추가</h3>
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
-    <label>카테고리</label><select id="tileCat"><option value="outfit">패션</option><option value="hair">헤어</option><option value="pose">포즈</option></select>
+    <div id="tileSubRow"><label>하위 분류</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
@@ -203,19 +207,13 @@ let currentCat = 'outfit';
 let currentOutfitSub = 'all';
 function tileCat(x){ return x.cat || 'outfit'; }
 function catTiles(cat){ return tiles.filter(x=>tileCat(x)===cat); }
-// 패션 하위 분류: group이 있으면 그걸 우선, 없으면 예전 타일은 cat 유무와 이름으로 구분.
-// 원본 = 탭 도입 전 타일(cat 없음) + 직접 추가한 타일(cat만 있음, O번호 아님)
-// 슬립존 = 이름이 O + 숫자로 시작하는 슬립존 의상 타일
-function outfitGroup(t){
-  if (t.group === 'costume-general') return 'general';
-  if (t.group === 'costume-underwear') return 'underwear';
-  if (!t.cat) return 'original';
-  if (/^O\d/.test(t.name || '')) return 'sleepyzone';
-  return 'original';
-}
+// 패션 하위 분류: 옷 종류 기준. sub가 없으면 미분류.
+// 출처(원본/슬립존) 구분은 더 이상 화면에서 쓰지 않지만, group 필드 자체는 데이터에 남아 있음.
 function filteredOutfit(){
   const list = catTiles('outfit');
-  return currentOutfitSub === 'all' ? list : list.filter(t=>outfitGroup(t) === currentOutfitSub);
+  if (currentOutfitSub === 'all') return list;
+  if (currentOutfitSub === 'unclassified') return list.filter(t=>!t.sub);
+  return list.filter(t=>t.sub === currentOutfitSub);
 }
 window.switchOutfitSub = function(sub){
   currentOutfitSub = sub;
@@ -416,6 +414,11 @@ render();
   window.copyRandomRandomTile = async function(){
     await copyRandomFromList(getRandomTiles().filter(x=>(x.prompt || '').trim()));
   };
+  let organizeMode = false;
+  function subSelectHTML(t){
+    const opts = [['','미분류'],['casual','사복'],['uniform','유니폼'],['costume','코스튬'],['underwear','속옷'],['special','특수']];
+    return `<select class="tile-sub-select" onclick="event.stopPropagation()" onchange="setTileSub('${t.id}', this.value)">` + opts.map(o=>`<option value="${o[0]}" ${((t.sub || '') === o[0]) ? 'selected' : ''}>${o[1]}</option>`).join('') + `</select>`;
+  }
   function tileHTML(t){
     return `
       <div class="tile" onclick="copyTile('${t.id}', event)">
@@ -423,6 +426,7 @@ render();
         <div class="tile-body">
           <div class="tile-name">${esc(t.name || '이름 없음')}</div>
           <div class="tile-prompt">${esc(t.prompt || '프롬 없음')}</div>
+          ${(organizeMode && tileCat(t) === 'outfit') ? subSelectHTML(t) : ''}
         </div>
         <div class="tile-actions" onclick="event.stopPropagation()">
           <button class="icon-btn" title="수정" onclick="openTileModal('${t.id}')">✏️</button>
@@ -483,6 +487,26 @@ window.copyTile = async function(id, ev){
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'), 1600);
   };
+  window.toggleOrganize = function(){
+    organizeMode = !organizeMode;
+    const btn = document.getElementById('organizeBtn');
+    if (btn) btn.textContent = organizeMode ? '정리 모드 ON' : '정리 모드';
+    render();
+  };
+  window.setTileSub = async function(id, sub){
+    const t = tiles.find(x=>x.id===id);
+    if (!t) return;
+    try{
+      await updateDoc(doc(db, 'atelierTiles', id), { sub: sub || '' });
+      const toast = document.getElementById('toast');
+      if (toast){
+        const label = sub === 'casual' ? '사복' : sub === 'uniform' ? '유니폼' : sub === 'costume' ? '코스튬' : sub === 'underwear' ? '속옷' : sub === 'special' ? '특수' : '미분류';
+        toast.textContent = (t.name || '이름 없음') + ' → ' + label;
+        toast.classList.add('show');
+        setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
+      }
+    }catch(e){ alert('분류 저장 실패: ' + e.message); }
+  };
   window.openTileModal = function(id){
     editId = id || null;
     pendingImage = null;
@@ -491,7 +515,11 @@ window.copyTile = async function(id, ev){
     const pv = document.getElementById('tileImagePreview');
     pv.classList.remove('show'); pv.src = '';
     document.getElementById('tileModalTitle').textContent = editId ? '타일 수정' : '타일 추가';
-    const cs = document.getElementById('tileCat'); if (cs){ const et = editId ? tiles.find(x=>x.id===editId) : null; cs.value = et ? tileCat(et) : currentCat; }
+    const et0 = editId ? tiles.find(x=>x.id===editId) : null;
+    const modalCat = et0 ? tileCat(et0) : currentCat;
+    const subRow = document.getElementById('tileSubRow');
+    if (subRow) subRow.style.display = modalCat === 'outfit' ? '' : 'none';
+    const ss = document.getElementById('tileSub'); if (ss) ss.value = et0 ? (et0.sub || '') : '';
     if (editId){
       const t = tiles.find(x=>x.id===editId);
       document.getElementById('tileName').value = t ? (t.name || '') : '';
@@ -538,12 +566,15 @@ window.copyTile = async function(id, ev){
     const prompt = document.getElementById('tilePrompt').value.trim();
     if (!name && !prompt) return;
     setSyncDot('syncing');
+    const existing = editId ? tiles.find(x=>x.id===editId) : null;
+    const saveCat = existing ? tileCat(existing) : currentCat;
+    const saveSub = saveCat === 'outfit' ? ((document.getElementById('tileSub')||{}).value || '') : (existing ? (existing.sub || '') : '');
     if (editId){
-      const data = { name: name || '이름 없음', prompt, cat: (document.getElementById('tileCat')||{}).value || currentCat };
+      const data = { name: name || '이름 없음', prompt, cat: saveCat, sub: saveSub };
       if (pendingImage) data.img = pendingImage;
       await updateDoc(doc(db, 'atelierTiles', editId), data);
     } else {
-      const data = { name: name || '이름 없음', prompt, img: pendingImage || '', cat: (document.getElementById('tileCat')||{}).value || currentCat, createdAt: serverTimestamp() };
+      const data = { name: name || '이름 없음', prompt, img: pendingImage || '', cat: saveCat, sub: saveSub, createdAt: serverTimestamp() };
       await addDoc(collection(db, 'atelierTiles'), data);
     }
     closeTileModal();
@@ -578,7 +609,7 @@ if (!Array.isArray(data.tiles)) throw new Error(f + ' 형식 오류');
 for (const tt of data.tiles){
 const key = (tt.name || '') + '\n' + (tt.prompt || '');
 if (seen.has(key)){ skipped++; continue; }
-await addDoc(collection(db, 'atelierTiles'), { name: tt.name || '이름 없음', prompt: tt.prompt || '', img: tt.img || '', cat: tt.cat || 'outfit', group: tt.group || '', createdAt: serverTimestamp() });
+await addDoc(collection(db, 'atelierTiles'), { name: tt.name || '이름 없음', prompt: tt.prompt || '', img: tt.img || '', cat: tt.cat || 'outfit', group: tt.group || '', sub: tt.sub || '', createdAt: serverTimestamp() });
 seen.add(key); added++;
 }
 }
@@ -605,7 +636,7 @@ window.exportTiles = function(){
       if (!Array.isArray(data.tiles)) throw new Error('bad');
       if (!confirm('가져온 타일을 새로 추가할까요? 기존 타일은 그대로 남아요.')) return;
       for (const t of data.tiles){
-        await addDoc(collection(db, 'atelierTiles'), { name: t.name || '이름 없음', prompt: t.prompt || '', img: t.img || '', cat: t.cat || 'outfit', group: t.group || '', createdAt: serverTimestamp() });
+        await addDoc(collection(db, 'atelierTiles'), { name: t.name || '이름 없음', prompt: t.prompt || '', img: t.img || '', cat: t.cat || 'outfit', group: t.group || '', sub: t.sub || '', createdAt: serverTimestamp() });
       }
     }catch(err){ alert('가져오기 실패: Trunk 내보내기 파일이 아니에요.'); }
     e.target.value = '';
