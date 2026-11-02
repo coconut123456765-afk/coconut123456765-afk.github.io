@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puppet:Don — 베타</title>
+<style>
+body{font-family:system-ui, sans-serif; margin:0; background:#faf8f5; color:#222;}
+header{padding:20px 16px 12px; border-bottom:1px solid #ddd; background:#fff;}
+.brand{font-size:28px; font-weight:800;} .brand span{color:#7b5aa6;}
+.sub{color:#666; font-size:13px; margin-top:4px;}
+.tabs{display:flex; gap:8px; padding:12px 16px; flex-wrap:wrap; background:#fff; border-bottom:1px solid #ddd;}
+.tab{padding:8px 14px; border:1px solid #ccc; border-radius:20px; background:#fff; cursor:pointer;}
+.tab.active{background:#222; color:#fff; border-color:#222;}
+.search{padding:12px 16px; display:flex; gap:8px; flex-wrap:wrap;} .search input{flex:1; min-width:200px; padding:10px 12px; border:1px solid #ccc; border-radius:8px; font-size:15px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:12px; padding:16px;}
+.card{border:1px solid #ddd; border-radius:12px; background:#fff; overflow:hidden; cursor:pointer;}
+.card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#e9e6e1;}
+.meta{padding:10px 12px;} .meta b{display:block;} .meta span{color:#666; font-size:12px;}
+.angles{display:flex; gap:4px; padding:0 12px 12px;} .angles img{width:20%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; background:#eee;}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; padding:20px; z-index:10;}
+.modal.open{display:flex;} .modal-box{background:#fff; border-radius:12px; max-width:520px; width:100%; padding:16px; max-height:90vh; overflow:auto;}
+.modal-box img.main{width:100%; border-radius:8px; background:#eee;}
+.btn{padding:10px 14px; border:1px solid #ccc; border-radius:8px; background:#fff; cursor:pointer; margin-right:6px;}
+.note{padding:0 16px 20px; color:#666; font-size:13px; line-height:1.6;}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">Puppet<span>:</span>Don</div>
+<div class="sub">POSE REFERENCE · DON ONLY · 베타 — 포즈 depth 갤러리 구조를 모티브로 함, 이미지는 원본 사이트 주소로 불러옴 (파일 복사 아님)</div>
+</header>
+<div class="tabs" id="tabs"></div>
+<div class="search">
+<input id="q" placeholder="포즈 ID로 검색 (예: P001)">
+<button class="btn" id="moreBtn" onclick="showMore()" style="display:none;">더 보기</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="note">베타 안내: 포즈 이름·분류는 원본 사이트의 전체 목록을 아직 가져오지 못해서, ID와 계통만으로 카드를 만들었습니다. 이미지는 원본 사이트 썸네일 주소(thumbs/…)로 불러옵니다. 5개 앵글은 정면·위·아래·옆·대각선입니다. 전체 288포즈·1,439장 기준이며, 계통별 ID는 P001부터 다시 시작합니다.</div>
+<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+<div class="modal-box">
+<img class="main" id="mImg" alt="">
+<div class="meta"><b id="mName"></b><span id="mCat"></span></div>
+<div class="angles" id="mAngles" style="padding:0 0 12px;"></div>
+<button class="btn" onclick="prevAngle()">← 이전 앵글</button>
+<button class="btn" onclick="nextAngle()">다음 앵글 →</button>
+<button class="btn" onclick="closeModal()">닫기</button>
+</div>
+</div>
+<script>
+const BASE='https://ai-pose-depth-gallery.pages.dev/';
+const cats=[
+ {id:'all', label:'전체', prefix:null, poses:288},
+ {id:'full-sexy', label:'전신 1인 · 섹시', prefix:'full_sexy', poses:80},
+ {id:'full-std', label:'전신 1인 · 표준', prefix:'full_std', poses:73},
+ {id:'upper', label:'상반신 1인', prefix:'upper', poses:80},
+ {id:'couple', label:'2인 커플', prefix:'couple', poses:55},
+];
+const angles=[
+ {id:'front', label:'정면'},
+ {id:'top', label:'위'},
+ {id:'bottom', label:'아래'},
+ {id:'side', label:'옆'},
+ {id:'diagonal', label:'대각선'},
+];
+let cur='all', shown=30, curPose=null, curAngle=0;
+function allPoses(){
+ const list=[];
+ cats.filter(c=>c.prefix).forEach(c=>{
+   for(let i=1;i<=c.poses;i++){ list.push({cat:c.id, prefix:c.prefix, id:'P'+String(i).padStart(3,'0')}); }
+ });
+ return list;
+}
+function filtered(){
+ const q=(document.getElementById('q').value||'').trim().toUpperCase();
+ let list=allPoses();
+ if(cur!=='all') list=list.filter(p=>p.cat===cur);
+ if(q) list=list.filter(p=>p.id.includes(q));
+ return list;
+}
+function catLabel(id){ const c=cats.find(x=>x.id===id); return c?c.label:id; }
+function thumb(p, a){ return BASE+'thumbs/'+p.prefix+'_'+p.id+'_'+a+'.jpg'; }
+function renderTabs(){
+ const el=document.getElementById('tabs'); el.innerHTML='';
+ cats.forEach(c=>{
+   const b=document.createElement('button'); b.className='tab'+(c.id===cur?' active':'');
+   b.textContent=c.id==='all' ? '전체 288포즈 · 1,439장' : c.label+' '+c.poses+'포즈';
+   b.onclick=()=>{shown=30; cur=c.id; renderTabs(); render();};
+   el.appendChild(b);
+ });
+}
+function render(){
+ const list=filtered();
+ document.getElementById('moreBtn').style.display=(list.length>shown?'inline-block':'none');
+ const grid=document.getElementById('grid'); grid.innerHTML='';
+ list.slice(0, shown).forEach(p=>{
+   const d=document.createElement('div'); d.className='card';
+   d.innerHTML='<img src="'+thumb(p,'front')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><div class="meta"><b>'+p.id+'</b><span>'+catLabel(p.cat)+'</span></div><div class="angles">'+angles.map(a=>'<img src="'+thumb(p,a.id)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">').join('')+'</div>';
+   d.onclick=()=>openPose(p);
+   grid.appendChild(d);
+ });
+ if(!list.length) grid.innerHTML='<div style="color:#666;">검색 결과가 없어요.</div>';
+}
+function openPose(p){ curPose=p; curAngle=0; updateModal(); document.getElementById('modal').classList.add('open'); }
+function updateModal(){
+ if(!curPose) return;
+ const a=angles[curAngle];
+ document.getElementById('mImg').src=thumb(curPose, a.id);
+ document.getElementById('mName').textContent=curPose.id+' · '+a.label;
+ document.getElementById('mCat').textContent=catLabel(curPose.cat)+' · '+curPose.prefix+'_'+curPose.id+'_'+a.id;
+ document.getElementById('mAngles').innerHTML=angles.map((x,i)=>'<img src="'+thumb(curPose,x.id)+'" alt="" style="cursor:pointer; outline:'+(i===curAngle?'2px solid #222':'none')+'" onclick="setAngle('+i+')">').join('');
+}
+window.setAngle=function(i){ curAngle=i; updateModal(); };
+window.prevAngle=function(){ curAngle=(curAngle+angles.length-1)%angles.length; updateModal(); };
+window.nextAngle=function(){ curAngle=(curAngle+1)%angles.length; updateModal(); };
+window.closeModal=function(){ document.getElementById('modal').classList.remove('open'); };
+window.showMore=function(){ shown+=30; render(); };
+document.getElementById('q').addEventListener('input', ()=>{shown=30; render();});
+document.addEventListener('keydown', e=>{
+ if(!document.getElementById('modal').classList.contains('open')) return;
+ if(e.key==='Escape') closeModal();
+ if(e.key==='ArrowLeft') prevAngle();
+ if(e.key==='ArrowRight') nextAngle();
+});
+renderTabs(); render();
+</script>
+</body>
+</html>
