@@ -189,6 +189,9 @@
 <button class="theme-tab" data-theme="china" onclick="switchTheme('china')">중국</button>
 <button class="theme-tab" data-theme="fantasy" onclick="switchTheme('fantasy')">판타지</button>
 <button class="theme-tab" data-theme="party" onclick="switchTheme('party')">파티</button>
+<button class="theme-tab" data-theme="japan" onclick="switchTheme('japan')">일본</button>
+<button class="theme-tab" data-theme="sports" onclick="switchTheme('sports')">스포츠</button>
+<button class="theme-tab" data-theme="specialday" onclick="switchTheme('specialday')">스페셜데이</button>
 </div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
@@ -217,7 +220,7 @@
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
     <div id="tileSubRow"><label>복장</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="dress">드레스</option><option value="swim">수영복</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
-    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
+    <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="sports">스포츠</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
@@ -241,7 +244,7 @@
 let currentCat = 'outfit';
 let currentOutfitSub = 'all';
 let currentTheme = 'all';
-const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['special','특수'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이'],['swim','수영복'],['jirai','지뢰계'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티']];
+const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['special','특수'],['staff','직원 유니폼'],['school','교복'],['nun','수녀'],['bunny','바니걸'],['cat','고양이'],['swim','수영복'],['jirai','지뢰계'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티'],['japan','일본'],['sports','스포츠'],['specialday','스페셜데이']];
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
 function tileCat(x){ return x.cat || 'outfit'; }
 function catTiles(cat){ return tiles.filter(x=>tileCat(x)===cat); }
@@ -585,6 +588,9 @@ window.copyTile = async function(id, ev){
     if (['china dress','chinese clothes','qi lolita','jiangshi'].some(k=>s.includes(k)) || ['치파오','강시','차이나'].some(k=>n.includes(k))) out.push('china');
     if (['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate'].some(k=>s.includes(k)) || ['하렘','기사','전사','마법소녀','유우령','해적'].some(k=>n.includes(k))) out.push('fantasy');
     if (s.includes('party') || n.includes('파티')) out.push('party');
+    if (['kimono','yukata','hakama','furisode','miko','japanese clothes','jinbei','uchikake','oiran','kunoichi','samurai','wa maid','wa lolita'].some(k=>s.includes(k)) || ['기모노','유카타','하카마','무녀','일본'].some(k=>n.includes(k))) out.push('japan');
+    if (['basketball uniform','soccer uniform','baseball uniform','tennis','volleyball','badminton','golf','ski suit','snowboard','surfboard','track uniform','running','yoga','gym uniform','cheerleader','figure skating','lacrosse','sportswear','sports festival'].some(k=>s.includes(k)) || ['농구','축구','야구','테니스','배구','스키복','체조복','치어리더'].some(k=>n.includes(k))) out.push('sports');
+    if (['halloween','christmas','santa','reindeer'].some(k=>s.includes(k)) || ['할로윈','크리스마스','산타'].some(k=>n.includes(k))) out.push('specialday');
     return out;
   }
   // 복장 컨셉: 실제로 입는 곳 기준 (Don 결정, 2026-11-03).
