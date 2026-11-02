@@ -209,7 +209,7 @@
     <h3 id="tileModalTitle">타일 추가</h3>
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
-    <div id="tileSubRow"><label>하위 분류</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
+    <div id="tileSubRow"><label>복장</label><select id="tileSub"><option value="">미분류</option><option value="casual">사복</option><option value="uniform">유니폼</option><option value="costume">코스튬</option><option value="underwear">속옷</option><option value="special">특수</option></select></div>
     <div id="tileThemeRow"><label>테마 (여러 개 가능)</label><div class="modal-theme-checks" id="tileThemeChecks"><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="staff">직원 유니폼</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="bunny">바니걸</label><label class="theme-check"><input type="checkbox" value="cat">고양이</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="jirai">지뢰계</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
@@ -238,7 +238,7 @@ const THEMES = [['maid','메이드'],['hanbok','한복'],['pervert','변태'],['
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
 function tileCat(x){ return x.cat || 'outfit'; }
 function catTiles(cat){ return tiles.filter(x=>tileCat(x)===cat); }
-// 패션 하위 분류: 옷 종류 기준. sub가 없으면 미분류.
+// 패션 복장: 옷 부류 기준. sub가 없으면 미분류.
 // 출처(원본/슬립존) 구분은 더 이상 화면에서 쓰지 않지만, group 필드 자체는 데이터에 남아 있음.
 function filteredOutfit(){
   let list = catTiles('outfit');
@@ -579,7 +579,7 @@ window.copyTile = async function(id, ev){
     if (s.includes('party') || n.includes('파티')) out.push('party');
     return out;
   }
-  // 종류 대충 정리 규칙, 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 사복, 없으면 그대로.
+  // 복장 대충 정리 규칙, 우선순위: 속옷 → 특수 → 유니폼 → 코스튬 → 사복, 없으면 그대로.
   function kindFromText(name, prompt){
     const n = name || '';
     const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
@@ -593,7 +593,7 @@ window.copyTile = async function(id, ev){
   window.fillThemes = async function(){
     const btn = document.getElementById('themeFillBtn');
     if (!btn || btn.disabled) return;
-    if (!confirm('이름과 프롬을 보고 테마와 종류를 대충 정리할까요? 이미 붙은 테마는 그대로 두고, 메이드 테마가 붙은 타일은 종류를 유니폼으로 통일할게요. 규칙에 안 걸리는 타일은 종류를 건드리지 않아요.')) return;
+    if (!confirm('이름과 프롬을 보고 테마와 복장을 대충 정리할까요? 이미 붙은 테마는 그대로 두고, 메이드 테마가 붙은 타일은 복장을 유니폼으로 통일할게요. 규칙에 안 걸리는 타일은 복장을 건드리지 않아요.')) return;
     btn.disabled = true; btn.textContent = '채우는 중…';
     try{
       const snap = await getDocs(collection(db, 'atelierTiles'));
@@ -612,7 +612,7 @@ window.copyTile = async function(id, ev){
         await updateDoc(doc(db, 'atelierTiles', tt.id), { themes: finalThemes, sub: newSub });
         updated++;
       }
-      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 종류 바뀐 타일 ' + kindChanged + '개, 메이드→유니폼 ' + maidUniform + '개');
+      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개, 복장 바뀐 타일 ' + kindChanged + '개, 메이드→유니폼 ' + maidUniform + '개');
     }catch(e){ alert('전체 정리 실패: ' + e.message); }
     btn.disabled = false; btn.textContent = '전체 정리';
   };
