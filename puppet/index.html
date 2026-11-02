@@ -50,6 +50,7 @@ header{padding:20px 16px 12px; border-bottom:1px solid #ddd; background:#fff; di
 <div class="search">
 <input id="q" placeholder="포즈 이름으로 검색">
 <button class="btn" onclick="openCardModal()">＋ 카드 추가</button>
+<button class="btn" id="moreBtn" onclick="showMore()" style="display:none;">더 보기</button>
 </div>
 <div class="grid" id="grid"></div>
 <div class="note">참고 구조: 전신 1인 섹시 399장·80포즈, 전신 1인 표준 365장·73포즈, 상반신 1인 400장·80포즈, 2인 커플 275장·55포즈 (합계 1,439장·288포즈, depth 갤러리 기준). 이 사이트는 Don 전용입니다. 프롬이 있는 포즈는 트렁크에, 이미지로만 설명되는 포즈는 여기에 넣습니다.</div>
@@ -77,6 +78,7 @@ header{padding:20px 16px 12px; border-bottom:1px solid #ddd; background:#fff; di
 </select>
 <input id="e_memo" placeholder="메모 (선택, 프롬 아님)">
 <input type="file" id="e_img" accept="image/*">
+<input id="e_imgUrl" placeholder="이미지 주소 (선택, 주소만 저장 — 파일 안 올림)">
 <button class="btn" onclick="saveCard()">저장</button>
 <button class="btn" onclick="closeEdit()">취소</button>
 </div>
@@ -91,7 +93,7 @@ const cats=[
  {id:'upper', label:'상반신 1인'},
  {id:'couple', label:'2인 커플'},
 ];
-let db, cards=[], cur='full-sexy', currentId=null, editingId=null;
+let db, cards=[], cur='full-sexy', currentId=null, editingId=null, pageSize=30, shown=30;
 function catLabel(id){ const c=cats.find(x=>x.id===id); return c?c.label:id; }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 window.saveConfig=function(){
@@ -107,12 +109,12 @@ function start(cfg){
  const tabsEl=document.getElementById('tabs');
  cats.forEach(c=>{
    const b=document.createElement('button'); b.className='tab'+(c.id===cur?' active':''); b.dataset.cat=c.id; b.textContent=c.label;
-   b.onclick=()=>{cur=c.id; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.cat===cur)); render();};
+   b.onclick=()=>{shown=30; cur=c.id; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.cat===cur)); render();};
    tabsEl.appendChild(b);
  });
  const q=query(collection(db,'puppetPoses'), orderBy('createdAt','asc'));
  onSnapshot(q, snap=>{ cards=snap.docs.map(d=>({id:d.id, ...d.data()})); render(); });
- document.getElementById('q').addEventListener('input', render);
+ document.getElementById('q').addEventListener('input', ()=>{shown=30; render();});
  render();
 }
 function render(){
@@ -120,19 +122,22 @@ function render(){
  const q=(document.getElementById('q').value||'').trim();
  const list=cards.filter(c=> (c.cat||'full-std')===cur && (!q || (c.name||'').includes(q)));
  document.querySelectorAll('.tab').forEach(b=>{ const cat=b.dataset.cat; const n=cards.filter(c=>(c.cat||'full-std')===cat).length; b.textContent=catLabel(cat)+' '+n+'장'; });
+ document.getElementById('moreBtn').style.display=(list.length>shown?'inline-block':'none');
+ const page=list.slice(0, shown);
  if(!list.length){ grid.innerHTML='<div style="color:#666;">아직 카드가 없어요. ＋ 카드 추가로 넣어보세요.</div>'; return; }
  grid.innerHTML='';
- list.forEach(c=>{
+ page.forEach(c=>{
    const d=document.createElement('div'); d.className='card';
-   d.innerHTML=(c.img?'<img src="'+c.img+'" alt="">':'<div class="ph">포즈 참고<br>이미지 자리</div>')+'<div class="meta"><b>'+esc(c.name)+'</b><span>'+esc(catLabel(c.cat))+'</span></div>';
+   d.innerHTML=(c.img?'<img src="'+c.img+'" alt="" loading="lazy">':'<div class="ph">포즈 참고<br>이미지 자리</div>')+'<div class="meta"><b>'+esc(c.name)+'</b><span>'+esc(catLabel(c.cat))+'</span></div>';
    d.onclick=()=>{ currentId=c.id; document.getElementById('viewName').textContent=c.name||''; document.getElementById('viewCat').textContent=catLabel(c.cat); document.getElementById('viewMemo').textContent=c.memo||''; const vi=document.getElementById('viewImg'), vp=document.getElementById('viewPh'); if(c.img){vi.src=c.img; vi.style.display='block'; vp.style.display='none';} else {vi.style.display='none'; vp.style.display='block';} document.getElementById('viewModal').classList.add('open'); };
    grid.appendChild(d);
  });
 }
+window.showMore=function(){ shown+=pageSize; render(); };
 window.closeView=function(){ document.getElementById('viewModal').classList.remove('open'); };
 window.closeEdit=function(){ document.getElementById('editModal').classList.remove('open'); };
-window.openCardModal=function(){ editingId=null; document.getElementById('editTitle').textContent='카드 추가'; document.getElementById('e_name').value=''; document.getElementById('e_cat').value=cur; document.getElementById('e_memo').value=''; document.getElementById('e_img').value=''; document.getElementById('editModal').classList.add('open'); };
-window.editCurrent=function(){ const c=cards.find(x=>x.id===currentId); if(!c) return; editingId=c.id; document.getElementById('editTitle').textContent='카드 편집'; document.getElementById('e_name').value=c.name||''; document.getElementById('e_cat').value=c.cat||'full-std'; document.getElementById('e_memo').value=c.memo||''; document.getElementById('e_img').value=''; document.getElementById('viewModal').classList.remove('open'); document.getElementById('editModal').classList.add('open'); };
+window.openCardModal=function(){ editingId=null; document.getElementById('editTitle').textContent='카드 추가'; document.getElementById('e_name').value=''; document.getElementById('e_cat').value=cur; document.getElementById('e_memo').value=''; document.getElementById('e_img').value=''; document.getElementById('e_imgUrl').value=''; document.getElementById('editModal').classList.add('open'); };
+window.editCurrent=function(){ const c=cards.find(x=>x.id===currentId); if(!c) return; editingId=c.id; document.getElementById('editTitle').textContent='카드 편집'; document.getElementById('e_name').value=c.name||''; document.getElementById('e_cat').value=c.cat||'full-std'; document.getElementById('e_memo').value=c.memo||''; document.getElementById('e_imgUrl').value=(c.img||'').startsWith('http')?c.img:''; document.getElementById('e_img').value=''; document.getElementById('e_imgUrl').value=''; document.getElementById('viewModal').classList.remove('open'); document.getElementById('editModal').classList.add('open'); };
 window.deleteCurrent=function(){ if(!currentId) return; if(!confirm('이 카드를 삭제할까요?')) return; deleteDoc(doc(db,'puppetPoses',currentId)); closeView(); };
 function fileTo400(file){ return new Promise((res,rej)=>{ const img=new Image(); const url=URL.createObjectURL(file); img.onload=()=>{ const max=400; const s=Math.min(1, max/Math.max(img.width, img.height)); const cv=document.createElement('canvas'); cv.width=Math.round(img.width*s); cv.height=Math.round(img.height*s); cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); URL.revokeObjectURL(url); res(cv.toDataURL('image/jpeg',0.7)); }; img.onerror=rej; img.src=url; }); }
 window.saveCard=async function(){
@@ -140,8 +145,9 @@ window.saveCard=async function(){
  const cat=document.getElementById('e_cat').value;
  const memo=document.getElementById('e_memo').value.trim();
  const f=document.getElementById('e_img').files[0];
- let img='';
- if(f) img=await fileTo400(f);
+ const imgUrl=document.getElementById('e_imgUrl').value.trim();
+ let img=imgUrl;
+ if(!img && f) img=await fileTo400(f);
  if(editingId){
    const old=cards.find(x=>x.id===editingId);
    await updateDoc(doc(db,'puppetPoses',editingId), {name, cat, memo, ...(img?{img}:{})});
