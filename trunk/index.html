@@ -272,8 +272,8 @@ function filteredOutfit(){
 }
 window.toggleTag = function(tag){
   if (tag === 'all'){ selectedTags = []; }
-  else if (selectedTags.includes(tag)){ selectedTags = selectedTags.filter(x=>x!==tag); }
-  else { selectedTags = [...selectedTags, tag]; }
+  else if (selectedTags.includes(tag)){ selectedTags = []; }
+  else { selectedTags = [tag]; }
   document.querySelectorAll('#tagTabs .theme-tab').forEach(b=>{
     const tg = b.dataset.tag;
     b.classList.toggle('active', tg === 'all' ? selectedTags.length === 0 : selectedTags.includes(tg));
@@ -585,7 +585,7 @@ window.copyTile = async function(id, ev){
     catch(e){ alert('태그 저장 실패: ' + e.message); }
   };
   window.toggleTileTheme = window.toggleTileTag;
-  // 합친 태그 시범 (2026-11-04): 복장+테마를 하나의 태그로 합침. 필터는 AND.
+  // 합친 태그 시범 (2026-11-04): 복장+테마를 하나의 태그로 합침. 필터는 단일선택 (Don 결정, 검색으로 찾으면 됨). 타일 자체의 태그는 여러 개 가능.
   // 주 태그(옷 종류, 하나만): 속옷 → 특수 → 운동복 → 프랜차이즈 → 유니폼 → 코스튬 → 수영복 → 드레스 → 사복
   // 부 태그(여러 개): 메이드, 한복, 변태, 교복, 수녀, 군복, 중국, 판타지, 파티, 일본, 스페셜데이, 로리타
   // 쇼는 파티에 둠. 연구원은 유니폼. 군복은 복장 따로 만들지 않고 유니폼+군복 태그.
