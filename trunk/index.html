@@ -600,9 +600,9 @@ window.copyTile = async function(id, ev){
     if (group === 'costume-underwear') primary = 'underwear';
     else if (has(['lingerie','babydoll','negligee','pasties']) || hasN(['란제리'])) primary = 'underwear';
     else if (hasN(['변태','동정살인','동정 박살']) || has(['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'])) primary = 'special';
-    else if (has(['basketball uniform','soccer uniform','baseball uniform','tennis','volleyball','badminton','golf','ski suit','snowboard','surfboard','track uniform','running','yoga','gym uniform','cheerleader','figure skating','lacrosse','sportswear','sports festival']) || hasN(['농구','축구','야구','테니스','배구','스키복','체조복','치어리더'])) primary = 'athletic';
+    else if (has(['basketball uniform','soccer uniform','baseball uniform','tennis','volleyball','badminton','golf','ski suit','snowboard','surfboard','track uniform','running','yoga','gym uniform','cheerleader','figure skating','lacrosse','sportswear','sports festival','gymnastics','leotard','cycling','karate','martial arts','dougi','ballet']) || hasN(['농구','축구','야구','테니스','배구','스키복','체조복','치어리더','체조','가라테','사이클','발레'])) primary = 'athletic';
     else if (has(['starbucks','mcdonald','lawson','kobeya']) || hasN(['스타벅스','맥도날드','로손','코베야'])) primary = 'franchise';
-    else if (has(['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','waitress','carhop','office lady','kindergarten','military','hooters','uber eats','researcher','lab coat','police','pilot','chef','patissier','cook']) || hasN(['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','웨이트리스','유치원','군복','후터스','딸버이츠','연구원','경찰','파일럿','조종사','셰프','파티시에','요리사'])) primary = 'uniform';
+    else if (has(['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','waitress','carhop','office lady','kindergarten','military','hooters','uber eats','researcher','lab coat','police','pilot','chef','patissier','cook','uniform','receptionist','bank','delivery','florist','business suit','suit, formal','tactical','special forces','ghillie','sniper']) || hasN(['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','웨이트리스','유치원','군복','후터스','딸버이츠','연구원','경찰','파일럿','조종사','셰프','파티시에','요리사','접수원','은행원','배달원','정장','플로리스트','특수부대','저격수','해군'])) primary = 'uniform';
     else if (has(['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco','detective','hakama','furisode','jinbei','uchikake','oiran','kunoichi','samurai','wa lolita','miko','japanese clothes','franken','cosplay']) || hasN(['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고','탐정','하카마','후리소데','프랑켄'])) primary = 'costume';
     else if (has(['swimsuit','bikini']) || hasN(['스쿠미즈','비키니','수영복'])) primary = 'swim';
     else {
@@ -617,9 +617,9 @@ window.copyTile = async function(id, ev){
     if (hasN(['변태'])) out.push('pervert');
     if (has(['school uniform','serafuku','hogwarts']) || hasN(['교복','세라복','호그와트'])) out.push('school');
     if (has(['nun']) || hasN(['수녀'])) out.push('nun');
-    if (has(['military']) || hasN(['군복'])) out.push('military');
+    if (has(['military','naval','sailor','tactical','camouflage','ghillie','special forces','sniper']) || hasN(['군복','해군','특수부대','저격수'])) out.push('military');
     if (has(['china dress','chinese clothes','qi lolita','jiangshi']) || hasN(['치파오','강시','차이나'])) out.push('china');
-    if (has(['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate']) || hasN(['하렘','기사','전사','마법소녀','유우령','해적'])) out.push('fantasy');
+    if (has(['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate','ninja','shinobi','mage','wizard','priestess','priest','adventurer','bard','alchemist']) || hasN(['하렘','기사','전사','마법소녀','유우령','해적','닌자','마법사','모험가','음유시인','연금술사'])) out.push('fantasy');
     if (has(['party','magician','idol']) || ((n.includes('파티') && !n.includes('파티시에')) || n.includes('마술사') || n.includes('아이돌'))) out.push('party');
     if (has(['kimono','yukata','hakama','furisode','miko','japanese clothes','jinbei','uchikake','oiran','kunoichi','samurai','wa maid','wa lolita']) || hasN(['기모노','유카타','하카마','무녀','일본'])) out.push('japan');
     if (has(['halloween','christmas','santa','reindeer','new year','hatsumoude','setsubun','graduation','festival','matsuri','tanabata','hinamatsuri','valentine','birthday']) || hasN(['할로윈','크리스마스','산타','새해','신년','절분','졸업','축제','마츠리','발렌타인','생일','명절','설날','추석'])) out.push('specialday');
