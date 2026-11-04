@@ -602,13 +602,13 @@ window.copyTile = async function(id, ev){
     else if (hasN(['변태','동정살인','동정 박살']) || has(['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'])) primary = 'special';
     else if (has(['basketball uniform','soccer uniform','baseball uniform','tennis','volleyball','badminton','golf','ski suit','snowboard','surfboard','track uniform','running','yoga','gym uniform','cheerleader','figure skating','lacrosse','sportswear','sports festival']) || hasN(['농구','축구','야구','테니스','배구','스키복','체조복','치어리더'])) primary = 'athletic';
     else if (has(['starbucks','mcdonald','lawson','kobeya']) || hasN(['스타벅스','맥도날드','로손','코베야'])) primary = 'franchise';
-    else if (has(['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','waitress','carhop','office lady','kindergarten','military','hooters','uber eats','researcher','lab coat','police']) || hasN(['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','웨이트리스','유치원','군복','후터스','딸버이츠','연구원','경찰'])) primary = 'uniform';
-    else if (has(['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco']) || hasN(['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고'])) primary = 'costume';
+    else if (has(['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','waitress','carhop','office lady','kindergarten','military','hooters','uber eats','researcher','lab coat','police','pilot','chef','patissier','cook']) || hasN(['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','웨이트리스','유치원','군복','후터스','딸버이츠','연구원','경찰','파일럿','조종사','셰프','파티시에','요리사'])) primary = 'uniform';
+    else if (has(['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco','detective','hakama','furisode','jinbei','uchikake','oiran','kunoichi','samurai','wa lolita','miko','japanese clothes','franken','cosplay']) || hasN(['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고','탐정','하카마','후리소데','프랑켄'])) primary = 'costume';
     else if (has(['swimsuit','bikini']) || hasN(['스쿠미즈','비키니','수영복'])) primary = 'swim';
     else {
       const sNoShirt = s.replace(/dress shirt/g, '');
       if (/\bdress\b/.test(sNoShirt) || sNoShirt.includes('gown')) primary = 'dress';
-      else if (has(['jeans','t-shirt','sweater','coat','skirt','shirt','jacket','pants','hoodie','knit','blouse','camisole','cardigan','pajama']) && !has(['jirai','lolita']) && !hasN(['지뢰','로리타'])) primary = 'casual';
+      else if (has(['jeans','t-shirt','sweater','coat','skirt','shirt','jacket','pants','hoodie','knit','blouse','camisole','cardigan','pajama']) && !has(['jirai','lolita','magician','idol']) && !hasN(['지뢰','로리타','마술사','아이돌'])) primary = 'casual';
     }
     const out = [];
     if (primary) out.push(primary);
@@ -620,7 +620,7 @@ window.copyTile = async function(id, ev){
     if (has(['military']) || hasN(['군복'])) out.push('military');
     if (has(['china dress','chinese clothes','qi lolita','jiangshi']) || hasN(['치파오','강시','차이나'])) out.push('china');
     if (has(['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate']) || hasN(['하렘','기사','전사','마법소녀','유우령','해적'])) out.push('fantasy');
-    if (has(['party']) || hasN(['파티'])) out.push('party');
+    if (has(['party','magician','idol']) || ((n.includes('파티') && !n.includes('파티시에')) || n.includes('마술사') || n.includes('아이돌'))) out.push('party');
     if (has(['kimono','yukata','hakama','furisode','miko','japanese clothes','jinbei','uchikake','oiran','kunoichi','samurai','wa maid','wa lolita']) || hasN(['기모노','유카타','하카마','무녀','일본'])) out.push('japan');
     if (has(['halloween','christmas','santa','reindeer','new year','hatsumoude','setsubun','graduation','festival','matsuri','tanabata','hinamatsuri','valentine','birthday']) || hasN(['할로윈','크리스마스','산타','새해','신년','절분','졸업','축제','마츠리','발렌타인','생일','명절','설날','추석'])) out.push('specialday');
     if (has(['lolita','jirai']) || hasN(['로리타','지뢰'])) out.push('lolita');
@@ -657,6 +657,7 @@ window.copyTile = async function(id, ev){
         const oldPrim = primOrder.find(k=>cur.includes(k));
         if (newPrim && oldPrim && newPrim !== oldPrim) finalTags = finalTags.filter(x=>x!==oldPrim);
         if (((tt.name || '').includes('지뢰') || (tt.prompt || '').toLowerCase().includes('jirai')) && finalTags.includes('casual')) finalTags = finalTags.filter(x=>x!=='casual');
+        if (((tt.name || '').includes('마술사') || (tt.prompt || '').toLowerCase().includes('magician') || (tt.name || '').includes('아이돌') || (tt.prompt || '').toLowerCase().includes('idol')) && finalTags.includes('casual')) finalTags = finalTags.filter(x=>x!=='casual');
         finalTags = TAGS.map(th=>th[0]).filter(k=>finalTags.includes(k));
         const same = finalTags.length === cur.length && finalTags.every((v,i)=>v===cur[i]);
         if (same){ already++; continue; }
