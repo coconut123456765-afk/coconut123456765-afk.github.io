@@ -191,7 +191,6 @@
         <button class="btn-random" id="randomTileBtn" onclick="copyRandomTile()" disabled>🎲 랜덤 1벌</button>
         <button class="btn-random" id="randomZoneBtn" onclick="scrollToRandomZone()" disabled>🎲 랜덤존 ↓</button>
         <button class="btn-random" id="organizeBtn" onclick="toggleOrganize()">정리 모드</button>
-        <button class="btn-random" id="themeFillBtn" onclick="fillThemes()">전체 정리</button>
         <button class="btn-add" onclick="openTileModal()">＋ 타일 추가</button>
       </div>
     </div>
@@ -585,89 +584,8 @@ window.copyTile = async function(id, ev){
     catch(e){ alert('태그 저장 실패: ' + e.message); }
   };
   window.toggleTileTheme = window.toggleTileTag;
-  // 합친 태그 시범 (2026-11-04): 복장+테마를 하나의 태그로 합침. 필터는 단일선택 (Don 결정, 검색으로 찾으면 됨). 타일 자체의 태그는 여러 개 가능.
-  // 주 태그(옷 종류, 하나만): 속옷 → 특수 → 운동복 → 프랜차이즈 → 유니폼 → 코스튬 → 수영복 → 드레스 → 사복
-  // 부 태그(여러 개): 메이드, 한복, 변태, 교복, 수녀, 군복, 중국, 판타지, 파티, 일본, 스페셜데이, 로리타
-  // 쇼는 파티에 둠. 연구원은 유니폼. 군복은 복장 따로 만들지 않고 유니폼+군복 태그.
-  // 고양이·바니걸 테마는 없앰(동물 요소 무시). 지뢰계는 로리타 안에 포함.
-  // 스페셜데이: 할로윈, 크리스마스, 새해, 절분, 졸업식, 축제, 마츠리, 발렌타인, 생일 등 축하·논다는 느낌.
-  function tagsFromText(name, prompt, group){
-    const n = name || '';
-    const s = ((name || '') + ' ' + (prompt || '')).toLowerCase();
-    const has = (arr)=>arr.some(k=>s.includes(k));
-    const hasN = (arr)=>arr.some(k=>n.includes(k));
-    let primary = null;
-    if (group === 'costume-underwear') primary = 'underwear';
-    else if (has(['lingerie','babydoll','negligee','pasties']) || hasN(['란제리'])) primary = 'underwear';
-    else if (hasN(['변태','동정살인','동정 박살']) || has(['lewd','topless','talisman on nipples','areola','virgin killer','virgin destroyer'])) primary = 'special';
-    else if (has(['basketball uniform','soccer uniform','baseball uniform','tennis','volleyball','badminton','golf','ski suit','snowboard','surfboard','track uniform','running','yoga','gym uniform','cheerleader','figure skating','lacrosse','sportswear','sports festival','gymnastics','leotard','cycling','karate','martial arts','dougi','ballet']) || hasN(['농구','축구','야구','테니스','배구','스키복','체조복','치어리더','체조','가라테','사이클','발레'])) primary = 'athletic';
-    else if (has(['starbucks','mcdonald','lawson','kobeya']) || hasN(['스타벅스','맥도날드','로손','코베야'])) primary = 'franchise';
-    else if (has(['maid','nun','school uniform','serafuku','hogwarts','nurse','flight attendant','firefighter','mailman','mechanic','waitress','carhop','office lady','kindergarten','military','hooters','uber eats','researcher','lab coat','police','pilot','chef','patissier','cook','uniform','receptionist','bank','delivery','florist','business suit','suit, formal','tactical','special forces','ghillie','sniper']) || hasN(['메이드','수녀','교복','세라복','호그와트','간호사','승무원','소방관','우편','배달','정비사','웨이트리스','유치원','군복','후터스','딸버이츠','연구원','경찰','파일럿','조종사','셰프','파티시에','요리사','접수원','은행원','배달원','정장','플로리스트','특수부대','저격수','해군'])) primary = 'uniform';
-    else if (has(['magical girl','jiangshi','pirate','ghost','mummy','bunnysuit','bunny','showgirl','wedding dress','harem','armor','knight','elf','kittysuit','hanbok','korean clothes','china dress','chinese clothes','qi lolita','ao dai','vietnamese','yukata','kimono','dirndl','flamenco','detective','hakama','furisode','jinbei','uchikake','oiran','kunoichi','samurai','wa lolita','miko','japanese clothes','franken','cosplay']) || hasN(['마법소녀','강시','해적','유우령','미라','바니','쇼걸','웨딩드레스','하렘','기사','전사','한복','치파오','차이나','아오자이','유카타','기모노','디른들','플라멩고','탐정','하카마','후리소데','프랑켄'])) primary = 'costume';
-    else if (has(['swimsuit','bikini']) || hasN(['스쿠미즈','비키니','수영복'])) primary = 'swim';
-    else {
-      const sNoShirt = s.replace(/dress shirt/g, '');
-      if (/\bdress\b/.test(sNoShirt) || sNoShirt.includes('gown')) primary = 'dress';
-      else if (has(['jeans','t-shirt','sweater','coat','skirt','shirt','jacket','pants','hoodie','knit','blouse','camisole','cardigan','pajama']) && !has(['jirai','lolita','magician','idol']) && !hasN(['지뢰','로리타','마술사','아이돌'])) primary = 'casual';
-    }
-    const out = [];
-    if (primary) out.push(primary);
-    if (has(['maid']) || hasN(['메이드'])) out.push('maid');
-    if (has(['hanbok']) || hasN(['한복'])) out.push('hanbok');
-    if (hasN(['변태'])) out.push('pervert');
-    if (has(['school uniform','serafuku','hogwarts']) || hasN(['교복','세라복','호그와트'])) out.push('school');
-    if (has(['nun']) || hasN(['수녀'])) out.push('nun');
-    if (has(['military','naval','sailor','tactical','camouflage','ghillie','special forces','sniper']) || hasN(['군복','해군','특수부대','저격수'])) out.push('military');
-    if (has(['china dress','chinese clothes','qi lolita','jiangshi']) || hasN(['치파오','강시','차이나'])) out.push('china');
-    if (has(['fantasy','harem','armor','knight','elf','magical girl','ghost','pirate','ninja','shinobi','mage','wizard','priestess','priest','adventurer','bard','alchemist']) || hasN(['하렘','기사','전사','마법소녀','유우령','해적','닌자','마법사','모험가','음유시인','연금술사'])) out.push('fantasy');
-    if (has(['party','magician','idol']) || ((n.includes('파티') && !n.includes('파티시에')) || n.includes('마술사') || n.includes('아이돌'))) out.push('party');
-    if (has(['kimono','yukata','hakama','furisode','miko','japanese clothes','jinbei','uchikake','oiran','kunoichi','samurai','wa maid','wa lolita']) || hasN(['기모노','유카타','하카마','무녀','일본'])) out.push('japan');
-    if (has(['halloween','christmas','santa','reindeer','new year','hatsumoude','setsubun','graduation','festival','matsuri','tanabata','hinamatsuri','valentine','birthday']) || hasN(['할로윈','크리스마스','산타','새해','신년','절분','졸업','축제','마츠리','발렌타인','생일','명절','설날','추석'])) out.push('specialday');
-    if (has(['lolita','jirai']) || hasN(['로리타','지뢰'])) out.push('lolita');
-    // 주 태그와 부 태그 중복 제거, TAGS 순서로 정리. 메이드 타일은 주 태그가 유니폼이 아니면 유니폼을 주 태그로? 아니, 시범에서는 주 태그 우선순위를 그대로 둠. 메이드가 있으면 부 태그 메이드만 붙고, 주 태그는 위 우선순위대로.
-    const order = TAGS.map(t=>t[0]);
-    return order.filter(k=>out.includes(k));
-  }
-  function themesFromText(name, prompt){ return tagsFromText(name, prompt, ''); }
-  function kindFromText(name, prompt){
-    const tags = tagsFromText(name, prompt, '');
-    const prim = ['underwear','special','athletic','franchise','uniform','costume','swim','dress','casual'];
-    for (const k of prim) if (tags.includes(k)) return k;
-    return null;
-  }
-  window.fillThemes = async function(){
-    const btn = document.getElementById('themeFillBtn');
-    if (!btn || btn.disabled) return;
-    if (!confirm('이름과 프롬을 보고 합친 태그를 대충 정리할까요? 이미 붙은 태그는 그대로 두고, 새 태그만 추가할게요. 랜덤 타일은 제외해요.')) return;
-    btn.disabled = true; btn.textContent = '채우는 중…';
-    try{
-      const snap = await getDocs(collection(db, 'atelierTiles'));
-      let updated = 0, already = 0, randomSkipped = 0;
-      const primOrder = ['underwear','special','athletic','franchise','uniform','costume','swim','dress','casual'];
-      for (const d of snap.docs){
-        const tt = { id: d.id, ...d.data() };
-        if (tileCat(tt) !== 'outfit') continue;
-        if (isRandomTile(tt)) { randomSkipped++; continue; }
-        const cur = tileTags(tt);
-        const auto = tagsFromText(tt.name, tt.prompt, tt.group);
-        let finalTags = [...cur];
-        auto.forEach(t=>{ if (!finalTags.includes(t)) finalTags.push(t); });
-        // 주 태그가 새로 생기면 옛 주 태그는 빼기 (주 태그는 하나만)
-        const newPrim = primOrder.find(k=>auto.includes(k));
-        const oldPrim = primOrder.find(k=>cur.includes(k));
-        if (newPrim && oldPrim && newPrim !== oldPrim) finalTags = finalTags.filter(x=>x!==oldPrim);
-        if (((tt.name || '').includes('지뢰') || (tt.prompt || '').toLowerCase().includes('jirai')) && finalTags.includes('casual')) finalTags = finalTags.filter(x=>x!=='casual');
-        if (((tt.name || '').includes('마술사') || (tt.prompt || '').toLowerCase().includes('magician') || (tt.name || '').includes('아이돌') || (tt.prompt || '').toLowerCase().includes('idol')) && finalTags.includes('casual')) finalTags = finalTags.filter(x=>x!=='casual');
-        finalTags = TAGS.map(th=>th[0]).filter(k=>finalTags.includes(k));
-        const same = finalTags.length === cur.length && finalTags.every((v,i)=>v===cur[i]);
-        if (same){ already++; continue; }
-        await updateDoc(doc(db, 'atelierTiles', tt.id), { tags: finalTags });
-        updated++;
-      }
-      alert('전체 정리 완료: 새로 붙인 타일 ' + updated + '개, 이미 있던 타일 ' + already + '개' + (randomSkipped ? ' · 랜덤 타일 ' + randomSkipped + '개 제외' : ''));
-    }catch(e){ alert('전체 정리 실패: ' + e.message); }
-    btn.disabled = false; btn.textContent = '전체 정리';
-  };
+  // 태그 수동 분류 (Don 결정 2026-11-06): 자동 분류(tagsFromText)와 전체 정리(fillThemes)는 제거함.
+  // 태그는 타일당 여러 개 가능, Don이 정리 모드 칩이나 모달에서 직접 고름. 이상한 태그는 Don이 직접 바꿈.
   window.openTileModal = function(id){
     editId = id || null;
     pendingImage = null;
