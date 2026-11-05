@@ -170,20 +170,21 @@
 <button class="theme-tab" data-tag="dress" onclick="toggleTag('dress')">드레스</button>
 <button class="theme-tab" data-tag="swim" onclick="toggleTag('swim')">수영복</button>
 <button class="theme-tab" data-tag="underwear" onclick="toggleTag('underwear')">속옷</button>
+<button class="theme-tab" data-tag="pajamas" onclick="toggleTag('pajamas')">잠옷</button>
 <button class="theme-tab" data-tag="special" onclick="toggleTag('special')">특수</button>
 <button class="theme-tab" data-tag="maid" onclick="toggleTag('maid')">메이드</button>
-<button class="theme-tab" data-tag="hanbok" onclick="toggleTag('hanbok')">한복</button>
-<button class="theme-tab" data-tag="pervert" onclick="toggleTag('pervert')">변태</button>
-<button class="theme-tab" data-tag="franchise" onclick="toggleTag('franchise')">프랜차이즈</button>
 <button class="theme-tab" data-tag="school" onclick="toggleTag('school')">교복</button>
 <button class="theme-tab" data-tag="nun" onclick="toggleTag('nun')">수녀</button>
 <button class="theme-tab" data-tag="military" onclick="toggleTag('military')">군복</button>
+<button class="theme-tab" data-tag="hanbok" onclick="toggleTag('hanbok')">한복</button>
 <button class="theme-tab" data-tag="china" onclick="toggleTag('china')">중국</button>
+<button class="theme-tab" data-tag="japan" onclick="toggleTag('japan')">일본</button>
 <button class="theme-tab" data-tag="fantasy" onclick="toggleTag('fantasy')">판타지</button>
 <button class="theme-tab" data-tag="party" onclick="toggleTag('party')">파티</button>
-<button class="theme-tab" data-tag="japan" onclick="toggleTag('japan')">일본</button>
 <button class="theme-tab" data-tag="specialday" onclick="toggleTag('specialday')">스페셜데이</button>
 <button class="theme-tab" data-tag="lolita" onclick="toggleTag('lolita')">로리타</button>
+<button class="theme-tab" data-tag="pervert" onclick="toggleTag('pervert')">변태</button>
+<button class="theme-tab" data-tag="franchise" onclick="toggleTag('franchise')">프랜차이즈</button>
 </div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
@@ -214,7 +215,7 @@
     <h3 id="tileModalTitle">타일 추가</h3>
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
-    <div id="tileTagRow"><label>태그 (여러 개 가능)</label><div class="modal-theme-checks" id="tileTagChecks"><label class="theme-check"><input type="checkbox" value="casual">사복</label><label class="theme-check"><input type="checkbox" value="uniform">유니폼</label><label class="theme-check"><input type="checkbox" value="athletic">운동복</label><label class="theme-check"><input type="checkbox" value="costume">코스튬</label><label class="theme-check"><input type="checkbox" value="dress">드레스</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="underwear">속옷</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="franchise">프랜차이즈</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label><label class="theme-check"><input type="checkbox" value="lolita">로리타</label></div></div>
+    <div id="tileTagRow"><label>태그 (여러 개 가능)</label><div class="modal-theme-checks" id="tileTagChecks"><label class="theme-check"><input type="checkbox" value="casual">사복</label><label class="theme-check"><input type="checkbox" value="uniform">유니폼</label><label class="theme-check"><input type="checkbox" value="athletic">운동복</label><label class="theme-check"><input type="checkbox" value="costume">코스튬</label><label class="theme-check"><input type="checkbox" value="dress">드레스</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="underwear">속옷</label><label class="theme-check"><input type="checkbox" value="pajamas">잠옷</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label><label class="theme-check"><input type="checkbox" value="lolita">로리타</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="franchise">프랜차이즈</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
@@ -237,7 +238,7 @@
   let db, tiles = [];
 let currentCat = 'outfit';
 let selectedTags = [];
-const TAGS = [['casual','사복'],['uniform','유니폼'],['athletic','운동복'],['costume','코스튬'],['dress','드레스'],['swim','수영복'],['underwear','속옷'],['special','특수'],['maid','메이드'],['hanbok','한복'],['pervert','변태'],['franchise','프랜차이즈'],['school','교복'],['nun','수녀'],['military','군복'],['china','중국'],['fantasy','판타지'],['party','파티'],['japan','일본'],['specialday','스페셜데이'],['lolita','로리타']];
+const TAGS = [['casual','사복'],['uniform','유니폼'],['athletic','운동복'],['costume','코스튬'],['dress','드레스'],['swim','수영복'],['underwear','속옷'],['pajamas','잠옷'],['special','특수'],['maid','메이드'],['school','교복'],['nun','수녀'],['military','군복'],['hanbok','한복'],['china','중국'],['japan','일본'],['fantasy','판타지'],['party','파티'],['specialday','스페셜데이'],['lolita','로리타'],['pervert','변태'],['franchise','프랜차이즈']];
 const THEMES = TAGS;
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
 function tileTags(x){
