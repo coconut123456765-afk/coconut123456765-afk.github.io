@@ -186,6 +186,16 @@
 <button class="theme-tab" data-tag="pervert" onclick="toggleTag('pervert')">변태</button>
 <button class="theme-tab" data-tag="franchise" onclick="toggleTag('franchise')">프랜차이즈</button>
 </div>
+<div class="theme-tabs" id="hairSubTabs" style="display:none">
+<span class="filter-label">헤어</span>
+<button class="theme-tab active" data-sub="all" onclick="toggleHairSub('all')">전체</button>
+<button class="theme-tab" data-sub="bangs" onclick="toggleHairSub('bangs')">앞머리</button>
+<button class="theme-tab" data-sub="back" onclick="toggleHairSub('back')">뒷머리</button>
+<button class="theme-tab" data-sub="preset" onclick="toggleHairSub('preset')">프리셋</button>
+<button class="theme-tab" data-sub="color" onclick="toggleHairSub('color')">머리색</button>
+<button class="theme-tab" data-sub="eyes" onclick="toggleHairSub('eyes')">눈색</button>
+<button class="theme-tab" data-sub="accessory" onclick="toggleHairSub('accessory')">장식</button>
+</div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
       <div style="display:flex;gap:8px">
@@ -238,6 +248,34 @@
   let db, tiles = [];
 let currentCat = 'outfit';
 let selectedTags = [];
+let selectedHairSub = 'all';
+// 헤어 서브탭 (Don 결정 2026-11-06): H번호 기준. H001-H036 뒷머리, H037-H048 앞머리, H049-H068 머리색, H069-H084 장식, H085-H094 프리셋, H095-H122 눈색. H번호가 없으면 프롬 단어로 추정.
+function hairSub(t){
+  const m = (t.name || '').match(/^H(\d+)/);
+  if (m){
+    const n = parseInt(m[1], 10);
+    if (n >= 1 && n <= 36) return 'back';
+    if (n >= 37 && n <= 48) return 'bangs';
+    if (n >= 49 && n <= 68) return 'color';
+    if (n >= 69 && n <= 84) return 'accessory';
+    if (n >= 85 && n <= 94) return 'preset';
+    if (n >= 95) return 'eyes';
+  }
+  const p = (t.prompt || '').toLowerCase();
+  if (p.includes('eyes') || p.includes('pupils') || p.includes('heterochromia')) return 'eyes';
+  if (p.includes('bangs') || p.includes('forehead')) return 'bangs';
+  if (p.includes('ribbon') || p.includes('hairclip') || p.includes('hairband') || p.includes('ahoge') || p.includes('animal ears') || p.includes('headphones') || p.includes('ornament') || p.includes('beret') || p.includes('scarf') || p.includes('scrunchie') || p.includes('kanzashi') || p.includes('hair flower') || p.includes('hair intakes')) return 'accessory';
+  if (/\b(black|brown|blonde|white|silver|grey|pink|red|orange|blue|purple|green|aqua|platinum|gradient|two-tone|streaked|colored) hair\b/.test(p)) return 'color';
+  return 'back';
+}
+window.toggleHairSub = function(sub){
+  selectedHairSub = sub;
+  document.querySelectorAll('#hairSubTabs .theme-tab').forEach(b=>{
+    const sg = b.dataset.sub;
+    b.classList.toggle('active', sg === 'all' ? selectedHairSub === 'all' : selectedHairSub === sg);
+  });
+  render();
+};
 const TAGS = [['casual','사복'],['uniform','유니폼'],['athletic','운동복'],['costume','코스튬'],['dress','드레스'],['swim','수영복'],['underwear','속옷'],['pajamas','잠옷'],['special','특수'],['maid','메이드'],['school','교복'],['nun','수녀'],['military','군복'],['hanbok','한복'],['china','중국'],['japan','일본'],['fantasy','판타지'],['party','파티'],['specialday','스페셜데이'],['lolita','로리타'],['pervert','변태'],['franchise','프랜차이즈']];
 const THEMES = TAGS;
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
@@ -282,6 +320,8 @@ window.toggleTag = function(tag){
 };
 window.switchCat = function(cat){
 currentCat = cat;
+selectedHairSub = 'all';
+document.querySelectorAll('#hairSubTabs .theme-tab').forEach(b=>b.classList.toggle('active', b.dataset.sub === 'all'));
 document.querySelectorAll('#catTabs .cat-tab').forEach(b=>b.classList.toggle('active', b.dataset.cat===cat));
 const title = document.getElementById('catTitle');
 if (title) title.textContent = cat==='hair' ? '헤어' : cat==='pose' ? '포즈' : '옷장';
@@ -501,6 +541,8 @@ const suitcaseBox = document.getElementById('suitcaseBox');
 if (suitcaseBox) suitcaseBox.style.display = currentCat==='outfit' ? '' : 'none';
 const tagTabs = document.getElementById('tagTabs');
 if (tagTabs) tagTabs.style.display = currentCat==='outfit' ? 'flex' : 'none';
+const hairSubTabs = document.getElementById('hairSubTabs');
+if (hairSubTabs) hairSubTabs.style.display = currentCat==='hair' ? 'flex' : 'none';
 const randomSection = document.getElementById('randomSection');
 const el = document.getElementById('tiles');
 const btn = document.getElementById('randomTileBtn');
@@ -509,7 +551,8 @@ if (currentCat!=='outfit'){
 if (randomSection) randomSection.style.display = 'none';
 const zoneBtn0 = document.getElementById('randomZoneBtn');
 if (zoneBtn0) zoneBtn0.style.display = 'none';
-const list = catTiles(currentCat);
+let list = catTiles(currentCat);
+if (currentCat === 'hair' && selectedHairSub !== 'all') list = list.filter(t=>hairSub(t) === selectedHairSub);
 if (btn) btn.disabled = !list.some(x=>(x.prompt || '').trim());
 if (!list.length){
 el.innerHTML = '<div class="empty">아직 타일이 없어요.<br>오른쪽 위 ＋ 타일 추가로, 이름·프롬·이미지를 넣어보세요.</div>';
