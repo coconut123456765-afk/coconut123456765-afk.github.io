@@ -196,6 +196,17 @@
 <button class="theme-tab" data-sub="eyes" onclick="toggleHairSub('eyes')">눈색</button>
 <button class="theme-tab" data-sub="accessory" onclick="toggleHairSub('accessory')">장식</button>
 </div>
+<div class="theme-tabs" id="poseSubTabs" style="display:none">
+<span class="filter-label">포즈</span>
+<button class="theme-tab active" data-sub="all" onclick="togglePoseSub('all')">전체</button>
+<button class="theme-tab" data-sub="standing" onclick="togglePoseSub('standing')">서기</button>
+<button class="theme-tab" data-sub="sitting" onclick="togglePoseSub('sitting')">앉기</button>
+<button class="theme-tab" data-sub="lying" onclick="togglePoseSub('lying')">눕기</button>
+<button class="theme-tab" data-sub="upper" onclick="togglePoseSub('upper')">상반신</button>
+<button class="theme-tab" data-sub="movement" onclick="togglePoseSub('movement')">움직임</button>
+<button class="theme-tab" data-sub="attack" onclick="togglePoseSub('attack')">공격</button>
+<button class="theme-tab" data-sub="duo" onclick="togglePoseSub('duo')">2인</button>
+</div>
 <div class="right-head">
 <div class="sec-title" id="catTitle">옷장</div>
       <div style="display:flex;gap:8px">
@@ -276,6 +287,27 @@ window.toggleHairSub = function(sub){
   });
   render();
 };
+let selectedPoseSub = 'all';
+// 포즈 서브탭 (Don 결정 2026-11-06): 프롬 단어 기준, 우선순위 2인 → 눕기 → 앉기(쪼그리기·무릎 포함) → 상반신 → 움직임 → 공격 → 서기 → 일상(없음).
+function poseSub(t){
+  const p = (t.prompt || '').toLowerCase();
+  if (p.includes('2girls') || p.includes('2boys') || p.includes('duo')) return 'duo';
+  if (p.includes('lying')) return 'lying';
+  if (['sitting','seiza','wariza','indian style','yokozuwari','sitting on floor','sitting on swing','kneeling','squatting','crouching','all fours','on one knee','bent over'].some(k=>p.includes(k))) return 'sitting';
+  if (p.includes('upper body')) return 'upper';
+  if (['running','jumping','walking','dancing','spinning','skipping','cartwheel','riding bicycle','turning','tripping','stretching'].some(k=>p.includes(k))) return 'movement';
+  if (['fighting stance','punching','kicking','holding sword','drawing bow','holding staff','holding baseball bat','volleyball','throwing'].some(k=>p.includes(k))) return 'attack';
+  if (p.includes('standing')) return 'standing';
+  return 'daily';
+}
+window.togglePoseSub = function(sub){
+  selectedPoseSub = sub;
+  document.querySelectorAll('#poseSubTabs .theme-tab').forEach(b=>{
+    const sg = b.dataset.sub;
+    b.classList.toggle('active', sg === 'all' ? selectedPoseSub === 'all' : selectedPoseSub === sg);
+  });
+  render();
+};
 const TAGS = [['casual','사복'],['uniform','유니폼'],['athletic','운동복'],['costume','코스튬'],['dress','드레스'],['swim','수영복'],['underwear','속옷'],['pajamas','잠옷'],['special','특수'],['maid','메이드'],['school','교복'],['nun','수녀'],['military','군복'],['hanbok','한복'],['china','중국'],['japan','일본'],['fantasy','판타지'],['party','파티'],['specialday','스페셜데이'],['lolita','로리타'],['pervert','변태'],['franchise','프랜차이즈']];
 const THEMES = TAGS;
 function tileThemes(x){ return Array.isArray(x.themes) ? x.themes : []; }
@@ -322,6 +354,8 @@ window.switchCat = function(cat){
 currentCat = cat;
 selectedHairSub = 'all';
 document.querySelectorAll('#hairSubTabs .theme-tab').forEach(b=>b.classList.toggle('active', b.dataset.sub === 'all'));
+selectedPoseSub = 'all';
+document.querySelectorAll('#poseSubTabs .theme-tab').forEach(b=>b.classList.toggle('active', b.dataset.sub === 'all'));
 document.querySelectorAll('#catTabs .cat-tab').forEach(b=>b.classList.toggle('active', b.dataset.cat===cat));
 const title = document.getElementById('catTitle');
 if (title) title.textContent = cat==='hair' ? '헤어' : cat==='pose' ? '포즈' : '옷장';
@@ -543,6 +577,8 @@ const tagTabs = document.getElementById('tagTabs');
 if (tagTabs) tagTabs.style.display = currentCat==='outfit' ? 'flex' : 'none';
 const hairSubTabs = document.getElementById('hairSubTabs');
 if (hairSubTabs) hairSubTabs.style.display = currentCat==='hair' ? 'flex' : 'none';
+const poseSubTabs = document.getElementById('poseSubTabs');
+if (poseSubTabs) poseSubTabs.style.display = currentCat==='pose' ? 'flex' : 'none';
 const randomSection = document.getElementById('randomSection');
 const el = document.getElementById('tiles');
 const btn = document.getElementById('randomTileBtn');
@@ -553,6 +589,7 @@ const zoneBtn0 = document.getElementById('randomZoneBtn');
 if (zoneBtn0) zoneBtn0.style.display = 'none';
 let list = catTiles(currentCat);
 if (currentCat === 'hair' && selectedHairSub !== 'all') list = list.filter(t=>hairSub(t) === selectedHairSub);
+if (currentCat === 'pose' && selectedPoseSub !== 'all') list = list.filter(t=>poseSub(t) === selectedPoseSub);
 if (btn) btn.disabled = !list.some(x=>(x.prompt || '').trim());
 if (!list.length){
 el.innerHTML = '<div class="empty">아직 타일이 없어요.<br>오른쪽 위 ＋ 타일 추가로, 이름·프롬·이미지를 넣어보세요.</div>';
