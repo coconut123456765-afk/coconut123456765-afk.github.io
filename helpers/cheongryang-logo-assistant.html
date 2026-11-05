@@ -99,7 +99,7 @@ async function loadOrgs(){
       row.innerHTML = '<img src="' + (g.logo ? g.logo.replace(/ /g,"%20") : "") + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
         '<div class="nm"><b>' + esc(g.name) + '</b><br><span class="hint">' + esc(worldName) + ' · 로고 ' + (g.logo ? '있음' : '없음') + '</span></div>';
       const btn = document.createElement("button"); btn.textContent = "이 조직 로고로 설정";
-      btn.onclick = ()=>applyLogo(worldKey, g.id, g.name, orgs.length, worlds.length);
+      btn.onclick = ()=>applyLogo(worldKey, g.id, g.name, orgs.length, worlds.length, btn);
       row.appendChild(btn); list.appendChild(row);
     });
     $("orgCard").style.display = "block";
@@ -108,8 +108,14 @@ async function loadOrgs(){
 }
 function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
-async function applyLogo(worldKey, groupId, groupName, orgCount, worldCount){
-  if (!confirm("'" + groupName + "' 조직의 로고를 청량고등학교 로고로 바꿀까요? 로고 외에는 아무것도 안 바뀌어요.")) return;
+async function applyLogo(worldKey, groupId, groupName, orgCount, worldCount, btn){
+  // 네이티브 confirm()은 자동 브라우저에서 바로 닫혀버려서, 페이지 안에서 두 번 눌러 확인하는 방식으로 바꿈
+  if (!btn.dataset.armed){
+    btn.dataset.armed = "1";
+    btn.textContent = "정말 바꿀까요? 다시 눌러주세요";
+    setStatus("한 번 더 누르면 '" + groupName + "' 로고가 바뀌어요. 로고 외에는 아무것도 안 바뀌어요.");
+    return;
+  }
   setStatus("저장 중…");
   try{
     // 쓰기 직전에 최신 데이터를 다시 읽어서, 그 위에 로고만 바꿈
