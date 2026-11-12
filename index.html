@@ -39,13 +39,8 @@
   .brand .b-don { border-bottom:2px solid var(--acc); padding-bottom:1px; }
   .demo-badge { background:var(--badge-bg); color:var(--warm); font-size:12px; padding:3px 10px; border-radius:20px; }
   .worlds { display:flex; gap:8px; margin-left:auto; }
-  /* Astryx Tabs 시범 (2026-11-12) — 롤백: index-before-tabs.html */
-  .worlds button, .tabs button, .orgchart-tabs button[data-orgchart-tab] { cursor:pointer; border:none; border-bottom:2px solid transparent; background:transparent; color:var(--dim); padding:8px 12px; font-size:14px; border-radius:0; }
-  .worlds button:hover, .tabs button:hover, .orgchart-tabs button[data-orgchart-tab]:hover { color:var(--txt); }
-  .worlds button.on, .tabs button.on, .orgchart-tabs button[data-orgchart-tab].on { background:transparent; color:var(--txt); border-bottom:2px solid var(--txt); font-weight:700; }
-  .worlds button:focus-visible, .tabs button:focus-visible, .orgchart-tabs button[data-orgchart-tab]:focus-visible { outline:2px solid var(--acc); outline-offset:3px; }
-  .chars button { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
-  .chars button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  .worlds button, .tabs button, .chars button { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
+  .worlds button.on, .tabs button.on, .chars button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
   main { display:flex; min-height:calc(100vh - 70px); }
   aside { width:280px; border-right:1px solid var(--line); padding:14px; }
   aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
@@ -71,7 +66,8 @@
   .group-block.org-block { background-color:var(--cover-bg); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); }
   .group-block .group-head h4 { font-family:"Noto Serif KR",serif; letter-spacing:.2px; }
   .orgchart-tabs { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
-  .orgchart-tabs button:not([data-orgchart-tab]) { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .orgchart-tabs button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .orgchart-tabs button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
   .orgchart-node { border:1px solid var(--line); border-top:4px solid var(--acc); border-radius:12px; padding:10px 8px 8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
   .orgchart-node.drop-target { outline:3px solid var(--acc); }
   .orgchart-node img { width:56px; height:56px; object-fit:cover; border-radius:50%; display:block; margin:0 auto; border:2px solid var(--line); }
