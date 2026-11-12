@@ -1355,7 +1355,20 @@ function renderTabInner(c){
             let next = []; filtered.forEach(m=>{ (childrenMap[m.id]||[]).forEach(ch=>{ if (!seenLevel.has(ch.id)) next.push(ch); }); }); curLevel = next;
           }
           if (!levels.length && members.length) levels = [members];
-          h += levels.map(lv=>`<div class="orgchart-tree" style="justify-content:center">` + lv.map(m=>levelCard(m)).join("") + `</div>`).join(`<div style="text-align:center;color:var(--line);font-size:18px;line-height:1">│</div>`);
+          /* 조직도 하위 그룹 시범 (2026-11-13) — 같은 레벨 안에서 하위 그룹 소속원은 별도 줄로, 그룹명 라벨 표시. 롤백: 이 블록을 원래 한 줄로 되돌리기 */
+          h += levels.map(lv=>{
+            const main = lv.filter(m=>charInGroup(m, selOrgId));
+            const subs = lv.filter(m=>!charInGroup(m, selOrgId));
+            let out = "";
+            if (main.length) out += `<div class="orgchart-tree" style="justify-content:center">` + main.map(m=>levelCard(m)).join("") + `</div>`;
+            const bySub = {};
+            subs.forEach(m=>{ const gid = (m.groupIds||[]).find(id=>dsel.has(id)); (bySub[gid] = bySub[gid] || []).push(m); });
+            Object.keys(bySub).forEach(gid=>{
+              const gname = (gs.find(g=>g.id===gid) || {}).name || "하위 그룹";
+              out += `<div style="text-align:center;font-size:12px;color:var(--dim);margin-top:10px">${esc(gname)}</div><div class="orgchart-tree" style="justify-content:center">` + bySub[gid].map(m=>levelCard(m)).join("") + `</div>`;
+            });
+            return out;
+          }).join(`<div style="text-align:center;color:var(--line);font-size:18px;line-height:1">│</div>`);
         }
         // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
         const childGroups = gs.filter(x=>x.parentId===selOrgId);
