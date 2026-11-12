@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>디스펜서 하위 그룹 만들기 도우미 (어시스턴트용)</title>
+<style>
+  body{font-family:'Noto Sans KR',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background:#f6f3fa;color:#2a1f1f}
+  h1{font-size:20px} .card{background:#fff;border:1px solid #ddd6e8;border-radius:12px;padding:16px;margin:12px 0}
+  button{background:#7b5aa6;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+  button:disabled{background:#bbb} input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd6e8;border-radius:8px;font-size:15px;margin:6px 0}
+  .ok{color:#2e7d32;font-weight:700} .err{color:#c0392b;font-weight:700}
+  .hint{font-size:13px;color:#9c8a84}
+  li{margin:4px 0}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<h1>디스펜서 하위 그룹 만들기 도우미 (어시스턴트용)</h1>
+<p class="hint">살룬 라군에 "디스펜서" 하위 그룹을 만들고, 엘리스·밤비·신데렐라를 그 그룹으로 옮겨요. 세 명의 상급자(리아)는 그대로 두고, 직책에 "디스펜서"를 달아요. 이 세 가지 외에는 아무것도 바꾸지 않아요. 비밀번호는 이 브라우저에서만 쓰고, 아냐한테는 안 보내요. 이 페이지는 어시스턴트 계정(dossier@don.local)으로도 쓸 수 있어요.</p>
+<div id="status" class="card">불러오는 중…</div>
+
+<div id="loginCard" class="card" style="display:none">
+  <h3>어시스턴트 로그인</h3>
+  <input id="loginEmail" type="email" value="dossier@don.local">
+  <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="loginBtn">로그인</button>
+  <p id="loginErr" class="err" style="display:none"></p>
+</div>
+
+<div id="previewCard" class="card" style="display:none">
+  <h3>바꿀 내용 미리보기</h3>
+  <p id="scanInfo" class="hint"></p>
+  <ul id="previewList"></ul>
+  <button id="applyBtn">적용하기</button>
+</div>
+
+<div id="doneCard" class="card" style="display:none"></div>
+
+<script>
+const WRITER_EMAILS = ["coconut123456765@gmail.com", "dossier@don.local"];
+const PARENT_ORG_ID = "g-saloon-new";
+const TRIO_NAMES = ["엘리스", "밤비", "신데렐라"];
+const SUBGROUP_NAME = "디스펜서";
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const $ = id => document.getElementById(id);
+function setStatus(t){ $("status").textContent = t; }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const cloudRef = db.ref("wiki");
+let isWriter = false;
+let scan = null;
+
+firebase.auth().onAuthStateChanged(user=>{
+  isWriter = !!(user && WRITER_EMAILS.includes(user.email));
+  if (isWriter){ $("loginCard").style.display = "none"; loadPreview(); }
+  else { $("loginCard").style.display = "block"; setStatus("어시스턴트 로그인이 필요해요. 위에서 로그인해주세요."); }
+});
+
+$("loginBtn").onclick = async ()=>{
+  const em = $("loginEmail").value.trim();
+  const pw = $("loginPw").value;
+  const err = $("loginErr"); err.style.display = "none";
+  try{ await firebase.auth().signInWithEmailAndPassword(em, pw); }
+  catch(e){ err.textContent = "로그인 실패: " + (e && e.message); err.style.display = "block"; }
+};
+
+async function loadPreview(){
+  setStatus("도시 데이터 읽는 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("도시 데이터가 없어요."); return; }
+    const worlds = Object.entries(v.store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+    const hotel = v.store["hotel"];
+    if (!hotel){ setStatus("살룬 라군 세계관을 못 찾았어요. 세계관 " + worlds.length + "개."); return; }
+    const chars = Array.isArray(hotel.chars) ? hotel.chars : [];
+    const groups = Array.isArray(hotel.groups) ? hotel.groups : [];
+    const existing = groups.find(g=>g && g.name === SUBGROUP_NAME && g.parentId === PARENT_ORG_ID);
+    const trio = TRIO_NAMES.map(nm=>chars.find(c=>c && c.profile && c.profile.name === nm)).filter(Boolean);
+    const missing = TRIO_NAMES.filter(nm=>!chars.some(c=>c && c.profile && c.profile.name === nm));
+    scan = { worldCount: worlds.length, charCount: chars.length, existingSubId: existing ? existing.id : null, trioIds: trio.map(c=>c.id), missing };
+    $("scanInfo").textContent = "세계관 " + worlds.length + "개 스캔, 살룬 캐릭터 " + chars.length + "명. 하위 그룹 '" + SUBGROUP_NAME + "' " + (existing ? "이미 있음(재사용)" : "없음(새로 만듦)") + ".";
+    const list = $("previewList"); list.innerHTML = "";
+    const items = [];
+    items.push(existing ? "하위 그룹 '" + SUBGROUP_NAME + "' 재사용" : "하위 그룹 '" + SUBGROUP_NAME + "' 새로 만들기 (상위: 살룬 라군)");
+    trio.forEach(c=>{
+      const sup = (c.groupSuperior && c.groupSuperior[PARENT_ORG_ID]) || "";
+      const supName = chars.find(x=>x.id === sup);
+      items.push(c.profile.name + " → '" + SUBGROUP_NAME + "' 그룹으로 이동, 직책 '디스펜서' 설정, 상급자 " + (supName ? supName.profile.name : "(없음)") + " 그대로");
+    });
+    if (missing.length) items.push("못 찾은 캐릭터: " + missing.join(", "));
+    items.forEach(t=>{ const li = document.createElement("li"); li.textContent = t; list.appendChild(li); });
+    $("previewCard").style.display = "block";
+    setStatus(missing.length ? "못 찾은 캐릭터가 있어요. 그래도 적용하면 찾은 사람만 바껴요." : "위 내용이 맞으면 적용하기를 눌러주세요.");
+  }catch(e){ setStatus("읽기 실패: " + (e && e.message)); }
+}
+
+$("applyBtn").onclick = ()=>applyChange($("applyBtn"));
+
+async function applyChange(btn){
+  // 네이티브 confirm()은 자동 브라우저에서 바로 닫혀버려서, 페이지 안에서 두 번 눌러 확인하는 방식으로 바꿈
+  if (!btn.dataset.armed){
+    btn.dataset.armed = "1";
+    btn.textContent = "정말 적용할까요? 다시 눌러주세요";
+    setStatus("한 번 더 누르면 위 내용이 저장돼요. 그 외에는 아무것도 안 바뀌어요.");
+    return;
+  }
+  setStatus("저장 중…");
+  try{
+    // 쓰기 직전에 최신 데이터를 다시 읽어서, 그 위에 필요한 것만 바꿈
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store || !v.store["hotel"]){ setStatus("데이터가 바뀌었어요. 새로고침하고 다시 해주세요."); return; }
+    const w = v.store["hotel"];
+    if (!Array.isArray(w.groups)) w.groups = [];
+    if (!Array.isArray(w.chars)) w.chars = [];
+    let sub = w.groups.find(g=>g && g.name === SUBGROUP_NAME && g.parentId === PARENT_ORG_ID);
+    let created = false;
+    if (!sub){
+      sub = { id: "g_" + Math.random().toString(36).slice(2,10), name: SUBGROUP_NAME, kind: "group", parentId: PARENT_ORG_ID, logo: "" };
+      w.groups.push(sub);
+      created = true;
+    }
+    let moved = [];
+    let already = [];
+    TRIO_NAMES.forEach(nm=>{
+      const c = w.chars.find(x=>x && x.profile && x.profile.name === nm);
+      if (!c) return;
+      if (!Array.isArray(c.groupIds)) c.groupIds = [];
+      if (c.groupIds.includes(sub.id)) { already.push(nm); }
+      else {
+        c.groupIds = c.groupIds.filter(id=>id !== PARENT_ORG_ID);
+        c.groupIds.push(sub.id);
+        moved.push(nm);
+      }
+      if (!c.groupSubs || typeof c.groupSubs !== "object") c.groupSubs = {};
+      c.groupSubs[PARENT_ORG_ID] = SUBGROUP_NAME;
+    });
+    const storeUpdatedAt = Date.now();
+    let backups = Array.isArray(v.backups) ? v.backups : [];
+    try{
+      const storeStr = JSON.stringify(v.store);
+      const last = backups[backups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        backups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (backups.length > 5) backups.shift();
+      }
+    }catch(e){}
+    await cloudRef.set({ store: v.store, theme: v.theme || "light", storeUpdatedAt, backups });
+    $("previewCard").style.display = "none";
+    const done = $("doneCard");
+    done.innerHTML = '<p class="ok">DONE: 디스펜서 하위 그룹 작업을 마쳤어요.</p>' +
+      '<p>스캔한 세계관 ' + scan.worldCount + '개, 살룬 캐릭터 ' + scan.charCount + '명. 하위 그룹 ' + (created ? '새로 만듦' : '재사용') + ', 이동한 캐릭터 ' + moved.length + '명(' + esc(moved.join(", ")) + '), 이미 그룹에 있던 캐릭터 ' + already.length + '명, 직책 "디스펜서" 설정 ' + (moved.length + already.length) + '명, 상급자는 그대로 유지.</p>' +
+      '<p class="hint">도시 위키를 새로고침하면 조직도에서 디스펜서 세 명이 별도 줄로 보여요.</p>';
+    done.style.display = "block";
+    setStatus("완료!");
+  }catch(e){ setStatus("저장 실패: " + (e && e.message)); }
+}
+</script>
+</body>
+</html>
