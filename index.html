@@ -70,6 +70,7 @@
   .orgchart-tabs button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
   .orgchart-node { border:1px solid var(--line); border-top:4px solid var(--acc); border-radius:12px; padding:10px 8px 8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
   .orgchart-node.drop-target { outline:3px solid var(--acc); }
+  .orgchart-node.board-selected { outline:3px solid var(--acc); outline-offset:2px; }
   .orgchart-node img { width:56px; height:56px; object-fit:cover; border-radius:50%; display:block; margin:0 auto; border:2px solid var(--line); }
   .orgchart-node-name { font-weight:700; font-size:13px; margin-top:6px; }
   .orgchart-node-sub { font-size:11px; color:var(--dim); }
@@ -467,6 +468,44 @@ function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; 
 function groupOf(w, id){ return worldGroups(w).find(g=>g.id===id) || null; }
 function charInGroup(c, gid){ return Array.isArray(c.groupIds) && c.groupIds.includes(gid); }
 function groupSubtitle(c, gid){ if (gid && gid !== '__ungrouped' && c.groupSubs && c.groupSubs[gid]) return c.groupSubs[gid]; return c.position || ''; }
+// 조직도 자유 배치 보드 (2026-11-13): 보드 안 카드들의 상급자 연결선을 SVG로 그림. 카드 실제 위치(offsetLeft/Top)로 계산.
+function drawBoardLines(board){
+  if (!board) return;
+  const svg = board.querySelector("svg.orgchart-lines"); if (!svg) return;
+  const orgId = window.orgChartOrg; if (!orgId) return;
+  const w = store[curWorld]; if (!w) return;
+  const nodes = {};
+  board.querySelectorAll("[data-org-node]").forEach(n=>{ nodes[n.dataset.orgNode] = n; });
+  let lines = "";
+  (w.chars||[]).forEach(c=>{
+    const sup = c.groupSuperior && c.groupSuperior[orgId];
+    const a = nodes[c.id], b = sup && nodes[sup];
+    if (!a || !b) return;
+    const x1 = a.offsetLeft + a.offsetWidth/2, y1 = a.offsetTop;
+    const x2 = b.offsetLeft + b.offsetWidth/2, y2 = b.offsetTop + b.offsetHeight;
+    lines += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--line)" stroke-width="2"/>';
+  });
+  svg.innerHTML = lines;
+}
+// 보드 클릭-클릭 상급자 지정: 첫 클릭은 선택, 두 번째 클릭(다른 카드)은 상급자로 지정, 같은 카드 다시 누르면 선택 해제
+function selectBoardNode(board, id){
+  const orgId = window.orgChartOrg; if (!orgId) return;
+  const w = store[curWorld]; if (!w) return;
+  const prev = window.boardSelected;
+  board.querySelectorAll(".orgchart-node.board-selected").forEach(n=>n.classList.remove("board-selected"));
+  if (!prev){ window.boardSelected = id; const n = board.querySelector('[data-org-node="'+id+'"]'); if (n) n.classList.add("board-selected"); return; }
+  if (prev === id){ window.boardSelected = null; return; }
+  const sel = (w.chars||[]).find(x=>x.id===prev);
+  const target = (w.chars||[]).find(x=>x.id===id);
+  if (!sel || !target){ window.boardSelected = null; return; }
+  if (!sel.groupSuperior || typeof sel.groupSuperior !== "object") sel.groupSuperior = {};
+  let curId = id; const seen = new Set(); let ok = true;
+  while (curId && !seen.has(curId)){ seen.add(curId); if (curId === sel.id){ ok = false; break; } const ch = (w.chars||[]).find(x=>x.id===curId); curId = ch && ch.groupSuperior ? ch.groupSuperior[orgId] : null; }
+  if (!ok){ alert("순환이 생겨서 저장하지 않았어요."); window.boardSelected = null; return; }
+  sel.groupSuperior[orgId] = id;
+  window.boardSelected = null;
+  persist(); render();
+}
 function reorderGroupByDom(gid, domIds){ const w = store[curWorld]; if (!w) return; let members; if (gid === null) members = w.chars.slice(); else if (gid === '__ungrouped') members = w.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0); else members = w.chars.filter(c=>charInGroup(c, gid)); const ordered = domIds.map(id=>members.find(c=>c.id===id)).filter(Boolean); if (ordered.length !== members.length) return; const firstIdx = w.chars.findIndex(c=>c.id===members[0].id); const rest = w.chars.filter(c=>!members.some(m=>m.id===c.id)); w.chars = [...rest.slice(0, firstIdx), ...ordered, ...rest.slice(firstIdx)]; persist(); }
 function groupPortrait(c){
   const rep = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
@@ -967,6 +1006,51 @@ function render(){
       document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
     };
   });
+  // 조직도 자유 배치 보드 (2026-11-13): 편집 모드에서 카드 드래그로 위치 저장, 클릭-클릭으로 상급자 지정
+  document.querySelectorAll(".orgchart-board").forEach(board=>{
+    const orgId = window.orgChartOrg; if (!orgId) return;
+    const w = store[curWorld];
+    window.boardSelected = null;
+    if (editingTab === "relations"){
+      board.querySelectorAll("[data-org-node]").forEach(n=>{
+        n.style.touchAction = "none";
+        n.onpointerdown = (e)=>{
+          e.preventDefault();
+          const dragId = n.dataset.orgDrag;
+          const startX = e.clientX, startY = e.clientY;
+          const origLeft = parseInt(n.style.left||"0",10), origTop = parseInt(n.style.top||"0",10);
+          let moved = false;
+          const move = (ev)=>{
+            if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+            moved = true;
+            n.style.left = Math.max(0, origLeft + ev.clientX - startX) + "px";
+            n.style.top = Math.max(0, origTop + ev.clientY - startY) + "px";
+            drawBoardLines(board);
+          };
+          const up = (ev)=>{
+            document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+            if (!moved){ selectBoardNode(board, dragId); return; }
+            const dragged = (w.chars||[]).find(x=>x.id===dragId); if (!dragged) return;
+            if (!dragged.orgPos || typeof dragged.orgPos !== "object") dragged.orgPos = {};
+            dragged.orgPos[orgId] = { x: parseInt(n.style.left,10), y: parseInt(n.style.top,10) };
+            persist(); render();
+          };
+          document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+        };
+      });
+      const topzone = document.querySelector(".orgchart-topzone[data-org-top]");
+      if (topzone) topzone.onclick = ()=>{
+        const selId = window.boardSelected;
+        if (!selId) return;
+        const sel = (w.chars||[]).find(x=>x.id===selId); if (!sel) return;
+        if (!sel.groupSuperior || typeof sel.groupSuperior !== "object") sel.groupSuperior = {};
+        delete sel.groupSuperior[orgId];
+        window.boardSelected = null;
+        persist(); render();
+      };
+    }
+    drawBoardLines(board);
+  });
   if (editingTab) bindEdit(c);
   const te = $("tabEdit");
   if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
@@ -1345,9 +1429,9 @@ function renderTabInner(c){
           return html;
         };
         if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
-        // 레벨 방식: 최상위 줄 -> 하급자 줄 -> ... (부부 최상위도 한 줄에 묶인다)
+        // 자유 배치 보드 (2026-11-13) — 자동 레벨 정렬 대신 카드 위치를 직접 저장해서 배치. 롤백: 이 블록을 레벨 렌더링으로 되돌리기 (백업 index-before-orgchart-board.html)
         {
-          const levelCard = (m)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
+          const levelCard = (m, pos)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:140px;cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
           let levels = []; let curLevel = roots.length ? roots : members; let seenLevel = new Set();
           for (let lv=0; lv<10 && curLevel.length; lv++){
             const filtered = curLevel.filter(m=>!seenLevel.has(m.id)); filtered.forEach(m=>seenLevel.add(m.id));
@@ -1355,20 +1439,18 @@ function renderTabInner(c){
             let next = []; filtered.forEach(m=>{ (childrenMap[m.id]||[]).forEach(ch=>{ if (!seenLevel.has(ch.id)) next.push(ch); }); }); curLevel = next;
           }
           if (!levels.length && members.length) levels = [members];
-          /* 조직도 하위 그룹 시범 (2026-11-13) — 같은 레벨 안에서 하위 그룹 소속원은 별도 줄로, 그룹명 라벨 표시. 롤백: 이 블록을 원래 한 줄로 되돌리기 */
-          h += levels.map(lv=>{
-            const main = lv.filter(m=>charInGroup(m, selOrgId));
-            const subs = lv.filter(m=>!charInGroup(m, selOrgId));
-            let out = "";
-            if (main.length) out += `<div class="orgchart-tree" style="justify-content:center">` + main.map(m=>levelCard(m)).join("") + `</div>`;
-            const bySub = {};
-            subs.forEach(m=>{ const gid = (m.groupIds||[]).find(id=>dsel.has(id)); (bySub[gid] = bySub[gid] || []).push(m); });
-            Object.keys(bySub).forEach(gid=>{
-              const gname = (gs.find(g=>g.id===gid) || {}).name || "하위 그룹";
-              out += `<div style="text-align:center;font-size:12px;color:var(--dim);margin-top:10px">${esc(gname)}</div><div class="orgchart-tree" style="justify-content:center">` + bySub[gid].map(m=>levelCard(m)).join("") + `</div>`;
-            });
-            return out;
-          }).join(`<div style="text-align:center;color:var(--line);font-size:18px;line-height:1">│</div>`);
+          const CARD_W = 140, CARD_H = 170, GAP_X = 165, GAP_Y = 195;
+          const posOf = (m)=>{
+            const p = m.orgPos && m.orgPos[selOrgId];
+            if (p && typeof p.x === "number" && typeof p.y === "number") return {x: p.x, y: p.y};
+            let lv = 0, idx = 0;
+            for (let i=0;i<levels.length;i++){ const j = levels[i].findIndex(x=>x.id===m.id); if (j>=0){ lv=i; idx=j; break; } }
+            return {x: 20 + idx*GAP_X, y: 20 + lv*GAP_Y};
+          };
+          const boardW = Math.max(760, ...members.map(m=>posOf(m).x + CARD_W + 20));
+          const boardH = Math.max(480, ...members.map(m=>posOf(m).y + CARD_H + 20));
+          h += `<div class="orgchart-board" style="position:relative;width:100%;height:${boardH}px;min-height:480px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:10px"><svg class="orgchart-lines" style="position:absolute;left:0;top:0;pointer-events:none" width="${boardW}" height="${boardH}"></svg>` + members.map(m=>levelCard(m, posOf(m))).join("") + `</div>`;
+          if (ed) h += `<div class="val" style="font-size:12px">보드 편집 중: 카드를 끌어다 놓으면 위치가 저장돼요. 카드를 한 번 누른 뒤 다른 카드를 누르면 상급자가 바뀌어요. 상급자를 없애려면 카드를 선택한 뒤 위의 '최상위' 칸을 눌러주세요.</div>`;
         }
         // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
         const childGroups = gs.filter(x=>x.parentId===selOrgId);
