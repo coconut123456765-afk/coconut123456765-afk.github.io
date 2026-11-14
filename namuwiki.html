@@ -1335,6 +1335,25 @@ function render(){
         : '<button class="wiki-editbtn" id="tabEdit">편집</button>';
     }
     h += '</div>';
+    // 프로필 상단 조직 내비박스 (Don 2026-11-14: 캐릭터 페이지에도 조직 내비박스, 나무위키식 — 미도리야 페이지 참고)
+    if (!window.expandedNavbox) window.expandedNavbox = new Set(['rest:w1792508654855']);
+    if (!window.collapsedNavbox) window.collapsedNavbox = new Set();
+    const pOrgs = groups.filter(g=>g.kind==="org" && !g.parentId && charInGroup(c, g.id));
+    const pNavOrgs = pOrgs.filter(g=>{ const mm = orgLevels(g.id).members; return mm.length>=2; });
+    const pNavHead = (title, logo)=> '<div class="wiki-navbox2-head">'
+      + (logo ? '<div class="wiki-navbox2-logo"><img src="'+esc(imgM(logo))+'" alt="로고" loading="lazy"></div>' : '')
+      + '<div class="wiki-navbox2-title">'+esc(title)+'</div>'
+      + '<div class="wiki-navbox2-toggle">[ 펼치기 · 접기 ]</div></div>';
+    const pNavCls = (key)=> (window.orgSecEdit || !window.collapsedNavbox.has(key)) ? '' : ' wiki-sec-collapsed';
+    if (pNavOrgs.length){
+      pNavOrgs.forEach(g=>{
+        h += '<div class="wiki-navbox2'+pNavCls(g.id)+'" data-navbox-key="'+esc(g.id)+'">' + pNavHead(g.name, g.logo)
+          + '<div class="wiki-navbox2-body">' + orgBlockHtml(g, false, undefined, true) + '</div></div>';
+      });
+    } else {
+      h += '<div class="wiki-navbox2'+pNavCls('rest:'+curWorld)+'" data-navbox-key="rest:'+esc(curWorld)+'">' + pNavHead("전체 캐릭터", null)
+        + '<div class="wiki-navbox2-body"><div class="wiki-navbox">'+navGridHtml(charList, null)+'</div></div></div>';
+    }
     const tocHtml = '<div class="wiki-toc"><div class="wiki-toc-title"><button data-toc-collapse type="button">목차 <span data-toc-arrow>▼</span></button></div><ol>' + pageTabs.map(([k,n])=>'<li><button class="wiki-toc-link" data-toc-target="sec-'+k+'">'+esc(n)+'</button></li>').join("") + '</ol></div>';
     const savedTab = curTab;
     pageTabs.forEach(([k,n], i)=>{
@@ -1387,7 +1406,7 @@ function render(){
   document.querySelectorAll("[data-toc-collapse]").forEach(b=>b.onclick=()=>{ const box = b.closest(".wiki-toc"); if (!box) return; const closed = box.classList.toggle("collapsed"); const a = box.querySelector("[data-toc-arrow]"); if (a) a.textContent = closed ? "▶" : "▼"; });
   document.querySelectorAll("[data-sec-fold]").forEach(b=>b.onclick=()=>{ const sec = document.getElementById(b.dataset.secFold); if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); b.textContent = closed ? "＞" : "∨"; });
   document.querySelectorAll(".wiki-ovsec > .wiki-sec").forEach(h=>h.onclick=()=>{ const sec = h.parentElement; if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); const a = h.querySelector(".wiki-sec-fold"); if (a) a.textContent = closed ? "＞" : "∨"; });
-  document.querySelectorAll(".wiki-navbox2-head").forEach(hd=>hd.onclick=()=>{ const box = hd.parentElement; if (!box) return; const key = box.dataset.navboxKey; if (key){ if (!window.expandedNavbox) window.expandedNavbox = new Set(); if (window.expandedNavbox.has(key)) window.expandedNavbox.delete(key); else window.expandedNavbox.add(key); } box.classList.toggle("wiki-sec-collapsed"); });
+  document.querySelectorAll(".wiki-navbox2-head").forEach(hd=>hd.onclick=()=>{ const box = hd.parentElement; if (!box) return; const key = box.dataset.navboxKey; const closed = box.classList.toggle("wiki-sec-collapsed"); if (key){ if (!window.expandedNavbox) window.expandedNavbox = new Set(); if (!window.collapsedNavbox) window.collapsedNavbox = new Set(); if (closed){ window.expandedNavbox.delete(key); window.collapsedNavbox.add(key); } else { window.expandedNavbox.add(key); window.collapsedNavbox.delete(key); } } });
   document.querySelectorAll("[data-sec-edit]").forEach(b=>b.onclick=()=>{ editingTab = "all"; editBackup = JSON.parse(JSON.stringify(cur())); render(); });
   // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
