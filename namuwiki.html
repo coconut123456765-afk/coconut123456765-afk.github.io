@@ -414,6 +414,9 @@
   .navbox-links button:hover { border-color:transparent; text-decoration:underline; }
   .wiki-infobox-name-jp { font-size:13px; font-weight:600; opacity:.85; }
   .wiki-infobox-name-en { font-size:14px; font-weight:600; opacity:.9; text-transform:uppercase; letter-spacing:.5px; }
+  .wiki-article-sub { font-size:16px; font-weight:700; margin:18px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--line, #e8e2d9); }
+  .wiki-article-sub:first-child { margin-top:0; }
+  .wiki-article-p { margin:6px 0; line-height:1.7; }
 </style>
 </head>
 <body>
@@ -505,7 +508,7 @@ const WORLDS = {
   ]},
 };
 const TABS = [
-  ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장"],
+  ["profile","프로필"], ["article","캐릭터 설명"], ["illust","일러스트"], ["wardrobe","옷장"],
   ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
 ];
 const REL_KINDS = { family:"가족", friend:"지인" };
@@ -593,7 +596,7 @@ function normalizeStore(){
     w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
     // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
     if (!window.expandedOrgs) window.expandedOrgs = new Set();
-    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (c.subtitle === undefined) c.subtitle = ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (!c.orgSec || typeof c.orgSec !== 'object') c.orgSec = {}; if (c.profileImg === undefined) c.profileImg = ""; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (c.subtitle === undefined) c.subtitle = ""; if (c.article === undefined) c.article = ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (!c.orgSec || typeof c.orgSec !== 'object') c.orgSec = {}; if (c.profileImg === undefined) c.profileImg = ""; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
   });
 }
 function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; }
@@ -1501,6 +1504,19 @@ function relMindmap(c){
   svg += `</svg>`;
   return svg;
 }
+// 캐릭터 설명 본문: [소제목] 줄은 소제목으로, 나머지는 문단으로
+function articleHtml(text){
+  const lines = String(text||"").split("\n");
+  let h = "";
+  lines.forEach(ln=>{
+    const t = ln.trim();
+    if (!t) return;
+    const m = t.match(/^\[([^\]]+)\]$/);
+    if (m){ h += `<div class="wiki-article-sub">${esc(m[1])}</div>`; }
+    else { h += `<p class="wiki-article-p">${linkify(t)}</p>`; }
+  });
+  return h || '<span class="empty">—</span>';
+}
 function renderTabInner(c, orgBlock){
   const ed = (editingTab === curTab || editingTab === "all");
   const p = c.profile;
@@ -1732,6 +1748,10 @@ function renderTabInner(c, orgBlock){
         `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`;
       }).join("")+
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
+  }
+  if (curTab==="article"){
+    if (ed) return `<div class="field"><label>캐릭터 설명 (나무위키식 본문 — [소제목] 줄은 소제목이 돼요)</label><textarea data-k="article" rows="12" placeholder="캐릭터 설명 본문을 적어주세요">${esc(c.article||"")}</textarea></div>`;
+    return `<div class="field"><div class="val">${articleHtml(c.article)}</div></div>`;
   }
   if (curTab==="wardrobe") return wardrobeField(c, ed);
   if (curTab==="weapon") return weaponField(c, ed);
@@ -2165,7 +2185,7 @@ const _addCharBtn = $("addChar"); if (_addCharBtn) _addCharBtn.onclick = ()=>{
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
   if (!w.chars) w.chars = [];
   const id = "c"+Date.now();
-  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:"", article:""});
   curChar=id; window.expandedUngrouped = true; window.expandedOrgs.clear(); persist(); render();
 };
 const _delCharBtn = $("delChar"); if (_delCharBtn) _delCharBtn.onclick = ()=>{
