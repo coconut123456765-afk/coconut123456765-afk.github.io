@@ -418,7 +418,12 @@
   .wiki-article-sub:first-child { margin-top:0; }
   .wiki-article-p { margin:6px 0; line-height:1.7; }
 
-  /* 나무위키식 둘러보기 내비박스 (2026-11-14, Don 스크린샷 2·3장): 초상 카드 격자 — 마이베이비·살룬 개요용, 청량고는 나중에 */
+  /* 화면 짤림(가로 넘침) 수정 (2026-11-14, Don 스크린샷): flex 자식이 내용 너비 때문에 안 줄어들어서 본문이 화면보다 넓어지던 문제 */
+  .wiki-profile-row > * { min-width:0; }
+  main > * { min-width:0; }
+  .wiki-infobox { max-width:100%; }
+  .ptable { max-width:100%; }
+  /* 나무위키식 둘러보기 내비박스 (2026-11-14, Don 스크린샷 2·3장): 초상 카드 격자 — 마이베이비만, 살룬·청량고는 도시에식 링크 목록으로 (Don 2026-11-14) */
   html, body { overflow-x:hidden; }
   img { max-width:100%; }
   .wiki-navbox { border:1px solid var(--line); border-radius:10px; padding:10px; margin:8px 0 14px; background:var(--panel); }
@@ -430,7 +435,7 @@
   .wiki-navcard-img { display:block; width:100%; aspect-ratio:3/4; overflow:hidden; background:var(--panel); }
   .wiki-navcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .wiki-navcard-noimg { display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:var(--dim); }
-  .wiki-navcard-name { display:block; font-size:14px; font-weight:700; color:var(--acc); margin-top:6px; padding:0 4px; }
+  .wiki-navcard-name { display:block; font-size:14px; font-weight:700; color:var(--acc); margin-top:6px; padding:6px 4px; }
   .wiki-navcard-sub { display:block; font-size:12px; color:var(--dim); padding:0 4px; }
   @media (max-width:700px){ .wiki-navgrid { grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px; } body.overview-mode aside { display:none; } }
 </style>
@@ -959,10 +964,12 @@ function render(){
     const img = groupPortrait(c);
     const sub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
     const isSel = c.id===curChar;
+    const theme = (/^#[0-9a-fA-F]{6}$/.test(c.color||"")) ? c.color : "#1a6fb5";
+    const themeText = pickText(theme);
     return '<button type="button" class="wiki-navcard'+(isSel?" on":"")+'" data-c="'+c.id+'">'
       + (img ? '<span class="wiki-navcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>'
              : '<span class="wiki-navcard-img wiki-navcard-noimg">'+esc((c.profile.name||"?").slice(0,1))+'</span>')
-      + '<span class="wiki-navcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'
+      + '<span class="wiki-navcard-name" style="background:'+esc(theme)+';color:'+esc(themeText)+'">'+esc(c.profile.name||"(이름 없음)")+'</span>'
       + (sub ? '<span class="wiki-navcard-sub">'+esc(sub)+'</span>' : '')
       + '</button>';
   };
@@ -1133,7 +1140,7 @@ function render(){
   };
   // 나무위키식 세계관 개요: 문서처럼 — 조직마다 번호 붙은 문단 + 링크 목록 (타일 없음, 전부 펼침)
   const worldOverviewHtml = ()=>{
-    const useCards = (curWorld === "w1792508654855" || curWorld === "hotel"); // 마이베이비·살룬만 카드 내비박스, 청량고는 나중에
+    const useCards = (curWorld === "w1792508654855"); // 마이베이비만 카드 내비박스, 살룬·청량고는 도시에식 링크 목록으로 (Don 2026-11-14)
     const listHtml = (list, gid)=> useCards ? '<div class="wiki-navbox">'+navGridHtml(list, gid)+'</div>' : '<ul class="wiki-linklist">'+list.map(c=>linkItemHtml(c, gid)).join("")+'</ul>';
     const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
     const orgInfo = topOrgs.map(g=>({g, ...orgLevels(g.id)})).filter(x=>x.members.length>=2);
@@ -1654,7 +1661,7 @@ function renderTabInner(c, orgBlock){
     prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
     prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
     prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
-    prow("logo", (ed || !c.logo) ? "" : `<tr><td class="plabel">${esc(dispLabel("logo","로고 / 사인"))}</td><td colspan="3"><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;display:block;"></td></tr>`);
+    prow("logo", (ed || !c.logo) ? "" : `<tr><td class="plabel">${esc(dispLabel("logo","로고 / 사인"))}</td><td colspan="3"><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;width:100%;height:auto;display:block;"></td></tr>`);
     (c.customRows||[]).forEach((r,i)=>{
       if (!r) return;
       const cid = "c:" + (r.cid || ("tmp" + i));
