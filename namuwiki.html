@@ -282,7 +282,8 @@
   .ptable td { overflow-wrap:break-word; }
   .ptable td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
   .ptable td.plabel { background:var(--plabel-bg); font-weight:700; width:24%; }
-  .ptable input { width:100%; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:7px 9px; font-size:15px; box-sizing:border-box; }
+  .ptable input { width:100%; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:7px 9px; font-size:15px; box-sizing:border-box; }
+  .ptable textarea { width:100%; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:7px 9px; font-size:15px; box-sizing:border-box; resize:vertical; field-sizing:content; min-height:35px; }
   .colorchip { display:inline-block; max-width:100%; box-sizing:border-box; overflow:hidden; color:#fff; padding:3px 12px; border-radius:6px; font-size:13px; font-weight:600; white-space:nowrap; }
   .val.overview { font-size:16px; }
   @media (max-width:700px){ .ptable{font-size:14px;} .ptable td{padding:7px 8px;} .bigname{font-size:21px;} .colorchip{padding:2px 8px;font-size:12px;} }
@@ -1519,7 +1520,7 @@ function renderTabInner(c, orgBlock){
     };
     const colorRow = ()=>{
       if (!ed && !c.color) return "";
-      if (ed) return `<tr>${labelCell("color","이미지 컬러","color")}<td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
+      if (ed) return `<tr>${labelCell("color","이미지 컬러","color")}<td colspan="3"><textarea data-k="color" rows="1" placeholder="#0C7BBB">${esc(c.color||"")}</textarea></td></tr>`;
       return `<tr><td class="plabel">${esc(dispLabel("color","이미지 컬러"))}</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
     };
     // 나무위키식 인포박스 (보기 모드): 이미지 → 명대사(테마색) → 이름줄(테마색) → 표
@@ -1588,7 +1589,7 @@ function renderTabInner(c, orgBlock){
     prow("hand", trow("hand","쓰는 손",c.hand,"hand","성별",c.gender,"gender"));
     prow("color", colorRow());
     const wide = (id,label,val,key)=>{
-      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><textarea data-k="${key}" rows="1">${esc(val||"")}</textarea></td></tr>`;
       if (!val) return "";
       return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
