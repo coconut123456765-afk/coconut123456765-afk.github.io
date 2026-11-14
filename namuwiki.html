@@ -386,12 +386,31 @@
   .copytip { display:none; }
   .gal-item { border-radius:8px; }
   .gal-item img { height:auto; object-fit:contain; }
-  .ptable { table-layout:auto; }
-  .ptable td.plabel { background:transparent; width:auto; }
+  .ptable { table-layout:auto; border:2px solid var(--theme, var(--acc)); }
+  .ptable td { border-color:var(--theme, var(--acc)); }
+  .ptable td.plabel { background:var(--theme, var(--acc)); color:var(--theme-text, #fff); width:auto; }
+  .ptable td.plabel:empty { background:transparent; }
   .plabel-pill { font-size:12px; padding:3px 10px; }
   @media (max-width:700px){
     .pair-frame { width:100%; }
   }
+  /* 나무위키 인포박스 (2026-11-14, Don 스크린샷 11장): 캐릭터 테마색 라벨 열 + 이미지→명대사→이름줄→표 */
+  .wiki-infobox { border:2px solid var(--theme, var(--acc)); border-radius:8px; overflow:hidden; margin-bottom:14px; }
+  .wiki-infobox-img img { width:100%; display:block; }
+  .wiki-infobox-quote { text-align:center; font-weight:700; padding:10px 12px; color:var(--theme, var(--acc)); }
+  .wiki-infobox .wiki-infobox-title { border-radius:0; margin:0; background:var(--theme, var(--acc)); color:var(--theme-text, #fff); }
+  .wiki-infobox .ptable { border:0; margin:0; }
+  .wiki-sec-no { color:var(--acc); }
+  .wiki-page-sec > .wiki-sec { display:flex; align-items:baseline; gap:6px; }
+  .wiki-sec-fold { background:none; border:0; color:var(--dim); cursor:pointer; font-size:16px; padding:0; line-height:1; }
+  .wiki-sec-edit { background:none; border:0; color:var(--acc); cursor:pointer; font-size:13px; padding:0; margin-left:auto; }
+  .wiki-page-sec.wiki-sec-collapsed > :not(.wiki-sec) { display:none; }
+  .wiki-weapon { border:1px solid var(--line); margin:12px 0; }
+  .wiki-weapon img { width:100%; display:block; cursor:zoom-in; }
+  .wiki-weapon-name { text-align:center; font-weight:700; color:var(--acc); padding:10px; }
+  .navbox-title { background:var(--acc); color:var(--on-acc); }
+  .navbox-links button { background:none; border:0; color:var(--acc); padding:4px 2px; }
+  .navbox-links button:hover { border-color:transparent; text-decoration:underline; }
 </style>
 </head>
 <body>
@@ -1094,7 +1113,7 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<div class="wiki-sec">'+secNo+'. '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g);
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g);
     });
     topNonOrgs.forEach(g=>{
       const mem = charList.filter(c=>charInGroup(c, g.id));
@@ -1102,7 +1121,7 @@ function render(){
       const hasAny = mem.length || subs.some(s=>charList.some(c=>charInGroup(c, s.id)));
       if (!hasAny) return;
       secNo++;
-      h += '<div class="wiki-sec">'+secNo+'. '+esc(g.name)+'</div>';
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(g.name)+'</div>';
       if (mem.length) h += '<ul class="wiki-linklist">'+mem.map(c=>linkItemHtml(c, g.id)).join("")+'</ul>';
       subs.forEach(s=>{
         const sm = charList.filter(c=>charInGroup(c, s.id));
@@ -1112,7 +1131,7 @@ function render(){
     });
     if (rest.length){
       secNo++;
-      h += '<div class="wiki-sec">'+secNo+'. '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><ul class="wiki-linklist">'+rest.map(c=>linkItemHtml(c, null)).join("")+'</ul>';
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><ul class="wiki-linklist">'+rest.map(c=>linkItemHtml(c, null)).join("")+'</ul>';
     }
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
     return h;
@@ -1247,7 +1266,7 @@ function render(){
     const savedTab = curTab;
     pageTabs.forEach(([k,n], i)=>{
       curTab = k;
-      const secHtml = '<section id="sec-'+k+'" class="wiki-page-sec"><div class="wiki-sec">'+(i+1)+'. '+esc(n)+'</div>' + renderTabInner(c, (g)=>orgBlockHtml(g, editingTab==="all")) + '</section>';
+      const secHtml = '<section id="sec-'+k+'" class="wiki-page-sec"><div class="wiki-sec"><button class="wiki-sec-fold" data-sec-fold="sec-'+k+'" type="button">∨</button><span class="wiki-sec-no">'+(i+1)+'.</span> '+esc(n)+(isMaster ? '<button class="wiki-sec-edit" data-sec-edit type="button">[편집]</button>' : '')+'</div>' + renderTabInner(c, (g)=>orgBlockHtml(g, editingTab==="all")) + '</section>';
       // 프로필 옆에 목차 (PC), 프로필 아래에 목차 (폰) — 나무위키식
       h += (k === "profile") ? '<div class="wiki-profile-row">' + secHtml + '<aside class="wiki-toc-aside">' + tocHtml + '</aside></div>' : secHtml;
     });
@@ -1293,6 +1312,8 @@ function render(){
   document.querySelectorAll("[data-wiki-bottom]").forEach(b=>b.onclick=()=>{ window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"}); });
   document.querySelectorAll("[data-toc-jump]").forEach(b=>b.onclick=()=>{ const t = document.querySelector(".wiki-toc"); if (t){ t.classList.remove("collapsed"); const a = t.querySelector("[data-toc-arrow]"); if (a) a.textContent = "▼"; t.scrollIntoView({behavior:"smooth", block:"start"}); } });
   document.querySelectorAll("[data-toc-collapse]").forEach(b=>b.onclick=()=>{ const box = b.closest(".wiki-toc"); if (!box) return; const closed = box.classList.toggle("collapsed"); const a = box.querySelector("[data-toc-arrow]"); if (a) a.textContent = closed ? "▶" : "▼"; });
+  document.querySelectorAll("[data-sec-fold]").forEach(b=>b.onclick=()=>{ const sec = document.getElementById(b.dataset.secFold); if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); b.textContent = closed ? "＞" : "∨"; });
+  document.querySelectorAll("[data-sec-edit]").forEach(b=>b.onclick=()=>{ editingTab = "all"; editBackup = JSON.parse(JSON.stringify(cur())); render(); });
   // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
   document.querySelectorAll("[data-orgsec-title-org]").forEach(inp=>inp.onchange=()=>{ renameSection(inp.dataset.orgsecTitleOrg, inp.dataset.orgsecTitleOld, inp.value); });
@@ -1350,6 +1371,19 @@ function galleryField(c, label, textKey, imgKey, ed){
   });
   h += '</div>';
   h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-'+imgKey+'" accept="image/*" style="display:none"></label></div>';
+  return h;
+}
+function weaponField(c, ed){
+  if (ed) return galleryField(c, "무기", "weapon", "weaponImgs", ed);
+  const imgs = c.weaponImgs || [];
+  let h = "";
+  if (c.weapon) h += `<div class="val" style="margin-bottom:4px">${linkify(c.weapon)}</div>`;
+  imgs.forEach(g=>{
+    h += `<div class="wiki-weapon"><img src="${esc(imgM(g.img))}" alt="" onclick="openLightbox(this.src)" loading="lazy">`;
+    if (g.title) h += `<div class="wiki-weapon-name">${esc(g.title)}</div>`;
+    h += `</div>`;
+  });
+  if (!c.weapon && !imgs.length) h = `<div class="field"><label>무기</label><div class="val"><span class="empty">—</span></div></div>`;
   return h;
 }
 function wardrobeField(c, ed){
@@ -1467,15 +1501,17 @@ function renderTabInner(c, orgBlock){
   const p = c.profile;
   if (curTab==="profile"){
     const p = c.profile;
+    const theme = (c.color && /^#[0-9a-fA-F]{6}$/.test(String(c.color))) ? c.color : "#1a6fb5";
+    const themeText = pickText(theme);
     const dispLabel = (key,def)=>((c.rowLabels && c.rowLabels[key]) || def);
     const dragHandle = (rowId)=> ed && rowId ? `<span class="draghandle" data-row="${rowId}" style="cursor:grab;touch-action:none;padding:0 4px;margin-right:3px;font-size:14px">≡</span>` : "";
     const labelCell = (key,def,rowId)=>{
-      if (!ed) return `<td class="plabel"><span class="plabel-pill">${esc(dispLabel(key,def))}</span></td>`;
+      if (!ed) return `<td class="plabel">${esc(dispLabel(key,def))}</td>`;
       return `<td class="plabel">${dragHandle(rowId)}<input class="rowlabel" data-cell="${key}" data-def="${esc(def)}" value="${esc(dispLabel(key,def))}" style="width:70px"></td>`;
     };
     const tcell = (label,val,key,rowId)=>{
       if (ed) return `${labelCell(key,label,rowId)}<td><input data-k="${key}" value="${esc(val||"")}"></td>`;
-      return `<td class="plabel"><span class="plabel-pill">${esc(dispLabel(key,label))}</span></td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
+      return `<td class="plabel">${esc(dispLabel(key,label))}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
     };
     const trow = (id,l1,v1,k1,l2,v2,k2)=>{
       if (!ed && !v1 && !v2) return "";
@@ -1484,11 +1520,12 @@ function renderTabInner(c, orgBlock){
     const colorRow = ()=>{
       if (!ed && !c.color) return "";
       if (ed) return `<tr>${labelCell("color","이미지 컬러","color")}<td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
-      return `<tr><td class="plabel"><span class="plabel-pill">${esc(dispLabel("color","이미지 컬러"))}</span></td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
+      return `<tr><td class="plabel">${esc(dispLabel("color","이미지 컬러"))}</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
     };
-    // 나무위키식 인포박스 파란 제목줄 (보기 모드만 — 이름은 여기서 뜸)
-    let h = ed ? `<div class="field"><label>대표 일러스트</label>` : `<div class="wiki-infobox-title">${esc(p.name||"(이름 없음)")}</div><div class="field"><label>대표 일러스트</label>`;
+    // 나무위키식 인포박스 (보기 모드): 이미지 → 명대사(테마색) → 이름줄(테마색) → 표
+    let h = "";
     if (ed){
+      h += `<div class="field"><label>대표 일러스트</label>`;
       const repPreview = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
       if (repPreview) h += `<img id="repPreview" src="${esc(imgM(repPreview))}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
       h += `<input data-k="repImg" value="${esc(c.repImg||"")}" placeholder="대표 이미지 링크 또는 파일 첨부">`;
@@ -1514,36 +1551,20 @@ function renderTabInner(c, orgBlock){
       h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
       if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
       h += `</div></div>`;
-    } else if (c.repImg || c.profileImg || c.illust){
-      const firstIllust = c.profileImg || c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
-      h += `<div class="polaroid"><img src="${esc(imgM(firstIllust))}" alt="대표 일러스트" loading="lazy"></div>`;
-    } else {
-      h += `<div class="val"><span class="empty">—</span></div>`;
-    }
-    h += `</div>`;
-    if (c.logo && !ed){
-      h += `<div class="field"><label>로고 / 사인</label><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
-    }
-    if (ed || c.quote){
-    h += `<div class="field"><label>명대사</label>`;
-    if (ed){
-      h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
-    } else if (c.quote){
-      h += `<div class="quotebanner">${esc(c.quote)}</div>`;
-    } else {
-      h += `<div class="val"><span class="empty">—</span></div>`;
-    }
-    h += `</div>`;
-    }
-    // 이름은 인포박스 제목줄에 이미 뜸 (보기 모드) — 여기선 부제만
-    if (ed){
+      h += `</div>`;
+      h += `<div class="field"><label>명대사</label><input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디"></div>`;
       h += `<div class="field"><label>이름</label><input data-k="profile.name" value="${esc(p.name||"")}">`;
       h += `<div class="field"><label>호칭 (부제, 비우면 직책이 뜹니다)</label><input data-k="subtitle" value="${esc(c.subtitle||"")}"></div>`;
       h += `</div>`;
-    } else if (c.subtitle){
-      h += `<div class="field"><div class="val">${esc(c.subtitle)}</div></div>`;
+      h += `<table class="ptable" style="--theme:${theme};--theme-text:${themeText}">`;
+    } else {
+      const firstIllust = c.profileImg || c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+      h += `<div class="wiki-infobox" style="--theme:${theme};--theme-text:${themeText}">`;
+      if (firstIllust) h += `<div class="wiki-infobox-img"><img src="${esc(imgM(firstIllust))}" alt="대표 일러스트" loading="lazy"></div>`;
+      if (c.quote) h += `<div class="wiki-infobox-quote">${esc(c.quote)}</div>`;
+      h += `<div class="wiki-infobox-title">${esc(p.name||"(이름 없음)")}</div>`;
+      h += `<table class="ptable">`;
     }
-    h += `<table class="ptable">`;
     if (ed){
       h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
     }
@@ -1551,12 +1572,12 @@ function renderTabInner(c, orgBlock){
     const prow = (id, html)=>{ if (html) rows.push({id, tr: html}); };
     prow("nick", trow("nick","별명",p.nickname,"profile.nickname","영문명",p.ename,"profile.ename"));
     prow("names", trow("names","개명 전 이름",c.formerName,"formerName","다른 이름",c.otherNames,"otherNames"));
-    prow("oldNick", (ed || c.oldNick) ? (ed ? `<tr>${labelCell("oldNick","옛 별명","oldNick")}<td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel"><span class="plabel-pill">${esc(dispLabel("oldNick","옛 별명"))}</span></td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "");
+    prow("oldNick", (ed || c.oldNick) ? (ed ? `<tr>${labelCell("oldNick","옛 별명","oldNick")}<td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">${esc(dispLabel("oldNick","옛 별명"))}</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "");
     const starCell = ()=>{
       const derived = deriveStarsign(p.birthday);
       if (ed) return `${labelCell("starsign","별자리","")}<td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
       const v = c.starsign || derived;
-      return `<td class="plabel"><span class="plabel-pill">${esc(dispLabel("starsign","별자리"))}</span></td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
+      return `<td class="plabel">${esc(dispLabel("starsign","별자리"))}</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
     };
     prow("age", trow("age","나이",p.age,"profile.age","혈액형",c.blood,"blood"));
     prow("birth", (ed || p.birthday || c.starsign) ? `<tr>${tcell("생일",p.birthday,"profile.birthday","birth")}${starCell()}</tr>` : "");
@@ -1569,7 +1590,7 @@ function renderTabInner(c, orgBlock){
     const wide = (id,label,val,key)=>{
       if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
       if (!val) return "";
-      return `<tr><td class="plabel"><span class="plabel-pill">${esc(dispLabel(key,label))}</span></td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
+      return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
     };
     prow("pos", wide("pos","지위/직책",c.position,"position"));
     prow("subtitle", wide("subtitle","호칭 (부제)",c.subtitle,"subtitle"));
@@ -1580,6 +1601,7 @@ function renderTabInner(c, orgBlock){
     prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
     prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
     prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
+    prow("logo", (ed || !c.logo) ? "" : `<tr><td class="plabel">${esc(dispLabel("logo","로고 / 사인"))}</td><td colspan="3"><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;display:block;"></td></tr>`);
     (c.customRows||[]).forEach((r,i)=>{
       if (!r) return;
       const cid = "c:" + (r.cid || ("tmp" + i));
@@ -1593,7 +1615,7 @@ function renderTabInner(c, orgBlock){
       } else {
         if (!r.label && !r.value) return;
         if (r.span === "half") rows.push({id: cid, half: tcell(r.label, r.value, "")});
-        else rows.push({id: cid, tr: `<tr><td class="plabel"><span class="plabel-pill">${esc(r.label)}</span></td><td colspan="3">${esc(r.value)}</td></tr>`});
+        else rows.push({id: cid, tr: `<tr><td class="plabel">${esc(r.label)}</td><td colspan="3">${esc(r.value)}</td></tr>`});
       }
     });
     const orderIdx = {};
@@ -1615,6 +1637,7 @@ function renderTabInner(c, orgBlock){
     }
     if (buf) h += `<tr>${buf.half}<td class="plabel"></td><td></td></tr>`;
     h += `</table>`;
+    if (!ed) h += `</div>`; // 인포박스 닫기
     if (ed){
       h += `<div style="margin-top:8px"><button type="button" class="hdr-btn" id="crowAdd">＋ 행 추가</button></div>`;
     }
@@ -1705,7 +1728,7 @@ function renderTabInner(c, orgBlock){
       `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
   }
   if (curTab==="wardrobe") return wardrobeField(c, ed);
-  if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
+  if (curTab==="weapon") return weaponField(c, ed);
   if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
   const t = ""+(c.custom||"");
   if (t.length > 160){
