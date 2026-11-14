@@ -324,16 +324,61 @@
   .sample-note { font-size:12px; color:var(--warm); margin-bottom:12px; }
   .empty { color:var(--dim); }
   @media (max-width:700px){ main{flex-direction:column;} aside{width:auto;border-right:0;border-bottom:1px solid var(--line);} section{padding:16px;} .row4{grid-template-columns:1fr 1fr;} .row3{grid-template-columns:1fr;} .field input, .field textarea, .field select{font-size:16px;} .worlds button, .tabs button, .chars button{padding:11px 16px;} header{padding:14px 16px;} header h1{font-size:18px;} .brand{font-size:19px; letter-spacing:1px;} }
+  /* 나만의 나무위키 (2026-11-14): 색·테마가 아니라 나무위키 껍데기 통째로 — 헤더 로고+검색, 사이드바 링크 목록, 문서식 개요 */
+  .brand { font-family:inherit; font-size:20px; font-weight:800; letter-spacing:0; }
+  .brand a { color:var(--acc); text-decoration:none; }
+  .brand .b-colon { color:var(--acc); }
+  .brand .b-don { border-bottom:0; padding-bottom:0; }
+  .wiki-search { display:flex; flex:1; max-width:420px; }
+  .wiki-search input { flex:1; min-width:0; border:1px solid var(--line); border-right:0; border-radius:6px 0 0 6px; padding:8px 12px; font-size:14px; background:var(--input-bg); color:var(--txt); }
+  .wiki-search button { border:1px solid var(--acc); background:var(--acc); color:var(--on-acc); border-radius:0 6px 6px 0; padding:8px 14px; font-size:14px; font-weight:700; cursor:pointer; }
+  .hdr-link { background:none; border:0; color:var(--txt); font-size:14px; cursor:pointer; padding:6px 4px; }
+  .hdr-link:hover { color:var(--acc); text-decoration:underline; }
+  aside { width:220px; }
+  section { max-width:1000px; }
+  body.overview-mode aside { display:block; }
+  body.overview-mode section { max-width:1000px; margin:0; width:auto; }
+  .wiki-navmenu { margin-bottom:18px; }
+  .wiki-navmenu h4, .wiki-navchars h4 { font-size:13px; color:var(--dim); margin:0 0 6px; font-weight:700; }
+  .wiki-navmenu .worlds { display:block; margin-left:0; }
+  .wiki-navmenu .worlds button { display:block; width:100%; text-align:left; padding:5px 4px; }
+  .wiki-navmenu .worlds button.on { border-bottom:0; }
+  .wiki-navmenu .worlds button:hover { text-decoration:underline; }
+  .wiki-navorg { margin-bottom:10px; }
+  .wiki-navorg-name { font-size:13px; font-weight:700; padding:4px; border-bottom:1px solid var(--line); margin-bottom:4px; }
+  .wiki-navsec-name { font-size:12px; color:var(--dim); padding:4px 4px 0; }
+  .wiki-navlist { list-style:none; margin:0; padding:0; }
+  .wiki-navlist li { padding:0; }
+  .chars .wiki-navlink { display:block; width:100%; text-align:left; background:none; border:0; color:var(--acc); font-size:14px; padding:3px 4px; cursor:pointer; }
+  .chars .wiki-navlink:hover { text-decoration:underline; }
+  .chars .wiki-navlink.on { font-weight:700; }
+  .wiki-linklist { list-style:none; margin:6px 0 8px; padding:0; }
+  .wiki-linklist li { padding:4px 0; border-bottom:1px solid var(--line); }
+  .wiki-link { background:none; border:0; color:var(--acc); font-size:15px; cursor:pointer; padding:0; }
+  .wiki-link:hover { text-decoration:underline; }
+  .wiki-link.on { font-weight:700; }
+  .wiki-linksub { font-size:13px; color:var(--dim); margin-left:6px; }
+  .wiki-linklist .gcard-sub-input { width:170px; display:inline-block; vertical-align:middle; margin-left:8px; }
+  .wiki-editbtn { border:0; background:none; box-shadow:none; color:var(--acc); padding:4px 8px; border-radius:0; }
+  .wiki-editbtn:hover { text-decoration:underline; color:var(--acc); border-color:transparent; }
+  #worldsMobile { display:none; }
+  @media (max-width:700px){
+    aside { display:none; }
+    #worldsMobile { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+    #worldsMobile button { background:none; border:0; color:var(--txt); font-size:14px; padding:6px 2px; cursor:pointer; }
+    #worldsMobile button.on { color:var(--acc); border-bottom:2px solid var(--acc); font-weight:700; }
+    .wiki-search { max-width:none; order:3; flex-basis:100%; }
+  }
 </style>
 </head>
 <body>
 <header>
-    <h1 class="brand">Dossier<span class="b-colon">:</span><span class="b-don">Don</span></h1>
-  <div class="worlds" id="worlds"></div>
-  <span id="syncStatus" style="font-size:12px;color:var(--dim);margin-right:8px;">동기화 확인 중…</span>
-  <button id="authBtn" class="hdr-btn">마스터 로그인</button>
-  <button id="settingsBtn" class="hdr-btn">설정</button>
-  <button class="hdr-btn" onclick="location.href='index.html'" title="오늘 바꾸기 전, 우리만의 도시에 위키 디자인으로 보기">📖 도시에 모드</button>
+  <h1 class="brand"><a href="#" id="brandHome">Dossier:Don</a></h1>
+  <div class="wiki-search"><input id="wikiSearch" type="search" placeholder="캐릭터 검색" autocomplete="off"><button id="wikiSearchBtn" type="button">검색</button></div>
+  <span id="syncStatus" style="font-size:12px;color:var(--dim);">동기화 확인 중…</span>
+  <button id="authBtn" class="hdr-link">마스터 로그인</button>
+  <button id="settingsBtn" class="hdr-link">설정</button>
+  <button class="hdr-link" onclick="location.href='index.html'" title="오늘 바꾸기 전, 우리만의 도시에 위키 디자인으로 보기">📖 도시에 모드</button>
 </header>
 <div id="settingsModal" class="modal" style="display:none">
   <div class="modal-panel">
@@ -375,10 +420,11 @@
 </div>
 <main>
   <aside>
-    <div class="chars-head"><h3>캐릭터</h3><div class="chars-tools"><button id="addChar" title="캐릭터 추가">＋</button><button id="delChar" title="현재 캐릭터 삭제">－</button></div></div>
-    <div class="chars" id="chars"></div>
+    <div class="wiki-navmenu"><h4>세계관</h4><div class="worlds" id="worlds"></div></div>
+    <div class="wiki-navchars"><h4>캐릭터</h4><div class="chars" id="chars"></div></div>
   </aside>
   <section>
+    <div id="worldsMobile"></div>
     <div class="sample-note" id="sampleNote" style="display:none">※ 이 캐릭터는 구조 확인용 샘플이에요. 오늘 밤에 지우고 Don의 캐릭터로 채워요.</div>
     <div id="body"></div>
   </section>
@@ -738,9 +784,11 @@ function render(){
     curWorld = validWorlds.length ? validWorlds[0][0] : null;
     curChar = null;
   }
-  $("worlds").innerHTML = validWorlds.map(([k,w])=>
+  const worldsHtml = validWorlds.map(([k,w])=>
     `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
-  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{
+  $("worlds").innerHTML = worldsHtml;
+  const wm = $("worldsMobile"); if (wm) wm.innerHTML = worldsHtml;
+  document.querySelectorAll("#worlds button, #worldsMobile button").forEach(b=>b.onclick=()=>{
     cancelEdit();
     curWorld=b.dataset.w;
     curChar=null; // 세계관 개요 페이지로 (나무위키식, 2026-11-14)
@@ -830,17 +878,17 @@ function render(){
     return html + '</div>';
   };
   // 나무위키식 세계관 개요: 조직 타일 + 수동 섹션 (2026-11-14 2차) — 타일을 눌러 펼치고, 섹션 칸은 안에서 직접 고침. 롤백: index-before-namuwiki.html
-  const orgCardHtml = (c, gid, secTitle)=>{
-    const img = groupPortrait(c);
-    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
-    const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+  // 나무위키식 링크 목록: 카드 대신 이름 링크 + 부제 (섹션 편집 때는 이름 옆에 섹션 칸)
+  const linkItemHtml = (c, gid, extra)=>{
+    const sub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
     const isSel = c.id===curChar;
-    const selColor = isSel ? (/^#[0-9a-fA-F]{6}$/.test(c.color||"") ? c.color : worldAccent()) : "";
-    const selStyle = selColor ? ' style="background:'+esc(selColor)+';color:'+pickText(selColor)+';border-color:'+esc(selColor)+'"' : "";
-    const secInput = (secTitle !== null && secTitle !== undefined && window.orgSecEdit) ? '<input class="gcard-sub-input" data-orgsec-char="'+c.id+'" data-orgsec-gid="'+esc(gid)+'" value="'+esc(secTitle)+'" placeholder="섹션 이름 (비우면 미지정)">' : "";
-    return '<div class="gcard-wrap"><button class="gcard '+(isSel?"on":"")+'" data-c="'+c.id+'"'+selStyle+'>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+secInput+'</div>';
+    return '<li><button class="wiki-link '+(isSel?"on":"")+'" data-c="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</button>'+(sub ? '<span class="wiki-linksub">'+esc(sub)+'</span>' : '')+(extra||'')+'</li>';
   };
-  const orgGridHtml = (list, gid, secOf)=> '<div class="wiki-orggrid">'+list.map(c=>orgCardHtml(c, gid, secOf ? secOf(c) : null)).join("")+'</div>';
+  const orgCardHtml = (c, gid, secTitle)=>{
+    const secInput = (secTitle !== null && secTitle !== undefined && window.orgSecEdit) ? ' <input class="gcard-sub-input" data-orgsec-char="'+c.id+'" data-orgsec-gid="'+esc(gid)+'" value="'+esc(secTitle)+'" placeholder="섹션 이름 (비우면 미지정)">' : "";
+    return linkItemHtml(c, gid, secInput);
+  };
+  const orgGridHtml = (list, gid, secOf)=> '<ul class="wiki-linklist">'+list.map(c=>orgCardHtml(c, gid, secOf ? secOf(c) : null)).join("")+'</ul>';
   const orgDescIds = (orgId)=>{
     const d = new Set([orgId]);
     const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ d.add(x.id); collect(x.id); }); };
@@ -996,7 +1044,7 @@ function render(){
           h += '<div class="wiki-rowhead">'+esc(title)+'</div>';
         }
         if (secMembers.length) h += orgGridHtml(secMembers, g.id, (m)=>effSecOf(m, g.id, levels));
-        else if (edit) h += '<div class="wiki-sublabel">비어 있음 — 카드 아래 칸에 이 섹션 이름을 적으면 여기로 와요</div>';
+        else if (edit) h += '<div class="wiki-sublabel">비어 있음 — 이름 옆 칸에 이 섹션 이름을 적으면 여기로 와요</div>';
       });
       if (edit){
         h += '<div class="wiki-addsec"><input data-orgsec-new="'+g.id+'" placeholder="새 섹션 이름"><button data-orgsec-add="'+g.id+'" type="button">섹션 추가</button></div>';
@@ -1004,83 +1052,94 @@ function render(){
     }
     return h + '</div>';
   };
+  // 나무위키식 세계관 개요: 문서처럼 — 조직마다 번호 붙은 문단 + 링크 목록 (타일 없음, 전부 펼침)
   const worldOverviewHtml = ()=>{
     const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
     const orgInfo = topOrgs.map(g=>({g, ...orgLevels(g.id)})).filter(x=>x.members.length>=2);
+    const topNonOrgs = groups.filter(g=>g.kind!=="org" && !g.parentId);
     const shown = new Set();
     orgInfo.forEach(x=>x.members.forEach(m=>shown.add(m.id)));
+    topNonOrgs.forEach(g=>{
+      charList.filter(c=>charInGroup(c, g.id)).forEach(m=>shown.add(m.id));
+      groups.filter(x=>x.parentId===g.id).forEach(s=>charList.filter(c=>charInGroup(c, s.id)).forEach(m=>shown.add(m.id)));
+    });
     const rest = charList.filter(c=>!shown.has(c.id));
     let h = '<div class="wiki-head"><div class="wiki-title">'+esc(cw.name)+'</div>';
-    if (isMaster) h += '<button class="wiki-editbtn" data-orgsec-edit-toggle>'+(window.orgSecEdit ? "✓ 편집 끝" : "✏️ 조직도 편집")+'</button>';
+    if (isMaster) h += '<button class="wiki-editbtn" data-orgsec-edit-toggle>'+(window.orgSecEdit ? "✓ 편집 끝" : "조직도 편집")+'</button>';
     h += '</div>';
-    if (window.orgSecEdit) h += '<div style="font-size:12px;color:var(--dim);margin-bottom:8px">섹션 이름을 고치고, ▲▼로 순서를 바꾸고, 카드 아래 칸에 섹션 이름을 적으면 사람이 옮겨져요.</div>';
-    // 조직 타일 (눌러서 펼침)
-    if (orgInfo.length){
-      h += '<div class="org-grid">' + orgInfo.map(x=>{
-        const expanded = window.expandedOrgs.has(x.g.id);
-        const tileImg = x.g.logo || "";
-        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"></span>' : '<span class="org-tile-img"></span>';
-        return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+x.g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(x.g.name)+'</span></button>';
-      }).join("") + '</div>';
-      orgInfo.forEach(x=>{
-        if (!window.expandedOrgs.has(x.g.id)) return;
-        h += orgBlockHtml(x.g);
+    if (window.orgSecEdit) h += '<div style="font-size:12px;color:var(--dim);margin-bottom:8px">섹션 이름을 고치고, ▲▼로 순서를 바꾸고, 이름 옆 칸에 섹션 이름을 적으면 사람이 옮겨져요.</div>';
+    let secNo = 0;
+    orgInfo.forEach(x=>{
+      secNo++;
+      h += '<div class="wiki-sec">'+secNo+'. '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g);
+    });
+    topNonOrgs.forEach(g=>{
+      const mem = charList.filter(c=>charInGroup(c, g.id));
+      const subs = groups.filter(x=>x.parentId===g.id);
+      const hasAny = mem.length || subs.some(s=>charList.some(c=>charInGroup(c, s.id)));
+      if (!hasAny) return;
+      secNo++;
+      h += '<div class="wiki-sec">'+secNo+'. '+esc(g.name)+'</div>';
+      if (mem.length) h += '<ul class="wiki-linklist">'+mem.map(c=>linkItemHtml(c, g.id)).join("")+'</ul>';
+      subs.forEach(s=>{
+        const sm = charList.filter(c=>charInGroup(c, s.id));
+        if (!sm.length) return;
+        h += '<div class="wiki-rowhead">'+esc(s.name)+'</div><ul class="wiki-linklist">'+sm.map(c=>linkItemHtml(c, s.id)).join("")+'</ul>';
       });
+    });
+    if (rest.length){
+      secNo++;
+      h += '<div class="wiki-sec">'+secNo+'. '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><ul class="wiki-linklist">'+rest.map(c=>linkItemHtml(c, null)).join("")+'</ul>';
     }
-    if (rest.length) h += '<div class="wiki-sec" id="wiki-rest">'+(orgInfo.length ? "미분류" : "전체 캐릭터")+'</div>' + orgGridHtml(rest, null, null);
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
     return h;
   };
+  // 나무위키식 사이드바: 보기 전용 링크 목록 — 조직·섹션별 이름 링크 (카드·타일 없음, 목록 수정은 도시에 모드에서)
+  const navLink = (c)=> '<li><button class="wiki-navlink '+(c.id===curChar?"on":"")+'" data-c="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</button></li>';
   let charsHtml = "";
   if (!groups.length){
-    charsHtml = gridHtml(charList, null);
+    charsHtml = '<ul class="wiki-navlist">'+charList.map(c=>navLink(c)).join("")+'</ul>';
   } else {
-    const topGroups = groups.filter(g=>!g.parentId);
-    const topOrgs = topGroups.filter(g=>g.kind==="org");
-    const topNonOrgs = topGroups.filter(g=>g.kind!=="org");
-    // 조직은 긴 바 대신 갤러리 타일(문양 위·이름 아래, 선택 시 파랑)로, 그 자리에서 펼침
-    const groupedIdsPre = new Set(groups.map(g=>g.id));
-    const ungroupedPre = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIdsPre.has(id)));
-    if (topOrgs.length){
-      charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
-        const expanded = window.expandedOrgs.has(g.id);
-        const tileImg = g.logo || "";
-        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"></span>' : '<span class="org-tile-img"></span>';
-        return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
-      }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
-      // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
-      topOrgs.forEach(g=>{
-        if (!window.expandedOrgs.has(g.id)) return;
-        const children = groups.filter(x=>x.parentId===g.id);
-        const descendantIds = new Set();
-        const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ descendantIds.add(x.id); collect(x.id); }); };
-        collect(g.id);
-        const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
-        charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>' + (g.logo ? '<div style="text-align:center;margin:8px 0 12px"><img src="'+esc(imgM(g.logo))+'" alt="" style="max-width:220px;width:100%;border-radius:12px;display:block;margin:0 auto" loading="lazy"></div>' : '');
-        if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
-        if (isMaster && window.listEdit){
-          if (direct.length) charsHtml += gridHtml(direct, g.id);
-          children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
-        } else {
-          // 보기 모드: 개요와 같은 섹션 조직도 (2026-11-14 일체화) — 평면 그리드 대신 섹션/반 탭
-          charsHtml += orgBlockHtml(g, false, false);
-        }
-        if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
-        charsHtml += '</div>';
+    const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
+    const topNonOrgs = groups.filter(g=>g.kind!=="org" && !g.parentId);
+    const orgNav = (g)=>{
+      const {members, levels} = orgLevels(g.id);
+      const d = orgDescIds(g.id);
+      const directOnly = members.filter(m=>charInGroup(m, g.id) && ![...d].some(id=>id!==g.id && charInGroup(m, id)));
+      const subs = groups.filter(x=>x.parentId===g.id && members.some(m=>charInGroup(m, x.id)));
+      let h = '<div class="wiki-navorg"><div class="wiki-navorg-name">'+esc(g.name)+'</div>';
+      if (!directOnly.length && subs.length){
+        subs.forEach(s=>{
+          const mem = members.filter(m=>charInGroup(m, s.id));
+          if (!mem.length) return;
+          h += '<div class="wiki-navsec-name">'+esc(s.name)+'</div><ul class="wiki-navlist">'+mem.map(c=>navLink(c)).join("")+'</ul>';
+        });
+      } else {
+        const order = secOrderOf(g.id, levels, members);
+        order.forEach(title=>{
+          const secMembers = members.filter(m=>effSecOf(m, g.id, levels)===title);
+          if (!secMembers.length) return;
+          h += '<div class="wiki-navsec-name">'+esc(title)+'</div><ul class="wiki-navlist">'+secMembers.map(c=>navLink(c)).join("")+'</ul>';
+        });
+      }
+      return h + '</div>';
+    };
+    topOrgs.forEach(g=>{ charsHtml += orgNav(g); });
+    topNonOrgs.forEach(g=>{
+      const mem = charList.filter(c=>charInGroup(c, g.id));
+      const subs = groups.filter(x=>x.parentId===g.id);
+      let h = '<div class="wiki-navorg"><div class="wiki-navorg-name">'+esc(g.name)+'</div>';
+      if (mem.length) h += '<ul class="wiki-navlist">'+mem.map(c=>navLink(c)).join("")+'</ul>';
+      subs.forEach(s=>{
+        const sm = charList.filter(c=>charInGroup(c, s.id));
+        if (!sm.length) return;
+        h += '<div class="wiki-navsec-name">'+esc(s.name)+'</div><ul class="wiki-navlist">'+sm.map(c=>navLink(c)).join("")+'</ul>';
       });
-    }
-    topNonOrgs.forEach(g=>{ charsHtml += renderGroupBlock(g); });
+      charsHtml += h + '</div>';
+    });
     const groupedIds = new Set(groups.map(g=>g.id));
     const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
-    if (ungrouped.length){
-      const ungOn = !!window.expandedUngrouped;
-      if (!topOrgs.length){ charsHtml += '<div class="group-block"><div class="group-head"><button class="group-org" data-ungrouped="1">'+(ungOn?"▾ ":"▸ ")+'미분류 ('+ungrouped.length+')</button></div></div>'; }
-      if (ungOn) charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
-    }
-  }
-  if (isMaster){
-    charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span>'+(window.listEdit && !(cw && cw.name === "마이베이비") ? '<span style="margin-left:12px"><input id="org-new-name" placeholder="새 조직 이름" style="width:140px"><button id="org-new-btn" type="button">조직 추가</button></span>' : '')+'</div>' + charsHtml;
+    if (ungrouped.length) charsHtml += '<div class="wiki-navorg"><div class="wiki-navorg-name">미분류</div><ul class="wiki-navlist">'+ungrouped.map(c=>navLink(c)).join("")+'</ul></div>';
   }
   $("chars").innerHTML = charsHtml;
   const leb = $("listEditBtn"); if (leb) leb.onclick=()=>{ window.listEdit = !window.listEdit; render(); };
@@ -1091,6 +1150,7 @@ function render(){
   document.querySelectorAll("#chars [data-gtile-char]").forEach(b=>b.onclick=()=>{ const ch = cw.chars.find(x=>x.id===b.dataset.gtileChar); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; const gid = b.dataset.gtileGid; if (ch.groupIds.includes(gid)) ch.groupIds = ch.groupIds.filter(id=>id!==gid); else ch.groupIds.push(gid); persist(); render(); });
   document.querySelectorAll("#chars [data-gsub-char]").forEach(inp=>inp.onchange=()=>{ const ch = cw.chars.find(x=>x.id===inp.dataset.gsubChar); if (!ch) return; if (!ch.groupSubs) ch.groupSubs = {}; const gid = inp.dataset.gsubGid; if (gid === "__all" || gid === "__ungrouped"){ ch.position = inp.value.trim(); } else { if (inp.value.trim()) ch.groupSubs[gid] = inp.value.trim(); else delete ch.groupSubs[gid]; } persist(); render(); });
   document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
+  applySearchFilter(); // 검색어가 있으면 사이드바 필터 유지
   // 드래그: 순서만 바꾼다 (상급자는 건드리지 않음, 트리 동급자 안에서도 순서만)
   document.querySelectorAll("#chars [data-drag]").forEach(h=>{
     h.onpointerdown = (e)=>{
@@ -1157,7 +1217,7 @@ function render(){
     if (isMaster){
       h += editingTab === "all"
         ? '<div style="display:flex;gap:6px"><button class="hdr-btn acc" id="tabSave">저장</button><button class="hdr-btn" id="tabCancel">취소</button></div>'
-        : '<button class="wiki-editbtn" id="tabEdit">✏️ 수정</button>';
+        : '<button class="wiki-editbtn" id="tabEdit">편집</button>';
     }
     h += '</div>';
     const tocHtml = '<div class="wiki-toc"><div class="wiki-toc-title"><button data-toc-collapse type="button">목차 <span data-toc-arrow>▼</span></button></div><ol>' + pageTabs.map(([k,n])=>'<li><button class="wiki-toc-link" data-toc-target="sec-'+k+'">'+esc(n)+'</button></li>').join("") + '</ol></div>';
@@ -2047,7 +2107,7 @@ function fileToDataURL(file, maxW, quality){
   });
 }
 
-$("addChar").onclick = ()=>{
+const _addCharBtn = $("addChar"); if (_addCharBtn) _addCharBtn.onclick = ()=>{
   cancelEdit();
   const w = store[curWorld];
   if (!w){ alert("세계관을 먼저 선택하세요."); return; }
@@ -2056,7 +2116,7 @@ $("addChar").onclick = ()=>{
   w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
   curChar=id; window.expandedUngrouped = true; window.expandedOrgs.clear(); persist(); render();
 };
-$("delChar").onclick = ()=>{
+const _delCharBtn = $("delChar"); if (_delCharBtn) _delCharBtn.onclick = ()=>{
   const w = store[curWorld], c = cur();
   if (!c) return;
   if (!confirm("\""+(c.profile.name||"(이름 없음)")+"\" 캐릭터를 삭제할까요?")) return;
@@ -2074,6 +2134,44 @@ document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
 document.getElementById("themeLightBtn").onclick = ()=>setTheme("light");
 const modal = document.getElementById("settingsModal");
 document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); renderBackupList(); modal.style.display = "flex"; };
+// 나무위키식 검색: 사이드바 캐릭터 링크를 필터하고, 엔터는 첫 번째 결과로
+function applySearchFilter(){
+  const inp = document.getElementById("wikiSearch");
+  const q = inp ? inp.value.trim().toLowerCase() : "";
+  const chars = document.getElementById("chars");
+  if (!chars) return;
+  chars.querySelectorAll(".wiki-navorg").forEach(org=>{
+    let anyVisible = false;
+    org.querySelectorAll(".wiki-navlist li").forEach(li=>{
+      const btn = li.querySelector(".wiki-navlink");
+      const show = !q || (btn && btn.textContent.toLowerCase().includes(q));
+      li.style.display = show ? "" : "none";
+      if (show) anyVisible = true;
+    });
+    org.style.display = anyVisible ? "" : "none";
+  });
+  chars.querySelectorAll(":scope > .wiki-navlist li").forEach(li=>{
+    const btn = li.querySelector(".wiki-navlink");
+    li.style.display = (!q || (btn && btn.textContent.toLowerCase().includes(q))) ? "" : "none";
+  });
+}
+function openFirstSearchMatch(){
+  const chars = document.getElementById("chars");
+  if (!chars) return;
+  const vis = [...chars.querySelectorAll(".wiki-navlink")].find(b=>{
+    const li = b.closest("li"); if (!li || li.style.display === "none") return false;
+    const org = b.closest(".wiki-navorg"); if (org && org.style.display === "none") return false;
+    return true;
+  });
+  if (vis){ cancelEdit(); curChar = vis.dataset.c; curTab = "profile"; render(); }
+}
+const wikiSearch = document.getElementById("wikiSearch");
+if (wikiSearch){
+  wikiSearch.addEventListener("input", ()=>applySearchFilter());
+  wikiSearch.addEventListener("keydown", (e)=>{ if (e.key === "Enter"){ e.preventDefault(); openFirstSearchMatch(); } });
+}
+const wsb = document.getElementById("wikiSearchBtn"); if (wsb) wsb.onclick = ()=>openFirstSearchMatch();
+const bh = document.getElementById("brandHome"); if (bh) bh.onclick = (e)=>{ e.preventDefault(); cancelEdit(); curChar = null; curTab = "profile"; render(); window.scrollTo({top:0}); };
 // 마스터 로그인 / 로그아웃
 const loginModal = document.getElementById("loginModal");
 document.getElementById("authBtn").onclick = ()=>{
