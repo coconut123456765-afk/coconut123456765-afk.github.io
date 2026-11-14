@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나무위키 캐릭터 설명 이식 도우미 (어시스턴트용)</title>
+<style>
+  body{font-family:'Noto Sans KR',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background:#f6f3fa;color:#2a1f1f}
+  h1{font-size:20px} .card{background:#fff;border:1px solid #ddd6e8;border-radius:12px;padding:16px;margin:12px 0}
+  button{background:#7b5aa6;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+  button:disabled{background:#bbb} input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd6e8;border-radius:8px;font-size:15px;margin:6px 0}
+  .ok{color:#2e7d32;font-weight:700} .err{color:#c0392b;font-weight:700}
+  .hint{font-size:13px;color:#9c8a84}
+  li{margin:4px 0}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<h1>나무위키 캐릭터 설명 이식 도우미 (어시스턴트용)</h1>
+<p class="hint">마이베이비의 아나스타샤·돈키호테 개요 뒤에, 나무위키에서 가져온 순수 캐릭터 설명을 덧붙여요. Don이 올린 개요 문장·이미지·다른 필드는 그대로 두고, 개요 뒤에만 덧붙입니다. 출처(CC BY-NC-SA 2.0 KR)도 함께 적어요. 비밀번호는 이 브라우저에서만 쓰고, 아냐한테는 안 보내요. 이 페이지는 어시스턴트 계정(dossier@don.local)으로도 쓸 수 있어요.</p>
+<div id="status" class="card">불러오는 중…</div>
+
+<div id="loginCard" class="card" style="display:none">
+  <h3>어시스턴트 로그인</h3>
+  <input id="loginEmail" type="email" value="dossier@don.local">
+  <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="loginBtn">로그인</button>
+  <p id="loginErr" class="err" style="display:none"></p>
+</div>
+
+<div id="previewCard" class="card" style="display:none">
+  <h3>바꿀 내용 미리보기</h3>
+  <p id="scanInfo" class="hint"></p>
+  <ul id="previewList"></ul>
+  <button id="applyBtn">적용하기</button>
+</div>
+
+<div id="doneCard" class="card" style="display:none"></div>
+
+<script>
+const WRITER_EMAILS = ["coconut123456765@gmail.com", "dossier@don.local"];
+const WORLD_ID = "w1792508654855";
+const MARKER = "나무위키에서 가져온 캐릭터 설명";
+const firebaseConfig = {
+  apiKey: <redacted>
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const $ = id => document.getElementById(id);
+function setStatus(t){ $("status").textContent = t; }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+const TEXTS = {
+"c-anya-1792513789034": `— 나무위키에서 가져온 캐릭터 설명 —
+출처: 나무위키 (CC BY-NC-SA 2.0 KR)
+원문: https://namu.wiki/w/아나스타샤(아이돌%20마스터%20신데렐라%20걸즈)
+
+[개요]
+"카크 바스 조부트? ……… 당신의 이름은? 이라고 물었습니다. 성함은? …○○, 이군요. 메냐 조부트 아냐. 아냐는, 그… 닉네임입니다. 저는 아나… 아나스타샤입니다."
+홋카이도 에어리어가 해금되며 추가된 은발벽안의 러시아-일본 혼혈 아이돌이다.
+
+[외모]
+위로 치켜 올라간 속눈썹이 특징이며 특히 눈동자 표현에 공을 많이 들인 디자인이 돋보인다. 혼혈이기는 하나, 희고 고운 피부와 벽안 때문에 일본인보다는 러시아인에 가까우며 첫인사부터 러시아어로 한다. 눈매도 날카롭고 특히 특훈 전의 기본 레어카드에 나오는 일러스트에서는 방한 털코트까지 입고 있으니 은여우와 닮은 인상이다. 거기다 반이 추운 나라 러시아인 지라 추위에 강하다.
+미야모토 프레데리카나 캐시 그라함과는 달리 진짜 러시아어를 할 줄 아는 스펙을 지닌 아이돌이기도 하다.
+
+[성격]
+겉모습으로는 쿨한 이미지의 미소녀지만, 실제적으로 성격은 소극적이고 상냥하며, 남에게 맞춰주는 타입이다. 데레스테의 개인 커뮤 4를 보면 더 확연하게 알 수 있다. 그로 인해 남들이 원하는 '쿨하고 멋진 이미지'의 자신을 연기하려고 러시아어로 말하고 통역하는 듯한 모습을 보인다.
+존댓말 캐릭터이기도 한데, 동갑인 미오에게나 자신보다 1살 어린 란코에게도 존댓말을 하는 것으로 확인되었다.
+별(즈베즈다, Звезда, Zvezda)을 굉장히 좋아한다. 천체관측이 취미이며 대사들을 보면 유독 별이나 하늘에 대한 언급이 많다. 대사를 보면 유독 '파파' 언급을 많이 해서 파더콘 속성도 있는 듯하다.
+아직 일본어가 서투른 탓에 일단 러시아어로 말했다가 '…아니 그건 ~입니다' 이런 식으로 고쳐 말하는 대사가 많다. 자기 스스로 별명을 아냐(アーニャ «Аня»)라고 말했다.
+본인의 앨범 드라마 트랙에서는 칸자키 란코, 마에카와 미쿠, 타카가키 카에데 같은 친구들을 통해 잘못된 일본어 지식을 주입받고 있다는 것이 밝혀지기도 했다.
+
+[배경]
+홋카이도 출신이지만 10살까지는 러시아에서 살았다고 한다. 일본어에 서투른 이유도 이 때문이다. 데레스테 개인 커뮤니티 1화에서 프로듀서가 아이돌로 섭외할 때 자신은 외국인이 아니라 혼혈 일본인이라고 직접 언급한다. 그러나 성장의 근간인 유년시절을 러시아에서 보낸 만큼 본질은 아무래도 러시아에 가까울 수밖에 없다. 개인 커뮤에서도 밝힌 것을 미루어 보아 외모와 자아 정체성에 대한 격차를 의식하는 듯하다. Nothing but You 이벤트 스토리와 보상 카드 스토리에서도 러시아에선 일본인, 일본에선 러시아 아이로 불렸다며 아냐가 품고 있는 이런 정체성에 관한 고민이 언급된다.
+
+[캐릭터성의 변천사]
+현재 미디어 믹스에서의 설정이나 컨셉이 등장 초창기와는 좀 차이가 있는 캐릭터이기도 하다. 초기에는 말에 러시아어가 섞이긴 해도 일본어도 상당히 잘하는 편이었고, 별을 좋아하는 신비로운 이미지였다.
+특히 애니메이션 방영 이후로는 쿨계보다는 강아지 같은 소동물계에 가까운 캐릭터가 되어 있다. 이러한 설정 변경과 미나미와의 조합은 데레스테에도 유지되어서 데레스테의 아냐를 보면 애니메이션의 묘사에 더 가깝고 미나미와 함께 다니는 장면이 많이 보인다.
+데레스테의 개인 커뮤/스토리 커뮤를 보면 아이같은 순수함+데레데레 조합, 일명 천연데레(?)로 미는 듯하다. 이벤트 [작은 오르골 상자]와 함께 나온 개인 커뮤 4를 보면 그야말로 천연데레 폭발이다.
+이후에도 데레스테 Nothing but You 커뮤에서도 차가운 분위기나 신비로운 미소녀의 컨셉에 얽힌 비화를 소개하는 내용이 전개되어 캐릭터 등장 초기의 방향성을 지향하고 있다.
+프로듀서와의 관계도 어느 정도 변형되었는데, 초기 커뮤를 보면 그야말로 쿨뷰티의 모습, 즉 프로듀서에게 신뢰만을 보여주는 모습이 강했다. 그러다가 시간이 어느 정도 지나고 데레스테에서 나온 SR, SSR 카드 대사를 보면 프로듀서에게 상당히 데레데레하는 모습을 보이고 있는 중이다. 연애감정인진 불명이지만 신뢰 이상의 감정을 지닌 건 확실하다.
+
+[관계]
+닛타 미나미: 애니메이션에서 미나미와 얽히게 된 것도 제작진이 '파파' 언급 부분에서 착안한 듯하다. 미나미도 아버지를 '파파'라고 부른다. 애니메이션에서 미나미와의 관계가 부각된 이후론 2차 창작에서는 이러한 이미지가 극대화되어 미나미와의 백합스러운 분위기로 그려지는 경우가 제일 메이저해졌다. Memories로부터 この空の下, Nebula Sky까지 이어지는 이별 3부작과 프로젝트 크로네를 통해 미나미와는 다른 길을 가지만 마음은 언제나 간직한다는 극중 전개가 있다.
+프로듀서: 위 '변천사' 문단 참조. 다른 아이돌들과 비교해도 프로듀서하고만 대화하는 대사의 비율이 상당히 많다.`,
+"c-donki-1792513789034": `— 나무위키에서 가져온 캐릭터 설명 —
+출처: 나무위키 (CC BY-NC-SA 2.0 KR)
+원문: https://namu.wiki/w/돈키호테(Project%20Moon%20세계관)
+
+[개요]
+《Limbus Company》의 등장인물이다. 출시 전 공개된 상징 이모지는 '🎠'이다.
+수감자 소개문(주의사항): "과도한 열정, [보안 검열], 과대망상. 열정으로만 수감자들의 질을 다시 측량한다면 최고의 점수를 받을 수감자일 것입니다. 해결사라는 것들에 관해서는 대단한 수집가이자 열성적인 팬이므로 온몸에 주렁주렁 해결사 기념품을 지니곤 합니다."
+
+[출신 및 성격]
+다른 수감자들과는 달리 림버스 컴퍼니에 입사하기 전 행적은 밝혀지지 않았으며, 주의사항에도 보안 검열된 것이 있는 등 모종의 이유로 출신이 숨겨진 모습을 보인다.
+해결사를 전통적인 기사도 문학의 정의롭고 강인한 기사 정도로 착각한 모양인지, 해결사 덕후 기질을 보이고 실제로도 온몸에 해결사 문양 뱃지를 덕지덕지 붙이고 다니며, 본인도 정의의 해결사라는 역할에 심취해 있으며 정의로운 특색 해결사가 되는 것을 목표로 하고 있다. 이를 두고 "도시에 정의로운 해결사 같은 게 존재했던 적이나 있었냐"고 비꼬는 소개글이 인상적이다.
+밝은 태도를 꾸준히 유지하며, 연극을 하는 것처럼 과장된 언동을 한다. 상술한 정의로운 해결사를 목표로 하는 것 때문에 조용히 지나갈 수 있는 상황을 어처구니없는 이유로 급발진하여 말아먹는 상황이 많다. 특히 정의로운 해결사라면서 살인을 마다하지 않는 참으로 정의로운 성향을 가졌는데, 예시로 료슈가 수감자 둘을 베어죽이자 본인도 맑은 눈으로 료슈의 머리를 뚫어 죽이고는 정의구현이라고 변명하는 기괴한 모습을 보여준다. 다만 트롤링의 경우 3장에서 베르길리우스에게 크게 혼난 이후로는 많이 얌전해졌으며 본인의 정의로운 해결사 역할도 그나마 때와 장소를 가릴 줄 알게 되었다.
+그와 동시에 시시각각 무겁고 진중한 분위기로 흘러가는 작품의 분위기를 환기시켜 주는 개그 캐릭터이기도 하다. 몸집에 맞지 않는 말투에 과장된 행동, 순수하기 짝이 없는 성격과는 달리 어린애 취급을 싫어하는 등의 요소가 맞물려 귀엽다는 평가가 많은 편이다. 다만 작중에선 몇 번 맑은 눈의 광인으로 불리고 있다.
+몇몇 영단어를 말할 때 매우 굴려서 발음한다. 작중에서는 비치 발리볼을 '뷔~이치 발리볼'이라 하거나, 발푸르기스의 밤을 '왈퓌리기스의 밤'이라 말하는 등 인상적인 명대사를 남기기도 했다. 김예림 성우에 의하면 애드립으로 발음을 굴렸던 것이 그대로 캐릭터성으로 굳은 것이라고 한다.
+하게체와 하오체가 섞인 듯한 말투를 사용한다. 문체의 용법 구분 자체도 모호한데, '-인 것인 겐가' 등 아예 잘못된 표현도 사용한다.
+
+[외형 및 로고]
+덥수룩한 숏컷 금발과 세로 동공의 금안을 가진 작은 키의 여성이다. 머그샷에서는 너저분한 머리에 낡은 제복으로 보이는 옷을 입고 무표정에 가까운 표정을 짓고 있다.
+개인실에서는 E.G.O를 벽에 기댄 채 색이 난잡하게 칠해진 매트 위에 엎드린 채로 인형 놀이를 하고 있으며, 놀이방을 연상시키는 알록달록한 바닥과 벽에 붙은 "목표는 정의로운 '특색' 해결사!!!"라는 문구가 붙어 있다. 배경에는 말의 뼈 그림자가 드리워져 있다. 수감실 밖에는 언뜻 보기에 회전목마로 보이는 구조물이 그려져 있는데, 자세히 보면 수많은 사람이 꼬챙이에 꽂혀서 늘어져 있는 구조물이다.
+개인 로고는 별과 회전목마이다. 로고의 플레이버 텍스트는 "행동의 상징. 건강해진다."이다.
+수감자들 중 유일하게 구두가 아닌 '로시난테'라는 이름의 운동화를 신고 있다.
+
+[능력·특징]
+작은 체구에도 불구하고 전투력이 상당히 좋은 것으로 묘사되는 인물이다. 무려 2m가 넘는 두꺼운 랜스를 들고 연속으로 돌진하는 등 체구에 비해 뛰어난 근력과 민첩성을 지니고 있으며, 이를 바탕으로 선봉에서 정면돌파를 하는 역할을 전투에서 주로 맡는다.
+해결사 오타쿠라 해결사에 대한 지식이 풍부하다. 웬만한 유명 해결사들의 이름은 물론 잡지에 등장하는 떠오르는 루키들의 이름부터 순위까지 다 외우고 다니며, LCB 정기검진 편에서는 해결사와 협회 관련 상식 테스트에서 당당히 만점을 받아 역대 최고 기록을 찍는 모습을 보여주었다. 하지만 정작 현장에서 굴러본 경험이 없는지 해결사 업계의 현실을 제대로 자각하지 못한다.
+평소에는 잘 드러나지 않지만 귀족 문화나 예법에도 상당한 소양이 있다.
+장비: 대략 2m 정도의 거대한 주스팅 랜스를 사용한다. 랜스의 날 하단부에는 SUEÑO IMPOSIBLE라고 새겨져 있다. 해결사 관련 컬렉션도 수집하는데, 평상시에는 보물 상자와 같은 장소에 컬렉션들을 소중하게 보관하고 있으며, 뱃지들은 웬만하면 옷에 주렁주렁 달고 다닌다.
+
+[인간관계]
+단테: 관리자이자 상관인 단테를 나리라고 부른다. 단테 역시 돈키호테를 요주의 수감자로 여기며 어르고 달래는 모습을 많이 보인다.
+수감자들: "본인은… 여정에서… 12명의 가족을 만났소. 그들과 함께… 수많은 적들을 물리치며… 정의를 행하고… 한 순간도… 희망을 포기한 적 없었네." 7장 기준으로 1년 가까이 되는 시간을 같이 지낸 만큼 수감자들끼리 정이 들었고 전반적으로 돈키호테가 없으면 섭섭하다고 한다. 돈키호테가 산초로서의 기억을 되찾았을 때는 12명의 가족이라 칭하는 등 가족으로 대할 정도로 친밀해진 모습을 보인다. 돈키호테 본인은 마이페이스적인 면모 덕분에 이러한 반응에 대부분 개의치 않아 하는 편이다.
+이상: 같은 좌석에 앉는 사이이기에 싱클레어와 체스를 둘 때 이상에게 훈수를 요청하거나, 대호수에서 이상이 뱃멀미로 고생할 때 걱정해 주며 방으로 데려가는 등 친밀한 관계를 맺고 있다.
+료슈: 초반에는 히스클리프와 이스마엘을 썰어죽인 료슈를 정의롭지 않다고 료슈의 머리를 똑같이 뚫어죽이는 맑은 눈의 광기를 보여줬다. 이후에는 양쪽 다 나름 정이 쌓였다.
+로쟈: 자신을 계속 꼬맹이로 여기고 있기에 본인은 그럴 때마다 꼬맹이가 아니라며 발끈하지만 기본적으로 서로 챙겨주는 매우 친한 사이이다.
+싱클레어: 평소에 같이 체스를 두면서 노는 친밀한 사이로 보인다. 다만 본인의 실력은 심히 궤멸적이라고 한다.
+오티스: 돈키호테의 사고뭉치적인 성격으로 인해 오티스는 돈키호테를 그다지 달가워 하지 않았던 반면에, 본인은 항상 오티스의 말에 적극적으로 따르며 존중하고 있다.
+그레고르: 요리를 할 때 자기도 요리하게 해달라며 그레고르에게 적극적으로 요청한다든가 같이 해결사 코스프레를 하는 등 사이 좋게 지내고 있다.
+베르길리우스: 해결사 덕후인 돈키호테는 특색 해결사인 베르길리우스를 동경하는 반면 베르길리우스는 두 번이나 대형사고를 친 돈키호테를 골칫거리 취급하며 예의주시하고 있다.`
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const cloudRef = db.ref("wiki");
+let isWriter = false;
+let scan = null;
+
+firebase.auth().onAuthStateChanged(user=>{
+  isWriter = !!(user && WRITER_EMAILS.includes(user.email));
+  if (isWriter){ $("loginCard").style.display = "none"; loadPreview(); }
+  else { $("loginCard").style.display = "block"; setStatus("어시스턴트 로그인이 필요해요. 위에서 로그인해주세요."); }
+});
+
+$("loginBtn").onclick = async ()=>{
+  const em = $("loginEmail").value.trim();
+  const pw = $("loginPw").value;
+  const err = $("loginErr"); err.style.display = "none";
+  try{ await firebase.auth().signInWithEmailAndPassword(em, pw); }
+  catch(e){ err.textContent = "로그인 실패: " + (e && e.message); err.style.display = "block"; }
+};
+
+async function loadPreview(){
+  setStatus("도시 데이터 읽는 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("도시 데이터가 없어요."); return; }
+    const worlds = Object.entries(v.store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+    const mb = v.store[WORLD_ID];
+    if (!mb){ setStatus("마이베이비 세계관을 못 찾았어요. 세계관 " + worlds.length + "개."); return; }
+    const chars = Array.isArray(mb.chars) ? mb.chars : [];
+    const targets = Object.keys(TEXTS).map(id=>chars.find(c=>c && c.id === id)).filter(Boolean);
+    const missing = Object.keys(TEXTS).filter(id=>!chars.some(c=>c && c.id === id));
+    scan = { worldCount: worlds.length, charCount: chars.length, targets: targets.map(c=>({id:c.id, name:(c.profile&&c.profile.name)||"(이름 없음)", overviewLen:(c.overview||"").length, already:(c.overview||"").includes(MARKER)})) };
+    $("scanInfo").textContent = "세계관 " + worlds.length + "개 스캔, 마이베이비 캐릭터 " + chars.length + "명.";
+    const list = $("previewList"); list.innerHTML = "";
+    const items = [];
+    scan.targets.forEach(t=>{
+      items.push(t.name + " — 개요 " + t.overviewLen + "자" + (t.already ? " (이미 이식됨, 건너뜀)" : " → 뒤에 " + TEXTS[t.id].length + "자 덧붙임") + ", 이미지·다른 필드는 그대로");
+    });
+    if (missing.length) items.push("못 찾은 캐릭터 ID: " + missing.join(", "));
+    items.forEach(t=>{ const li = document.createElement("li"); li.textContent = t; list.appendChild(li); });
+    $("previewCard").style.display = "block";
+    setStatus(missing.length ? "못 찾은 캐릭터가 있어요. 그래도 적용하면 찾은 사람만 바껴요." : "위 내용이 맞으면 적용하기를 눌러주세요.");
+  }catch(e){ setStatus("읽기 실패: " + (e && e.message)); }
+}
+
+$("applyBtn").onclick = ()=>applyChange($("applyBtn"));
+
+async function applyChange(btn){
+  if (!btn.dataset.armed){
+    btn.dataset.armed = "1";
+    btn.textContent = "정말 적용할까요? 다시 눌러주세요";
+    setStatus("한 번 더 누르면 위 내용이 저장돼요. 그 외에는 아무것도 안 바뀌어요.");
+    return;
+  }
+  setStatus("저장 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store || !v.store[WORLD_ID]){ setStatus("데이터가 바뀌었어요. 새로고침하고 다시 해주세요."); return; }
+    const w = v.store[WORLD_ID];
+    if (!Array.isArray(w.chars)) w.chars = [];
+    let updated = [], skipped = [];
+    Object.keys(TEXTS).forEach(id=>{
+      const c = w.chars.find(x=>x && x.id === id);
+      if (!c) return;
+      const cur = c.overview || "";
+      if (cur.includes(MARKER)){ skipped.push((c.profile&&c.profile.name)||id); return; }
+      c.overview = cur ? (cur + "\n\n" + TEXTS[id]) : TEXTS[id];
+      updated.push((c.profile&&c.profile.name)||id);
+    });
+    const storeUpdatedAt = Date.now();
+    let backups = Array.isArray(v.backups) ? v.backups : [];
+    try{
+      const storeStr = JSON.stringify(v.store);
+      const last = backups[backups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        backups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (backups.length > 5) backups.shift();
+      }
+    }catch(e){}
+    await cloudRef.set({ store: v.store, theme: v.theme || "light", storeUpdatedAt, backups });
+    $("previewCard").style.display = "none";
+    const done = $("doneCard");
+    done.innerHTML = '<p class="ok">DONE: 나무위키 캐릭터 설명 이식을 마쳤어요.</p>' +
+      '<p>스캔한 세계관 ' + scan.worldCount + '개, 마이베이비 캐릭터 ' + scan.charCount + '명. 개요에 덧붙인 캐릭터 ' + updated.length + '명(' + esc(updated.join(", ")) + '), 이미 이식돼 건너뛴 캐릭터 ' + skipped.length + '명(' + esc(skipped.join(", ")) + '). 이미지·다른 필드는 건드리지 않았어요.</p>' +
+      '<p class="hint">도시 위키를 새로고침하면 두 캐릭터 프로필 개요가 길어져 있어요.</p>';
+    done.style.display = "block";
+    setStatus("완료!");
+  }catch(e){ setStatus("저장 실패: " + (e && e.message)); }
+}
+</script>
+</body>
+</html>
