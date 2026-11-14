@@ -938,13 +938,13 @@ function render(){
     return out;
   };
   // 펼쳐진 조직 하나분의 내용 (반 탭이거나 수동 섹션)
-  const orgBlockHtml = (g, forceEdit)=>{
+  const orgBlockHtml = (g, forceEdit, useId)=>{
     const {members, levels} = orgLevels(g.id);
     const d = orgDescIds(g.id);
     const directOnly = members.filter(m=>charInGroup(m, g.id) && ![...d].some(id=>id!==g.id && charInGroup(m, id)));
     const subs = groups.filter(x=>x.parentId===g.id && members.some(m=>charInGroup(m, x.id)));
     const edit = !!(isMaster && (window.orgSecEdit || forceEdit));
-    let h = '<div class="wiki-orgblock" id="wiki-org-'+g.id+'">';
+    let h = '<div class="wiki-orgblock"' + (useId === false ? '' : ' id="wiki-org-'+g.id+'"') + '>';
     if (!directOnly.length && subs.length){
       // 반 탭 (청량고: 모니카반/청량중학교)
       if (!window.orgSecTab) window.orgSecTab = {};
@@ -1027,8 +1027,13 @@ function render(){
         charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>' + (g.logo ? '<div style="text-align:center;margin:8px 0 12px"><img src="'+esc(imgM(g.logo))+'" alt="" style="max-width:220px;width:100%;border-radius:12px;display:block;margin:0 auto" loading="lazy"></div>' : '');
         if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
-        if (direct.length) charsHtml += gridHtml(direct, g.id);
-        children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        if (isMaster && window.listEdit){
+          if (direct.length) charsHtml += gridHtml(direct, g.id);
+          children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        } else {
+          // 보기 모드: 개요와 같은 섹션 조직도 (2026-11-14 일체화) — 평면 그리드 대신 섹션/반 탭
+          charsHtml += orgBlockHtml(g, false, false);
+        }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
         charsHtml += '</div>';
       });
@@ -1157,7 +1162,7 @@ function render(){
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
   // 세계관 개요 (2026-11-14): 개요 카드 클릭, 반 탭
   document.querySelectorAll("#body [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render(); });
-  document.querySelectorAll("#body [data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; render(); });
+  document.querySelectorAll("[data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; render(); });
   // 개요 조직 타일 (사이드바와 같은 펼침 방식)
   document.querySelectorAll("#body [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   // 목차: 펼치고 그쪽으로 이동
@@ -1168,14 +1173,14 @@ function render(){
     if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
   });
   document.querySelectorAll("[data-wiki-top]").forEach(b=>b.onclick=()=>{ window.scrollTo({top:0, behavior:"smooth"}); });
-  // 수동 섹션 편집
+  // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
-  document.querySelectorAll("#body [data-orgsec-title-org]").forEach(inp=>inp.onchange=()=>{ renameSection(inp.dataset.orgsecTitleOrg, inp.dataset.orgsecTitleOld, inp.value); });
-  document.querySelectorAll("#body [data-orgsec-up]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecUpOrg, b.dataset.orgsecUp, -1));
-  document.querySelectorAll("#body [data-orgsec-down]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecDownOrg, b.dataset.orgsecDown, 1));
-  document.querySelectorAll("#body [data-orgsec-del]").forEach(b=>b.onclick=()=>deleteSection(b.dataset.orgsecDelOrg, b.dataset.orgsecDel));
-  document.querySelectorAll("#body [data-orgsec-add]").forEach(b=>b.onclick=()=>{ const inp = document.querySelector('[data-orgsec-new="'+b.dataset.orgsecAdd+'"]'); addSection(b.dataset.orgsecAdd, inp ? inp.value : ""); });
-  document.querySelectorAll("#body [data-orgsec-char]").forEach(inp=>inp.onchange=()=>{ setMemberSection(inp.dataset.orgsecChar, inp.dataset.orgsecGid, inp.value); });
+  document.querySelectorAll("[data-orgsec-title-org]").forEach(inp=>inp.onchange=()=>{ renameSection(inp.dataset.orgsecTitleOrg, inp.dataset.orgsecTitleOld, inp.value); });
+  document.querySelectorAll("[data-orgsec-up]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecUpOrg, b.dataset.orgsecUp, -1));
+  document.querySelectorAll("[data-orgsec-down]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecDownOrg, b.dataset.orgsecDown, 1));
+  document.querySelectorAll("[data-orgsec-del]").forEach(b=>b.onclick=()=>deleteSection(b.dataset.orgsecDelOrg, b.dataset.orgsecDel));
+  document.querySelectorAll("[data-orgsec-add]").forEach(b=>b.onclick=()=>{ const row = b.closest(".wiki-addsec"); const inp = row ? row.querySelector("input") : document.querySelector('[data-orgsec-new="'+b.dataset.orgsecAdd+'"]'); addSection(b.dataset.orgsecAdd, inp ? inp.value : ""); });
+  document.querySelectorAll("[data-orgsec-char]").forEach(inp=>inp.onchange=()=>{ setMemberSection(inp.dataset.orgsecChar, inp.dataset.orgsecGid, inp.value); });
   // 조직도 프로토타입: 하위탭, 탭 순서, 드래그 상급자 지정
   document.querySelectorAll("[data-orgchart-tab]").forEach(b=>b.onclick=()=>{ window.orgChartOrg = b.dataset.orgchartTab; render(); });
   document.querySelectorAll("[data-orgchart-up]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartUp; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos > 0){ const tmp = ordered[pos-1]; ordered[pos-1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
