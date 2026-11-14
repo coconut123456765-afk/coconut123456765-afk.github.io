@@ -369,6 +369,29 @@
     #worldsMobile button.on { color:var(--acc); border-bottom:2px solid var(--acc); font-weight:700; }
     .wiki-search { max-width:none; order:3; flex-basis:100%; }
   }
+  /* 프로필 속 도시에 잔재 제거 (2026-11-14): 줄무늬 종이·폴라로이드·노란 포스트잇·프롬 복사 안내를 나무위키식 평면으로 */
+  .notebook { background:none; background-image:none; border:0; border-radius:0; padding:0; }
+  .notebook::before, .notebook::after { display:none; }
+  .polaroid { background:transparent; padding:0; box-shadow:none; max-width:420px; }
+  .polaroid::before { display:none; }
+  .polaroid img { border:1px solid var(--line); border-radius:8px; }
+  .pair-row { background:none; background-image:none; border:1px solid var(--line); border-radius:8px; box-shadow:none; }
+  .pair-head { border-bottom:1px solid var(--line); }
+  .pair-no { display:none; }
+  .pair-name { font-family:inherit; font-size:18px; font-weight:700; }
+  .pair-frame { background:transparent; padding:0; box-shadow:none; width:216px; border-radius:0; }
+  .pair-frame::before { display:none; }
+  .pair-frame img { height:auto; object-fit:contain; }
+  .pair-body div.pair-desc { background:transparent; box-shadow:none; border:0; padding:0; line-height:1.6; font-size:15px; color:var(--txt); }
+  .copytip { display:none; }
+  .gal-item { border-radius:8px; }
+  .gal-item img { height:auto; object-fit:contain; }
+  .ptable { table-layout:auto; }
+  .ptable td.plabel { background:transparent; width:auto; }
+  .plabel-pill { font-size:12px; padding:3px 10px; }
+  @media (max-width:700px){
+    .pair-frame { width:100%; }
+  }
 </style>
 </head>
 <body>
