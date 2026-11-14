@@ -1159,7 +1159,8 @@ function render(){
   const worldOverviewHtml = ()=>{
     const useCards = true; // 내비박스 스타일: 전 조직 카드 격자 (Don 2026-11-14, 미도리야 내비박스 참고)
     const listHtml = (list, gid)=> '<div class="wiki-navbox">'+navGridHtml(list, gid)+'</div>';
-    const collapsedCls = window.orgSecEdit ? '' : ' wiki-sec-collapsed'; // 편집 중엔 펼쳐진 채로
+    if (!window.expandedNavbox) window.expandedNavbox = new Set(['rest:w1792508654855']); // 마이베이비 전체 캐릭터는 펼쳐진 채로 시작 (Don 2026-11-14)
+    const navCollapsedCls = (key)=> (window.orgSecEdit || window.expandedNavbox.has(key)) ? '' : ' wiki-sec-collapsed'; // 펼친 상태는 다시 그려도 유지 (반 탭 클릭 때 접힘 버그 수정)
     const navHead = (title, logo)=> '<div class="wiki-navbox2-head">'
       + (logo ? '<div class="wiki-navbox2-logo"><img src="'+esc(imgM(logo))+'" alt="로고" loading="lazy"></div>' : '')
       + '<div class="wiki-navbox2-title">'+esc(title)+'</div>'
@@ -1181,7 +1182,7 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead(x.g.name, x.g.logo)
+      h += '<div class="wiki-navbox2'+navCollapsedCls(x.g.id)+'" id="ovsec-'+secNo+'" data-navbox-key="'+esc(x.g.id)+'">' + navHead(x.g.name, x.g.logo)
         + '<div class="wiki-navbox2-body">' + orgBlockHtml(x.g, false, undefined, true) + '</div></div>';
     });
     topNonOrgs.forEach(g=>{
@@ -1190,7 +1191,7 @@ function render(){
       const hasAny = mem.length || subs.some(s=>charList.some(c=>charInGroup(c, s.id)));
       if (!hasAny) return;
       secNo++;
-      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead(g.name, g.logo)
+      h += '<div class="wiki-navbox2'+navCollapsedCls(g.id)+'" id="ovsec-'+secNo+'" data-navbox-key="'+esc(g.id)+'">' + navHead(g.name, g.logo)
         + '<div class="wiki-navbox2-body">';
       if (mem.length) h += listHtml(mem, g.id);
       subs.forEach(s=>{
@@ -1202,7 +1203,7 @@ function render(){
     });
     if (rest.length){
       secNo++;
-      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터", null)
+      h += '<div class="wiki-navbox2'+navCollapsedCls('rest:'+curWorld)+'" id="ovsec-'+secNo+'" data-navbox-key="rest:'+esc(curWorld)+'">' + navHead((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터", null)
         + '<div class="wiki-navbox2-body">' + listHtml(rest, null) + '</div></div>';
     }
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
@@ -1386,7 +1387,7 @@ function render(){
   document.querySelectorAll("[data-toc-collapse]").forEach(b=>b.onclick=()=>{ const box = b.closest(".wiki-toc"); if (!box) return; const closed = box.classList.toggle("collapsed"); const a = box.querySelector("[data-toc-arrow]"); if (a) a.textContent = closed ? "▶" : "▼"; });
   document.querySelectorAll("[data-sec-fold]").forEach(b=>b.onclick=()=>{ const sec = document.getElementById(b.dataset.secFold); if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); b.textContent = closed ? "＞" : "∨"; });
   document.querySelectorAll(".wiki-ovsec > .wiki-sec").forEach(h=>h.onclick=()=>{ const sec = h.parentElement; if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); const a = h.querySelector(".wiki-sec-fold"); if (a) a.textContent = closed ? "＞" : "∨"; });
-  document.querySelectorAll(".wiki-navbox2-head").forEach(hd=>hd.onclick=()=>{ const box = hd.parentElement; if (!box) return; box.classList.toggle("wiki-sec-collapsed"); });
+  document.querySelectorAll(".wiki-navbox2-head").forEach(hd=>hd.onclick=()=>{ const box = hd.parentElement; if (!box) return; const key = box.dataset.navboxKey; if (key){ if (!window.expandedNavbox) window.expandedNavbox = new Set(); if (window.expandedNavbox.has(key)) window.expandedNavbox.delete(key); else window.expandedNavbox.add(key); } box.classList.toggle("wiki-sec-collapsed"); });
   document.querySelectorAll("[data-sec-edit]").forEach(b=>b.onclick=()=>{ editingTab = "all"; editBackup = JSON.parse(JSON.stringify(cur())); render(); });
   // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });

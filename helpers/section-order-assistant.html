@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>섹션 순서 정하기 도우미 (어시스턴트용)</title>
+<style>
+  body{font-family:'Noto Sans KR',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background:#f6f3fa;color:#2a1f1f}
+  h1{font-size:20px} .card{background:#fff;border:1px solid #ddd6e8;border-radius:12px;padding:16px;margin:12px 0}
+  button{background:#7b5aa6;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+  button:disabled{background:#bbb} input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd6e8;border-radius:8px;font-size:15px;margin:6px 0}
+  .ok{color:#2e7d32;font-weight:700} .err{color:#c0392b;font-weight:700}
+  .hint{font-size:13px;color:#9c8a84}
+  li{margin:4px 0}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<h1>섹션 순서 정하기 도우미 (어시스턴트용)</h1>
+<p class="hint">조직도 섹션 순서를 정해요. 살룬 라군은 총지배인 → 하우스키퍼 → 파트 매니저 → 디스펜서, 안씨네는 부모 → 안오룡 직속 순으로. 조직의 secOrder만 바꾸는 거라, 사람·이미지·다른 필드는 그대로예요. 비밀번호는 이 브라우저에서만 쓰고, 아냐한테는 안 보내요. 이 페이지는 어시스턴트 계정(dossier@don.local)으로도 쓸 수 있어요.</p>
+<div id="status" class="card">불러오는 중…</div>
+
+<div id="loginCard" class="card" style="display:none">
+  <h3>어시스턴트 로그인</h3>
+  <input id="loginEmail" type="email" value="dossier@don.local">
+  <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="loginBtn">로그인</button>
+  <p id="loginErr" class="err" style="display:none"></p>
+</div>
+
+<div id="previewCard" class="card" style="display:none">
+  <h3>바꿀 내용 미리보기</h3>
+  <p id="scanInfo" class="hint"></p>
+  <ul id="previewList"></ul>
+  <button id="applyBtn">적용하기</button>
+</div>
+
+<div id="doneCard" class="card" style="display:none"></div>
+
+<script>
+const WRITER_EMAILS = ["coconut123456765@gmail.com", "dossier@don.local"];
+// [world, orgId, orgName, target secOrder]
+const ORDERS = [
+  { world:'hotel', org:'g-saloon-new', orgName:'살룬 라군', order:['총지배인','하우스키퍼','파트 매니저','디스펜서'] },
+  { world:'siblings', org:'g-ahn', orgName:'안씨네', order:['부모','안오룡 직속'] },
+];
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const $ = id => document.getElementById(id);
+function setStatus(t){ $("status").textContent = t; }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const cloudRef = db.ref("wiki");
+let isWriter = false;
+let scan = null;
+
+firebase.auth().onAuthStateChanged(user=>{
+  isWriter = !!(user && WRITER_EMAILS.includes(user.email));
+  if (isWriter){ $("loginCard").style.display = "none"; loadPreview(); }
+  else { $("loginCard").style.display = "block"; setStatus("어시스턴트 로그인이 필요해요. 위에서 로그인해주세요."); }
+});
+
+$("loginBtn").onclick = async ()=>{
+  const em = $("loginEmail").value.trim();
+  const pw = $("loginPw").value;
+  const err = $("loginErr"); err.style.display = "none";
+  try{ await firebase.auth().signInWithEmailAndPassword(em, pw); }
+  catch(e){ err.textContent = "로그인 실패: " + (e && e.message); err.style.display = "block"; }
+};
+
+async function loadPreview(){
+  setStatus("도시 데이터 읽는 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("도시 데이터가 없어요."); return; }
+    const worlds = Object.entries(v.store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+    scan = { worldCount: worlds.length, rows: [] };
+    ORDERS.forEach(r=>{
+      const w = v.store[r.world];
+      if (!w){ scan.rows.push({world:r.world, org:r.org, name:r.orgName, state:"missing-world"}); return; }
+      const g = (w.groups || []).find(x=>x && x.id === r.org);
+      if (!g){ scan.rows.push({world:r.world, org:r.org, name:r.orgName, state:"missing"}); return; }
+      const cur = Array.isArray(g.secOrder) ? g.secOrder : null;
+      const same = cur && cur.length === r.order.length && cur.every((t,i)=>t === r.order[i]);
+      scan.rows.push({world:r.world, org:r.org, name:r.orgName, state: same ? "done" : "set", cur});
+    });
+    $("scanInfo").textContent = "세계관 " + worlds.length + "개 스캔.";
+    const list = $("previewList"); list.innerHTML = "";
+    scan.rows.forEach(x=>{
+      const r = ORDERS.find(o=>o.org === x.org);
+      const li = document.createElement("li");
+      if (x.state === "set") li.innerHTML = "<b>" + esc(x.name) + "</b>: " + (x.cur ? esc(x.cur.join(" → ")) : "(순서 없음, 자동)") + " → <b>" + esc(r.order.join(" → ")) + "</b>";
+      else if (x.state === "done") li.textContent = x.name + " — 이미 순서가 맞아요 (건너뜀)";
+      else li.textContent = x.name + " — 못 찾음";
+      list.appendChild(li);
+    });
+    $("previewCard").style.display = "block";
+    setStatus("위 내용이 맞으면 적용하기를 눌러주세요.");
+  }catch(e){ setStatus("읽기 실패: " + (e && e.message)); }
+}
+
+$("applyBtn").onclick = ()=>applyChange($("applyBtn"));
+
+async function applyChange(btn){
+  if (!btn.dataset.armed){
+    btn.dataset.armed = "1";
+    btn.textContent = "정말 적용할까요? 다시 눌러주세요";
+    setStatus("한 번 더 누르면 위 내용이 저장돼요. 그 외에는 아무것도 안 바뀌어요.");
+    return;
+  }
+  setStatus("저장 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("데이터가 바뀌었어요. 새로고침하고 다시 해주세요."); return; }
+    let changed = [], skipped = [];
+    ORDERS.forEach(r=>{
+      const w = v.store[r.world];
+      if (!w) { skipped.push(r.orgName); return; }
+      const g = (w.groups || []).find(x=>x && x.id === r.org);
+      if (!g){ skipped.push(r.orgName); return; }
+      const cur = Array.isArray(g.secOrder) ? g.secOrder : null;
+      const same = cur && cur.length === r.order.length && cur.every((t,i)=>t === r.order[i]);
+      if (same){ skipped.push(r.orgName); return; }
+      g.secOrder = [...r.order];
+      changed.push(r.orgName + " (" + r.order.join(" → ") + ")");
+    });
+    const storeUpdatedAt = Date.now();
+    let backups = Array.isArray(v.backups) ? v.backups : [];
+    try{
+      const storeStr = JSON.stringify(v.store);
+      const last = backups[backups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        backups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (backups.length > 5) backups.shift();
+      }
+    }catch(e){}
+    await cloudRef.set({ store: v.store, theme: v.theme || "light", storeUpdatedAt, backups });
+    $("previewCard").style.display = "none";
+    const done = $("doneCard");
+    done.innerHTML = '<p class="ok">DONE: 섹션 순서를 정했어요.</p>' +
+      '<p>스캔한 세계관 ' + scan.worldCount + '개. 바꾼 조직 ' + changed.length + '개(' + esc(changed.join(", ")) + '), 건너뛴 조직 ' + skipped.length + '개(' + esc(skipped.join(", ")) + '). 사람·이미지·다른 필드는 건드리지 않았어요.</p>' +
+      '<p class="hint">도시 위키를 새로고침하면 살룬은 총지배인 → 하우스키퍼 → 파트 매니저 → 디스펜서, 안씨네는 부모 → 안오룡 직속 순으로 보여요.</p>';
+    done.style.display = "block";
+    setStatus("완료!");
+  }catch(e){ setStatus("저장 실패: " + (e && e.message)); }
+}
+</script>
+</body>
+</html>
