@@ -90,6 +90,16 @@
   .org-tile-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
   .org-tile-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .org-tile-name { font-size:12px; font-weight:700; padding:6px 3px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* 섹션 조직도 (나무위키 모드에서 이식, 2026-11-14) */
+  .wiki-rowhead { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--acc); border-radius:8px; padding:7px 12px; font-size:14px; font-weight:700; margin:14px 0 8px; }
+  .wiki-rowhead input { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-size:14px; font-weight:700; }
+  .wiki-rowhead button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; padding:6px 9px; cursor:pointer; font-size:13px; }
+  .wiki-orggrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin:6px 0 8px; }
+  .wiki-sublabel { text-align:center; font-size:12px; color:var(--dim); margin-top:10px; }
+  .wiki-addsec { display:flex; gap:6px; margin-top:10px; }
+  .wiki-addsec input { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:14px; }
+  .wiki-editbtn { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:999px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .wiki-editbtn:hover { border-color:var(--acc); color:var(--acc); }
   .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 8px; }
   .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
   /* Astryx Card 시범 (2026-11-12) — 롤백: index-before-astryx.html */
@@ -826,6 +836,182 @@ function render(){
     if (listEdit){ const cand2 = charList.filter(c=>!charInGroup(c, g.id)); html += '<div class="group-bigrow"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand2.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand2.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>'; }
     return html + '</div>';
   };
+  // 수동 섹션 조직도 (2026-11-14 나무위키 모드에서 이식 — 조직타일 펼침 내용을 섹션으로 통일)
+  // 나무위키식 세계관 개요: 조직 타일 + 수동 섹션 (2026-11-14 2차) — 타일을 눌러 펼치고, 섹션 칸은 안에서 직접 고침. 롤백: index-before-namuwiki.html
+  const orgCardHtml = (c, gid, secTitle)=>{
+    const img = groupPortrait(c);
+    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
+    const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+    const isSel = c.id===curChar;
+    const selColor = isSel ? (/^#[0-9a-fA-F]{6}$/.test(c.color||"") ? c.color : worldAccent()) : "";
+    const selStyle = selColor ? ' style="background:'+esc(selColor)+';color:'+pickText(selColor)+';border-color:'+esc(selColor)+'"' : "";
+    const secInput = (secTitle !== null && secTitle !== undefined && window.orgSecEdit) ? '<input class="gcard-sub-input" data-orgsec-char="'+c.id+'" data-orgsec-gid="'+esc(gid)+'" value="'+esc(secTitle)+'" placeholder="섹션 이름 (비우면 미지정)">' : "";
+    return '<div class="gcard-wrap"><button class="gcard '+(isSel?"on":"")+'" data-c="'+c.id+'"'+selStyle+'>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+secInput+'</div>';
+  };
+  const orgGridHtml = (list, gid, secOf)=> '<div class="wiki-orggrid">'+list.map(c=>orgCardHtml(c, gid, secOf ? secOf(c) : null)).join("")+'</div>';
+  const orgDescIds = (orgId)=>{
+    const d = new Set([orgId]);
+    const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ d.add(x.id); collect(x.id); }); };
+    collect(orgId);
+    return d;
+  };
+  const orgLevels = (orgId)=>{
+    const d = orgDescIds(orgId);
+    const members = charList.filter(c=>(c.groupIds||[]).some(id=>d.has(id)));
+    const ids = new Set(members.map(c=>c.id));
+    const supOfOrg = (c)=> (c.groupSuperior && c.groupSuperior[orgId]) || null;
+    const children = {};
+    members.forEach(c=>{ const s = supOfOrg(c); if (s && ids.has(s)) (children[s] = children[s] || []).push(c); });
+    const roots = members.filter(c=>{ const s = supOfOrg(c); return !s || !ids.has(s); });
+    const levels = []; let cur = roots.length ? roots : members; const seen = new Set();
+    for (let lv=0; lv<10 && cur.length; lv++){
+      const f = cur.filter(m=>!seen.has(m.id)); f.forEach(m=>seen.add(m.id));
+      if (!f.length) break; levels.push(f);
+      let next = []; f.forEach(m=>{ (children[m.id]||[]).forEach(ch=>{ if (!seen.has(ch.id)) next.push(ch); }); }); cur = next;
+    }
+    if (!levels.length && members.length) levels = [members];
+    return {members, levels};
+  };
+  const orgRowLabel = (row, orgId, isRoot)=>{
+    const subs = row.map(m=>groupSubtitle(m, orgId));
+    if (subs.length && subs.every(s=>s) && new Set(subs).size === 1) return subs[0];
+    const sups = [...new Set(row.map(m=>m.groupSuperior && m.groupSuperior[orgId]).filter(Boolean))];
+    if (sups.length === 1){ const sup = charList.find(c=>c.id===sups[0]); if (sup) return (sup.profile.name||"") + " 직속"; }
+    if (isRoot) return "최상위";
+    return "";
+  };
+  // 수동 섹션: c.orgSec[orgId]가 있으면 그 이름, 없으면 예전 조직도에서 파생한 라벨. g.secOrder가 순서.
+  const derivedSecOf = (m, orgId, levels)=>{
+    const d = orgDescIds(orgId);
+    const gid = (m.groupIds||[]).find(id=>d.has(id) && id!==orgId);
+    if (gid && !charInGroup(m, orgId)) return (groups.find(g=>g.id===gid)||{}).name || "하위 그룹";
+    const li = levels.findIndex(lv=>lv.some(x=>x.id===m.id));
+    if (li < 0) return "";
+    return orgRowLabel(levels[li], orgId, li===0);
+  };
+  const effSecOf = (m, orgId, levels)=>{
+    if (m.orgSec && Object.prototype.hasOwnProperty.call(m.orgSec, orgId)) return m.orgSec[orgId] || "미지정";
+    return derivedSecOf(m, orgId, levels);
+  };
+  const secOrderOf = (orgId, levels, members)=>{
+    const g = groups.find(x=>x.id===orgId);
+    const base = (g && Array.isArray(g.secOrder) && g.secOrder.length) ? [...g.secOrder] : [];
+    if (!base.length){
+      levels.forEach((lv,i)=>{
+        const t = orgRowLabel(lv, orgId, i===0);
+        if (t && !base.includes(t)) base.push(t);
+        const d = orgDescIds(orgId);
+        lv.filter(m=>!charInGroup(m, orgId)).forEach(m=>{
+          const gid = (m.groupIds||[]).find(id=>d.has(id) && id!==orgId);
+          const gn = gid && (groups.find(x=>x.id===gid)||{}).name;
+          if (gn && !base.includes(gn)) base.push(gn);
+        });
+      });
+    }
+    const seen = new Set(base);
+    members.forEach(m=>{ const t = effSecOf(m, orgId, levels); if (t && !seen.has(t)){ seen.add(t); base.push(t); } });
+    const mi = base.indexOf("미지정");
+    if (mi >= 0){ base.splice(mi, 1); base.push("미지정"); }
+    return base;
+  };
+  const ensureSecOrder = (orgId)=>{
+    const g = groups.find(x=>x.id===orgId); if (!g) return [];
+    if (!Array.isArray(g.secOrder) || !g.secOrder.length){
+      const {levels, members} = orgLevels(orgId);
+      g.secOrder = secOrderOf(orgId, levels, members);
+    }
+    return g.secOrder;
+  };
+  const renameSection = (orgId, oldT, newT)=>{
+    newT = (newT||"").trim();
+    if (!newT || newT===oldT){ render(); return; }
+    const order = ensureSecOrder(orgId);
+    const idx = order.indexOf(oldT);
+    if (idx >= 0){
+      if (order.includes(newT)) order.splice(idx, 1);
+      else order[idx] = newT;
+    } else if (!order.includes(newT)) order.push(newT);
+    const {members, levels} = orgLevels(orgId);
+    members.forEach(m=>{ if (effSecOf(m, orgId, levels)===oldT){ if (!m.orgSec || typeof m.orgSec !== "object") m.orgSec = {}; m.orgSec[orgId] = newT; } });
+    persist(); render();
+  };
+  const moveSection = (orgId, title, dir)=>{
+    const order = ensureSecOrder(orgId);
+    const i = order.indexOf(title); if (i < 0) return;
+    const j = i + dir; if (j < 0 || j >= order.length) return;
+    const t = order[i]; order[i] = order[j]; order[j] = t;
+    persist(); render();
+  };
+  const deleteSection = (orgId, title)=>{
+    if (!confirm("섹션 '"+title+"'을(를) 삭제할까요? 안에 있던 사람은 미지정으로 옮겨져요.")) return;
+    const g = groups.find(x=>x.id===orgId); if (!g) return;
+    if (Array.isArray(g.secOrder)) g.secOrder = g.secOrder.filter(t=>t!==title);
+    const {members, levels} = orgLevels(orgId);
+    members.forEach(m=>{ if (effSecOf(m, orgId, levels)===title){ if (!m.orgSec || typeof m.orgSec !== "object") m.orgSec = {}; m.orgSec[orgId] = ""; } });
+    persist(); render();
+  };
+  const addSection = (orgId, title)=>{
+    title = (title||"").trim(); if (!title) return;
+    const order = ensureSecOrder(orgId);
+    if (!order.includes(title)) order.push(title);
+    persist(); render();
+  };
+  const setMemberSection = (charId, orgId, title)=>{
+    const ch = charList.find(x=>x.id===charId); if (!ch) return;
+    if (!ch.orgSec || typeof ch.orgSec !== "object") ch.orgSec = {};
+    ch.orgSec[orgId] = (title||"").trim();
+    if (ch.orgSec[orgId]){ const order = ensureSecOrder(orgId); if (!order.includes(ch.orgSec[orgId])) order.push(ch.orgSec[orgId]); }
+    persist(); render();
+  };
+  const orgLevelRowHtml = (row, orgId)=>{
+    const d = orgDescIds(orgId);
+    const main = row.filter(m=>charInGroup(m, orgId));
+    const subs = row.filter(m=>!charInGroup(m, orgId));
+    let out = "";
+    if (main.length) out += orgGridHtml(main, orgId, null);
+    const bySub = {};
+    subs.forEach(m=>{ const gid = (m.groupIds||[]).find(id=>d.has(id) && id!==orgId); if (!gid) return; (bySub[gid] = bySub[gid] || []).push(m); });
+    Object.keys(bySub).forEach(gid=>{
+      const gname = (groups.find(g=>g.id===gid) || {}).name || "하위 그룹";
+      out += '<div class="wiki-sublabel">'+esc(gname)+'</div>' + orgGridHtml(bySub[gid], gid, null);
+    });
+    return out;
+  };
+  // 펼쳐진 조직 하나분의 내용 (반 탭이거나 수동 섹션)
+  const orgBlockHtml = (g, forceEdit, useId)=>{
+    const {members, levels} = orgLevels(g.id);
+    const d = orgDescIds(g.id);
+    const directOnly = members.filter(m=>charInGroup(m, g.id) && ![...d].some(id=>id!==g.id && charInGroup(m, id)));
+    const subs = groups.filter(x=>x.parentId===g.id && members.some(m=>charInGroup(m, x.id)));
+    const edit = !!(isMaster && (window.orgSecEdit || forceEdit));
+    let h = '<div class="wiki-orgblock"' + (useId === false ? '' : ' id="wiki-org-'+g.id+'"') + '>';
+    if (!directOnly.length && subs.length){
+      // 반 탭 (청량고: 모니카반/청량중학교)
+      if (!window.orgSecTab) window.orgSecTab = {};
+      const sel = window.orgSecTab[g.id] || subs[0].id;
+      h += '<div class="orgchart-tabs">' + subs.map(s=>'<button class="'+(s.id===sel?"on":"")+'" data-orgsec-tab="'+s.id+'" data-orgsec-org="'+g.id+'">'+esc(s.name)+'</button>').join("") + '</div>';
+      const tabLevels = levels.map(lv=>lv.filter(m=>charInGroup(m, sel))).filter(lv=>lv.length);
+      h += tabLevels.map(lv=>orgLevelRowHtml(lv, g.id)).join("");
+    } else {
+      // 수동 섹션
+      const order = secOrderOf(g.id, levels, members);
+      order.forEach(title=>{
+        const secMembers = members.filter(m=>effSecOf(m, g.id, levels)===title);
+        if (!secMembers.length && !edit) return;
+        if (edit){
+          h += '<div class="wiki-rowhead" style="display:flex;gap:6px;align-items:center"><input data-orgsec-title-org="'+g.id+'" data-orgsec-title-old="'+esc(title)+'" value="'+esc(title)+'"><button data-orgsec-up="'+esc(title)+'" data-orgsec-up-org="'+g.id+'" title="섹션 위로">▲</button><button data-orgsec-down="'+esc(title)+'" data-orgsec-down-org="'+g.id+'" title="섹션 아래로">▼</button><button data-orgsec-del="'+esc(title)+'" data-orgsec-del-org="'+g.id+'" title="섹션 삭제">✕</button></div>';
+        } else {
+          h += '<div class="wiki-rowhead">'+esc(title)+'</div>';
+        }
+        if (secMembers.length) h += orgGridHtml(secMembers, g.id, (m)=>effSecOf(m, g.id, levels));
+        else if (edit) h += '<div class="wiki-sublabel">비어 있음 — 카드 아래 칸에 이 섹션 이름을 적으면 여기로 와요</div>';
+      });
+      if (edit){
+        h += '<div class="wiki-addsec"><input data-orgsec-new="'+g.id+'" placeholder="새 섹션 이름"><button data-orgsec-add="'+g.id+'" type="button">섹션 추가</button></div>';
+      }
+    }
+    return h + '</div>';
+  };
   let charsHtml = "";
   if (!groups.length){
     charsHtml = gridHtml(charList, null);
@@ -837,6 +1023,7 @@ function render(){
     const groupedIdsPre = new Set(groups.map(g=>g.id));
     const ungroupedPre = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIdsPre.has(id)));
     if (topOrgs.length){
+      if (isMaster) charsHtml += '<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="wiki-editbtn" data-orgsec-edit-toggle>'+(window.orgSecEdit ? "✓ 편집 끝" : "✏️ 조직도 편집")+'</button></div>';
       charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
         const expanded = window.expandedOrgs.has(g.id);
         const tileImg = g.logo || "";
@@ -854,8 +1041,13 @@ function render(){
         charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>' + (g.logo ? '<div style="text-align:center;margin:8px 0 12px"><img src="'+esc(imgM(g.logo))+'" alt="" style="max-width:220px;width:100%;border-radius:12px;display:block;margin:0 auto" loading="lazy"></div>' : '');
         if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
-        if (direct.length) charsHtml += gridHtml(direct, g.id);
-        children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        if (isMaster && window.listEdit){
+          if (direct.length) charsHtml += gridHtml(direct, g.id);
+          children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        } else {
+          // 보기 모드: 나무위키 모드와 같은 섹션 조직도 (2026-11-14)
+          charsHtml += orgBlockHtml(g, false, false);
+        }
         if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
         charsHtml += '</div>';
       });
@@ -931,6 +1123,15 @@ function render(){
   document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
   document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
   document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
+  // 수동 섹션 편집 (사이드바 조직타일)
+  document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
+  document.querySelectorAll("[data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; render(); });
+  document.querySelectorAll("[data-orgsec-title-org]").forEach(inp=>inp.onchange=()=>{ renameSection(inp.dataset.orgsecTitleOrg, inp.dataset.orgsecTitleOld, inp.value); });
+  document.querySelectorAll("[data-orgsec-up]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecUpOrg, b.dataset.orgsecUp, -1));
+  document.querySelectorAll("[data-orgsec-down]").forEach(b=>b.onclick=()=>moveSection(b.dataset.orgsecDownOrg, b.dataset.orgsecDown, 1));
+  document.querySelectorAll("[data-orgsec-del]").forEach(b=>b.onclick=()=>deleteSection(b.dataset.orgsecDelOrg, b.dataset.orgsecDel));
+  document.querySelectorAll("[data-orgsec-add]").forEach(b=>b.onclick=()=>{ const row = b.closest(".wiki-addsec"); const inp = row ? row.querySelector("input") : document.querySelector('[data-orgsec-new="'+b.dataset.orgsecAdd+'"]'); addSection(b.dataset.orgsecAdd, inp ? inp.value : ""); });
+  document.querySelectorAll("[data-orgsec-char]").forEach(inp=>inp.onchange=()=>{ setMemberSection(inp.dataset.orgsecChar, inp.dataset.orgsecGid, inp.value); });
   const moveGroup = (gid, dir)=>{ const g = cw.groups.find(x=>x.id===gid); if (!g) return; const sibs = cw.groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind); const pos = sibs.findIndex(x=>x.id===gid); const target = sibs[pos+dir]; if (!target) return; const i1 = cw.groups.findIndex(x=>x.id===gid); const i2 = cw.groups.findIndex(x=>x.id===target.id); const tmp = cw.groups[i1]; cw.groups[i1] = cw.groups[i2]; cw.groups[i2] = tmp; persist(); render(); };
   document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gup, -1));
   document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gdown, 1));
