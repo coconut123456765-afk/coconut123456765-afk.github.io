@@ -1338,7 +1338,7 @@ function render(){
     // 프로필 상단 조직 내비박스 (Don 2026-11-14: 캐릭터 페이지에도 조직 내비박스, 나무위키식 — 미도리야 페이지 참고)
     if (!window.expandedNavbox) window.expandedNavbox = new Set(['rest:w1792508654855']);
     if (!window.collapsedNavbox) window.collapsedNavbox = new Set();
-    const pOrgs = groups.filter(g=>g.kind==="org" && !g.parentId && charInGroup(c, g.id));
+    const pOrgs = groups.filter(g=>g.kind==="org" && !g.parentId && orgLevels(g.id).members.some(m=>m.id===c.id)); // 하위 그룹(디스펜서) 소속도 조직 소속으로 봄 — charInGroup은 직속만 봐서 신데렐라가 빠져서
     const pNavOrgs = pOrgs.filter(g=>{ const mm = orgLevels(g.id).members; return mm.length>=2; });
     const pNavHead = (title, logo)=> '<div class="wiki-navbox2-head">'
       + (logo ? '<div class="wiki-navbox2-logo"><img src="'+esc(imgM(logo))+'" alt="로고" loading="lazy"></div>' : '')
