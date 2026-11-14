@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossier:Don</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="192x192" href="https://res.cloudinary.com/x4eukv2d/image/upload/w_192,h_192,c_pad,b_transparent/dossier-logo-red.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/x4eukv2d/image/upload/w_192,h_192,c_pad,b_transparent/dossier-logo-red.png">
+<meta property="og:title" content="Dossier:Don">
+<meta property="og:description" content="Don의 캐릭터 도감">
+<meta property="og:image" content="https://res.cloudinary.com/x4eukv2d/image/upload/v1793391343/dossier-logo-v3.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root, html[data-theme="dark"] {
+    --bg:#101218; --panel:#232836; --line:#343b4f; --txt:#e8eaf0; --dim:#9aa3b8; --acc:#7fb4ff; --warm:#ffc98a;
+    --input-bg:#141821; --plabel-bg:#1a2233; --paper:#1a2030; --ruled:rgba(140,170,220,0.09);
+    --hole-in:#05080f; --hole-ring:#46536e; --badge-bg:#5a3d1e; --on-acc:#101623;
+    --pair-paper:#2a2418; --pair-ruled:rgba(255,255,255,0.09); --cover:#6e5f4a; --cover-bg:#3d3325; --ruled-strong:rgba(255,255,255,0.18);
+  }
+  html[data-theme="light"] {
+    --bg:#e6dfd0; --panel:#ffffff; --line:#ddd6c8; --txt:#2c2822; --dim:#8a8172; --acc:#1a6fb5; --warm:#8a5a1e;
+    --input-bg:#ffffff; --plabel-bg:#efe9db; --paper:#fffdf7; --ruled:rgba(120,100,70,0.10);
+    --hole-in:#e6dfcf; --hole-ring:#b3a88f; --badge-bg:#f0e2c8; --on-acc:#ffffff;
+    --pair-paper:#fdf2cf; --pair-ruled:rgba(90,130,180,0.35); --cover:#8a6f4d; --cover-bg:#e2d0ae; --ruled-strong:rgba(90,130,180,0.35);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:"Pretendard","Apple SD Gothic Neo",sans-serif; line-height:1.6; }
+  header { padding:18px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:20px; margin:0; }
+  .brand { font-family:"Special Elite","Courier New",monospace; font-size:23px; letter-spacing:2px; margin:0; font-weight:400; }
+
+  .brand .b-colon { color:var(--acc); }
+  .brand .b-don { border-bottom:2px solid var(--acc); padding-bottom:1px; }
+  .demo-badge { background:var(--badge-bg); color:var(--warm); font-size:12px; padding:3px 10px; border-radius:20px; }
+  .worlds { display:flex; gap:8px; margin-left:auto; }
+  .worlds button, .tabs button, .chars button { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
+  .worlds button.on, .tabs button.on, .chars button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  main { display:flex; min-height:calc(100vh - 70px); }
+  aside { width:280px; border-right:1px solid var(--line); padding:14px; }
+  aside h3 { font-size:13px; color:var(--dim); margin:4px 0 10px; }
+  .chars { display:flex; flex-direction:column; gap:6px; }
+  .chars button { text-align:left; display:flex; align-items:center; gap:10px; }
+  .group-head { display:flex; align-items:center; gap:6px; margin:14px 0 6px; }
+  .group-head:first-child { margin-top:4px; }
+  .group-head h4 { margin:2px 0 6px; font-size:16px; font-weight:700; font-family:"Noto Serif KR",serif; flex:1; min-width:0; letter-spacing:.2px; padding:3px 0 3px 10px; line-height:1.7; border-left:3px solid var(--acc); }
+  .group-head input.group-name { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:13px; }
+  .group-head button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:8px; cursor:pointer; padding:7px 12px; font-size:13px; }
+  .group-head input.group-name { font-size:14px; padding:7px 9px; }
+  .group-bigrow { display:flex; gap:8px; margin:8px 0 12px; flex-wrap:wrap; }
+  .group-bigrow button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; cursor:pointer; padding:9px 14px; font-size:14px; font-weight:700; }
+  .group-create-panel { border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:14px; background:var(--panel); }
+  .group-create-panel h4 { margin:0 0 6px; font-size:14px; }
+  .group-create-panel p { margin:0 0 8px; font-size:12px; color:var(--dim); }
+  .group-create-panel input, .group-create-panel select { width:100%; box-sizing:border-box; margin-bottom:8px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-size:14px; }
+  .group-create-panel button { width:100%; border:1px solid var(--line); background:var(--acc); color:var(--on-acc); border-radius:8px; cursor:pointer; padding:10px; font-size:14px; font-weight:700; }
+  .gcard-select { display:flex; gap:6px; align-items:center; justify-content:center; font-size:12px; color:var(--dim); padding:4px 0 0; }
+  .gcard-wrap.selected .gcard { outline:3px solid var(--acc); }
+  .group-sub { margin-left:0; margin-top:20px; border-left:4px solid var(--acc); padding-left:14px; }
+  .group-block { margin-top:24px; padding:14px; border:2px solid var(--cover); border-radius:8px; background-color:var(--paper); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); box-shadow:0 3px 10px rgba(0,0,0,.12); }
+  .group-block.org-block { background-color:var(--cover-bg); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--ruled-strong) 27px, var(--ruled-strong) 28px); }
+  .group-block .group-head h4 { font-family:"Noto Serif KR",serif; letter-spacing:.2px; }
+  .orgchart-tabs { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+  .orgchart-tabs button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .orgchart-tabs button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  .orgchart-node { border:1px solid var(--line); border-top:4px solid var(--acc); border-radius:12px; padding:10px 8px 8px; background:var(--panel); text-align:center; min-width:110px; max-width:140px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .orgchart-node.drop-target { outline:3px solid var(--acc); }
+  .orgchart-node.board-selected { outline:3px solid var(--acc); outline-offset:2px; }
+  .orgchart-node img { width:56px; height:56px; object-fit:cover; border-radius:50%; display:block; margin:0 auto; border:2px solid var(--line); }
+  .orgchart-node-name { font-weight:700; font-size:13px; margin-top:6px; }
+  .orgchart-node-sub { font-size:11px; color:var(--dim); }
+  .orgchart-tree { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
+  .orgchart-tree-node { display:flex; flex-direction:column; align-items:center; position:relative; }
+  .orgchart-children { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px; padding-top:18px; position:relative; }
+  .orgchart-children::before { content:""; position:absolute; top:0; left:50%; width:2px; height:18px; background:var(--line); }
+  .orgchart-tree-node > .orgchart-children::after { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:var(--line); }
+  .orgchart-topzone { border:2px dashed var(--line); border-radius:10px; padding:10px; text-align:center; color:var(--dim); font-size:13px; margin:8px 0; }
+  .orgchart-topzone.drop-target { border-color:var(--acc); color:var(--acc); }
+  .group-block:first-child { margin-top:0; }
+  .group-block:first-child { margin-top:0; padding-top:0; border-top:0; }
+  button.group-org { flex:1; min-width:0; text-align:left; background:var(--panel); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; cursor:pointer; font-weight:700; }
+  .org-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 12px; }
+  button.org-tile { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:16px; text-align:center; background:var(--panel); color:var(--txt); border:1px solid var(--line); cursor:pointer; }
+  button.org-tile.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .org-tile-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
+  .org-tile-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .org-tile-name { font-size:12px; font-weight:700; padding:6px 3px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 8px; }
+  .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  /* Astryx Card 시범 (2026-11-12) — 롤백: index-before-astryx.html */
+  button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:16px; text-align:center; border:1px solid var(--line); }
+  button.gcard:hover { box-shadow:0 8px 24px rgba(0,0,0,.14); }
+  button.gcard:focus-visible { outline:2px solid var(--acc); outline-offset:3px; }
+  button.gcard.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .gcard-pos { font-size:11px; color:var(--dim); padding:7px 6px 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+  .gcard-sub { font-size:11px; color:var(--dim); padding:3px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+  button.gcard.on .gcard-pos, button.gcard.on .gcard-sub { color:inherit; opacity:0.85; }
+  .gcard-img { aspect-ratio:1/1; background:var(--plabel-bg); overflow:hidden; }
+  .gcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .gcard-img-empty { width:100%; height:100%; background:var(--plabel-bg); }
+  .gcard-name { font-size:14px; font-weight:700; padding:7px 6px 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+  .gcard-order { display:flex; gap:4px; justify-content:center; }
+  .gcard-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; }
+  .group-editbar { display:flex; gap:8px; align-items:center; margin:0 0 10px; }
+  .group-editbar button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 10px; font-size:12px; font-weight:700; }
+  .group-editbar button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .group-editbar span { font-size:11px; color:var(--dim); }
+  .org-chart .org-top { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .tree-node { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
+  .tree-node .gcard-wrap { width:170px; }
+  .tree-children { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
+  .tree-conn { width:3px; height:20px; background:var(--dim); border-radius:2px; }
+  .gtile-btn { width:100%; box-sizing:border-box; margin-top:4px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
+  .gtile-row { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; justify-content:center; }
+  .gtile-row button { border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:6px; cursor:pointer; padding:3px 7px; font-size:11px; }
+  .gtile-row button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+  .org-chart .org-top .gcard-wrap { width:160px; flex:0 0 160px; }
+  .org-top-count { display:flex; gap:6px; align-items:center; font-size:12px; color:var(--dim); margin:6px 0; }
+  .org-top-count input { width:56px; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:13px; }
+  .org-conn { width:3px; height:22px; background:var(--dim); margin:0 auto 8px; border-radius:2px; }
+  .gcard-drag { cursor:grab; text-align:center; font-size:12px; color:var(--dim); padding:2px 0 0; touch-action:none; user-select:none; }
+  .gcard-wrap.dragging { opacity:.35; }
+  .gcard-sub-input { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:4px 6px; font-size:11px; }
+  .drag-ghost { position:fixed; z-index:9999; width:160px; pointer-events:none; opacity:.9; box-shadow:0 8px 20px rgba(0,0,0,.25); border-radius:10px; overflow:hidden; background:var(--panel); }
+  .group-add { display:flex; gap:6px; margin-top:10px; }
+  .group-add input { flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:12px; }
+  .group-add button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:6px; cursor:pointer; padding:5px 9px; font-size:12px; }
+  .char-row { display:flex; align-items:center; gap:4px; }
+  .char-row .char-sel { flex:1; min-width:0; }
+  .char-order { display:flex; flex-direction:column; gap:2px; flex-shrink:0; }
+  .char-order button { width:20px; height:15px; font-size:8px; line-height:1; padding:0; border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .char-order button:hover:not(:disabled) { color:var(--acc); border-color:var(--acc); }
+  .char-order button:disabled { opacity:0.2; cursor:default; }
+  .char-meta { display:flex; flex-direction:column; min-width:0; flex:1; }
+  .char-name { font-size:14px; }
+  .char-sub { font-size:11px; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .char-item-img { margin:2px 0 8px; border-radius:10px; overflow:hidden; border:1px solid var(--line); aspect-ratio:1/1; max-height:280px; }
+  .char-item-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .char-thumb { cursor:pointer; }
+  .gal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:10px; }
+  .prompttext { white-space:pre-wrap; overflow-wrap:break-word; }
+  .promptbox .promptcopy { align-self:flex-end; }
+  .pair-list { display:flex; flex-direction:column; gap:16px; margin-top:10px; }
+  .pair-row { background-color:var(--pair-paper); background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--pair-ruled) 27px, var(--pair-ruled) 28px); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .pair-head { display:flex; align-items:center; gap:10px; padding:10px 14px; background:transparent; border-bottom:1px solid var(--line); }
+  .pair-no { font-family:"Special Elite","Courier New",monospace; color:var(--acc); font-size:14px; letter-spacing:1px; white-space:nowrap; }
+  .pair-name { font-family:"Nanum Pen Script","Segoe Print",cursive; font-weight:400; font-size:26px; line-height:1.2; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pair-head .pair-title { font-family:"Nanum Pen Script","Segoe Print",cursive; font-size:24px; flex:1; min-width:0; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+  .pair-body { display:flex; gap:16px; padding:14px; align-items:flex-start; }
+  .pair-frame { position:relative; background:#fdfdf8; padding:8px 8px 20px; border-radius:2px; box-shadow:0 3px 10px rgba(0,0,0,0.18); width:216px; flex-shrink:0; }
+  .pair-frame::before { content:''; position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-2deg); width:72px; height:20px; background:rgba(255,255,255,0.45); border:1px solid rgba(0,0,0,0.06); border-radius:2px; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  .pair-frame img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
+  .pair-ptext { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .pair-plabel { font-family:"Special Elite","Courier New",monospace; font-size:12px; letter-spacing:2px; color:var(--dim); }
+  .pair-ptext .prompttext { font-size:15px; line-height:28px; }
+  .pair-body .pair-prompt { flex:1; min-width:0; }
+  .pair-row.copybox { cursor:pointer; }
+  .pair-side { flex:1; min-width:0; }
+  .pair-body div.pair-desc { white-space:pre-wrap; line-height:28px; font-size:16px; font-family:inherit; color:#222; background:#FFE89A; padding:8px 12px; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+  .pair-body textarea.desc-note { width:100%; box-sizing:border-box; background:#FFE89A; color:#222; font-family:inherit; font-size:16px; line-height:28px; padding:8px 12px; border:1px solid #E8C86A; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.12); margin-bottom:8px; }
+  .copyhint { font-size:12px; color:var(--dim); margin-top:6px; }
+  .copytip { text-align:right; margin-top:8px; }
+  .copytip span { display:inline-block; font-size:13px; color:var(--txt); background:var(--plabel-bg); border:1px solid var(--line); border-radius:8px; padding:5px 10px; }
+  .pair-body .pair-desc { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; font-size:14px; font-family:inherit; }
+  @media (max-width:700px){ .pair-body{flex-direction:column;} .pair-frame{width:100%;} }
+  .gal-item { border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--panel); }
+  .gal-item img { width:100%; height:200px; object-fit:cover; display:block; cursor:zoom-in; }
+  .gal-title { padding:6px 8px; font-size:12px; color:var(--txt); }
+  .gal-edrow { display:flex; align-items:center; gap:8px; margin-top:8px; padding:8px; border:1px solid var(--line); border-radius:10px; }
+  .gal-edimg { width:56px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+  .gal-edtitle { flex:1; }
+  .char-thumb { width:32px; height:32px; border-radius:50%; background:var(--plabel-bg); color:var(--dim); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; overflow:hidden; }
+  .char-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .chars-head { display:flex; align-items:center; justify-content:space-between; margin:4px 0 10px; }
+  .chars-head h3 { font-size:13px; color:var(--dim); margin:0; }
+  .chars-tools { display:flex; gap:6px; }
+  .chars-tools button { width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background:var(--panel); color:var(--dim); font-size:15px; line-height:1; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+  .chars-tools button:hover { color:var(--txt); border-color:var(--acc); }
+  .chars-tools #delChar:hover { color:#e06c75; border-color:#e06c75; }
+  section { flex:1; padding:20px 26px; max-width:760px; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:13px; color:var(--dim); margin-bottom:5px; }
+  .field .val { font-size:16px; }
+  .field input, .field textarea, .field select { width:100%; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:15px; }
+  .field textarea { min-height:90px; resize:vertical; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .rel { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .rel select { flex:1; }
+  .rel button { border:1px solid var(--line); background:var(--panel); color:var(--txt); border-radius:8px; padding:8px 10px; cursor:pointer; }
+
+  .val.overview { font-size:17px; border-left:3px solid var(--acc); padding-left:12px; }
+  .val.foldable { max-height:4.8em; overflow:hidden; }
+  .val.foldable.open { max-height:none; }
+  .foldbtn { background:none; border:1px solid var(--line); color:var(--acc); border-radius:8px; padding:8px 14px; margin-top:8px; cursor:pointer; font-size:14px; }
+  .navbox { margin-top:26px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .navbox-title { background:var(--plabel-bg); padding:10px 14px; font-weight:700; font-size:14px; }
+  .navbox-links { padding:12px 14px; display:flex; flex-wrap:wrap; gap:8px; }
+  .navbox-links button { background:var(--plabel-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 14px; cursor:pointer; font-size:14px; }
+  .navbox-links button:hover { border-color:var(--acc); }
+
+  .quotebanner {
+    background:linear-gradient(180deg,#ffe87a 0%,#ffefa0 12%,#fff3ad 100%);
+    color:#4a3d1a; text-align:center; padding:14px 16px; border-radius:3px;
+    font-weight:600; font-size:16px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);
+    position:relative;
+  }
+  .quotebanner::before {
+    content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:74px; height:20px; background:rgba(255,255,255,0.45);
+    border:1px solid rgba(0,0,0,0.06); border-radius:2px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  }
+  .polaroid {
+    background:#fdfdf8;
+    padding:14px 14px 44px;
+    display:inline-block; max-width:680px; width:100%;
+    box-shadow:0 5px 16px rgba(0,0,0,0.22);
+    position:relative;
+  }
+  .polaroid img { display:block; width:100%; }
+  .polaroid::before {
+    content:''; position:absolute; top:-11px; left:50%;
+    transform:translateX(-50%) rotate(2deg);
+    width:86px; height:22px; background:rgba(255,255,255,0.42);
+    border:1px solid rgba(0,0,0,0.05); border-radius:2px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  }
+  .bigname { font-size:24px; font-weight:800; }
+  .ptable { width:100%; border-collapse:collapse; font-size:15px; margin-top:4px; table-layout:fixed; }
+  .ptable td { overflow-wrap:break-word; }
+  .ptable td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+  .ptable td.plabel { background:var(--plabel-bg); font-weight:700; width:24%; }
+  .ptable input { width:100%; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:7px 9px; font-size:15px; box-sizing:border-box; }
+  .colorchip { display:inline-block; max-width:100%; box-sizing:border-box; overflow:hidden; color:#fff; padding:3px 12px; border-radius:6px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .val.overview { font-size:16px; }
+  @media (max-width:700px){ .ptable{font-size:14px;} .ptable td{padding:7px 8px;} .bigname{font-size:21px;} .colorchip{padding:2px 8px;font-size:12px;} }
+
+  .notebook { position:relative; border:1px solid var(--line); border-radius:12px; padding:20px 20px 20px 58px;
+    background-color:var(--paper);
+    background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 30px, var(--ruled) 30px, var(--ruled) 31px); }
+  .notebook::before { content:""; position:absolute; left:12px; top:16px; bottom:16px; width:24px;
+    background-image:radial-gradient(circle, var(--hole-in) 0 5px, var(--hole-ring) 5px 6px, transparent 6.5px);
+    background-size:24px 38px; background-repeat:repeat-y; }
+  .notebook::after { content:""; position:absolute; top:0; bottom:0; left:48px; width:2px; background:rgba(255,110,110,0.22); }
+  @media (max-width:700px){ .notebook{padding:16px 14px 16px 46px;} .notebook::before{left:8px;} .notebook::after{left:38px;} }
+
+
+  .hdr-btn { cursor:pointer; border:1px solid var(--line); background:var(--panel); color:var(--txt); padding:8px 14px; border-radius:10px; font-size:14px; }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:50; padding:20px; align-items:center; justify-content:center; }
+  .modal-panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; width:340px; max-width:100%; }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .modal-head b { font-size:17px; }
+  .setting-row { margin-bottom:16px; }
+  .setting-row > label { display:block; font-size:13px; color:var(--dim); margin-bottom:8px; }
+  .login-input { width:100%; box-sizing:border-box; background:var(--input-bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:15px; }
+  .seg { display:flex; gap:8px; }
+  .seg button { flex:1; cursor:pointer; border:1px solid var(--line); background:var(--bg); color:var(--txt); padding:10px; border-radius:10px; font-size:14px; }
+  .seg button.on { background:var(--acc); color:var(--on-acc); border-color:var(--acc); font-weight:700; }
+  .acc-row { display:flex; gap:8px; align-items:center; }
+  .hint { font-size:12px; color:var(--dim); margin:8px 0 0; }
+
+  .wikilink { color:var(--acc); text-decoration:underline; cursor:pointer; }
+  .field .val { white-space:pre-wrap; }
+  .topnav { margin-bottom:14px; font-size:13px; color:var(--dim); }
+  .topnav a { color:var(--acc); cursor:pointer; margin:0 6px; }
+
+  .worldrow { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .worldrow input[type="text"] { flex:1; min-width:0; background:var(--input-bg); border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:8px 10px; font-size:14px; }
+  .worldrow input[type="color"] { width:34px; height:34px; padding:2px; border:1px solid var(--line); border-radius:8px; background:var(--input-bg); cursor:pointer; flex-shrink:0; }
+  .worldrow label { font-size:13px; color:var(--dim); white-space:nowrap; display:flex; align-items:center; gap:4px; }
+  .worldrow .wdel { border:1px solid var(--line); background:none; color:#e06c75; border-radius:8px; padding:8px 10px; cursor:pointer; font-size:13px; white-space:nowrap; }
+  .tab-editbar { display:flex; gap:8px; justify-content:flex-end; margin-bottom:12px; }
+  .tab-editbar .acc { background:var(--acc); color:var(--on-acc); font-weight:700; border-color:var(--acc); }
+  .sample-note { font-size:12px; color:var(--warm); margin-bottom:12px; }
+  .empty { color:var(--dim); }
+  @media (max-width:700px){ main{flex-direction:column;} aside{width:auto;border-right:0;border-bottom:1px solid var(--line);} section{padding:16px;} .row4{grid-template-columns:1fr 1fr;} .row3{grid-template-columns:1fr;} .field input, .field textarea, .field select{font-size:16px;} .worlds button, .tabs button, .chars button{padding:11px 16px;} header{padding:14px 16px;} header h1{font-size:18px;} .brand{font-size:19px; letter-spacing:1px;} }
+</style>
+</head>
+<body>
+<header>
+    <h1 class="brand">Dossier<span class="b-colon">:</span><span class="b-don">Don</span></h1>
+  <div class="worlds" id="worlds"></div>
+  <span id="syncStatus" style="font-size:12px;color:var(--dim);margin-right:8px;">동기화 확인 중…</span>
+  <button id="authBtn" class="hdr-btn">마스터 로그인</button>
+  <button id="settingsBtn" class="hdr-btn">설정</button>
+  <button class="hdr-btn" onclick="location.href='index.html'" title="나무위키처럼 보이는 디자인으로 보기">🌳 나무위키 모드</button>
+</header>
+<div id="settingsModal" class="modal" style="display:none">
+  <div class="modal-panel">
+    <div class="modal-head"><b>설정</b><button id="settingsClose" class="hdr-btn">닫기</button></div>
+    <div class="setting-row"><label>테마</label>
+      <div class="seg">
+        <button id="themeDarkBtn">다크</button>
+        <button id="themeLightBtn">라이트</button>
+      </div>
+    </div>
+    <div class="setting-row"><label>데이터</label>
+      <div class="seg">
+        <button id="exportBtn">내보내기</button>
+        <button id="importBtn">가져오기</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <p class="hint">편집 내용은 이 브라우저에 자동 저장돼요. 백업하거나 다른 기기로 옮길 땐 내보내기를 쓰세요.</p>
+      <p class="hint">이미지가 base64로 저장돼 무거우면 'Cloudinary로 옮기기'를 눌러보세요.</p>
+    </div>
+    <div class="setting-row" id="backupRow"><label>자동 백업</label>
+      <div id="backupList"></div>
+      <p class="hint">저장할 때마다 최근 5개 상태가 서버에 자동 백업돼요. 실수로 지웠을 때 여기서 되돌릴 수 있어요. 파일로 따로 보관하려면 내보내기를 쓰세요.</p>
+    </div>
+    <div class="setting-row" id="worldMgmtRow"><label>세계관 관리</label>
+      <div id="worldList"></div>
+      <button id="addWorldBtn" class="hdr-btn" style="width:100%;margin-top:4px">＋ 세계관 추가</button>
+    </div>
+  </div>
+</div>
+<div id="loginModal" class="modal" style="display:none">
+  <div class="modal-panel">
+    <div class="modal-head"><b>마스터 로그인</b><button id="loginClose" class="hdr-btn">닫기</button></div>
+    <div class="setting-row"><label>이메일</label><input id="loginEmail" type="email" autocomplete="username" class="login-input"></div>
+    <div class="setting-row"><label>비밀번호</label><input id="loginPass" type="password" autocomplete="current-password" class="login-input"></div>
+    <p class="hint" id="loginErr" style="color:#e06c75;display:none"></p>
+    <button id="loginGo" class="hdr-btn acc" style="width:100%;padding:10px">로그인</button>
+    <p class="hint">한 번 로그인한 브라우저에서는 다음부터 자동으로 마스터로 들어갑니다.</p>
+  </div>
+</div>
+<main>
+  <aside>
+    <div class="chars-head"><h3>캐릭터</h3><div class="chars-tools"><button id="addChar" title="캐릭터 추가">＋</button><button id="delChar" title="현재 캐릭터 삭제">－</button></div></div>
+    <div class="chars" id="chars"></div>
+  </aside>
+  <section>
+    <div class="sample-note" id="sampleNote" style="display:none">※ 이 캐릭터는 구조 확인용 샘플이에요. 오늘 밤에 지우고 Don의 캐릭터로 채워요.</div>
+    <div class="tabs" id="tabs"></div>
+    <div id="body"></div>
+  </section>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ---------- 데모 데이터 (오늘 밤 세션에서 교체) ---------- */
+const WORLDS = {
+  hotel: { name:"🏨 판타지 호텔", hasWeapon:true, chars:[
+    { id:"h1", sample:true, profile:{name:"(샘플) 리아", age:"24", height:"168cm", birthday:"3월 14일"},
+      rels:[{to:"h2", kind:"family"}], illust:"", wardrobe:"낮: 프론트 유니폼(네이비)\n밤: 바텐더 복장",
+      weapon:"은빛 단검 — 호신용", three:"B88 / W60 / H89",
+      overview:"호텔 로비의 낮을 지키는 프론트 직원. 손님맞이 미소가 트레이드마크다. [[노아]]와는 남매 사이.",
+      quote:"(샘플) 어서 오세요. 최고의 밤을 준비했어요.", color:"#7B61FF",
+      blood:"A형", weight:"52kg", birthplace:"(샘플) 항구도시",
+      hand:"오른손", hobby:"칵테일 레시피 수집", specialty:"웃는 얼굴",
+      custom:"데모용 메모입니다. 여담이 길어지면 이렇게 접기 버튼이 생겨요. 나무위키처럼 긴 내용은 접어두고, 보고 싶을 때 펼쳐서 읽는 방식이에요. 캐릭터에 얽힌 비하인드나 설정 메모가 쌓이면 이 칸이 가장 먼저 길어질 거예요." },
+    { id:"h2", sample:true, profile:{name:"(샘플) 노아", age:"19", height:"175cm", birthday:"11월 2일"},
+      rels:[{to:"h1", kind:"family"}], illust:"", wardrobe:"벨보이 유니폼",
+      weapon:"(없음)", three:"", overview:"리아의 동생. 호기심 많은 말썽꾸러기.",
+      quote:"(샘플) 형! 나도 벨보이 할래!", color:"#FF9F43",
+      blood:"B형", weight:"60kg", birthplace:"(샘플) 항구도시",
+      hand:"오른손", hobby:"뒷골목 탐험", specialty:"빨리 달리기", custom:"" },
+  ]},
+  siblings:{ name:"🏠 6남매 일상 코미디", hasWeapon:false, chars:[
+    { id:"s1", sample:true, profile:{name:"(샘플) 첫째", age:"27", height:"180cm", birthday:"1월 5일"},
+      rels:[], illust:"", wardrobe:"평상복", weapon:"", three:"", overview:"6남매의 맏이. 동생들을 챙기느라 늘 바쁜 일상.",
+      quote:"(샘플) 밥은 챙겨 먹고 다니냐?", color:"#4CAF50",
+      blood:"O형", weight:"75kg", birthplace:"(샘플) 서울",
+      hand:"오른손", hobby:"요리", specialty:"빨래 개기", custom:"맏이. 요리 담당" },
+  ]},
+};
+const TABS = [
+  ["profile","프로필"], ["illust","일러스트"], ["wardrobe","옷장"],
+  ["weapon","무기"], ["relations","인간관계"], ["custom","여담"],
+];
+const REL_KINDS = { family:"가족", friend:"지인" };
+
+/* ---------- 상태 ---------- */
+let store = JSON.parse(JSON.stringify(WORLDS));
+let theme = "dark";
+const ACCENTS = { dark:"#7fb4ff", light:"#1a6fb5" };
+function pickText(hex){
+  const c = String(hex||"#000000").replace("#","");
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return ((0.299*r + 0.587*g + 0.114*b)/255) > 0.6 ? "#101623" : "#ffffff";
+}
+function worldAccent(){
+  const w = store[curWorld];
+  return (w && w.accent) || ACCENTS[theme];
+}
+function applyAccent(){
+  const a = worldAccent();
+  document.documentElement.style.setProperty("--acc", a);
+  document.documentElement.style.setProperty("--on-acc", pickText(a));
+}
+
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", theme);
+  const db = document.getElementById("themeDarkBtn"), lb = document.getElementById("themeLightBtn");
+  if (db) db.classList.toggle("on", theme==="dark");
+  if (lb) lb.classList.toggle("on", theme==="light");
+}
+/* ---- 저장: 로컬 캐시 + 클라우드 실시간 동기화 ---- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const CLOUDINARY_CLOUD = "x4eukv2d";
+const CLOUDINARY_PRESET = "Unsigned";
+async function uploadToCloudinary(file){
+  // 원본 그대로 업로드 (압축 없음)
+  const fd = new FormData();
+  fd.append("file", file, file.name || (file.type === "image/png" ? "image.png" : "image.jpg"));
+  fd.append("upload_preset", CLOUDINARY_PRESET);
+  const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUDINARY_CLOUD + "/image/upload", {
+    method: "POST", body: fd
+  });
+  if (!res.ok) throw new Error("Cloudinary 업로드 실패 (" + res.status + ")");
+  const j = await res.json();
+  if (!j.secure_url) throw new Error("Cloudinary 응답 오류");
+  return j.secure_url;
+}
+let cloudRef = null, cloudReady = false, cloudCache = "";
+let cloudBackups = []; // 서버 자동 백업 스냅샷 (최근 5개, wiki 노드 내 backups)
+const MASTER_EMAIL = "coconut123456765@gmail.com";
+let isMaster = false; // 마스터 로그인 여부 (게스트는 보기만)
+let storeUpdatedAt = 0;
+function saveLocal(){
+  try{ localStorage.setItem("don_wiki", JSON.stringify({ store, theme, storeUpdatedAt })); }
+  catch(e){ /* 용량 초과 시 조용히 무시 - Firebase가 진짜 저장소 */ }
+}
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem("don_wiki");
+    if (raw){
+      const st = JSON.parse(raw);
+      if (st && st.store){
+        // 구버전 데이터에 섞인 _updatedAt 제거
+        if (st.store._updatedAt) delete st.store._updatedAt;
+        store = st.store;
+      }
+      if (st && st.theme) theme = st.theme;
+      if (st && st.storeUpdatedAt) storeUpdatedAt = st.storeUpdatedAt;
+    }
+  }catch(e){}
+  normalizeStore();
+}
+// 구 데이터에 빠진 필드 보정 (rels 없는 캐릭터가 있으면 관계 추가가 조용히 실패함)
+function normalizeStore(){
+  Object.values(store).forEach(w=>{
+    if (!w || !Array.isArray(w.chars)) return;
+    if (!Array.isArray(w.groups)) w.groups = [];
+    w.groups.forEach(g=>{ if (!g.id) g.id = "g_"+Math.random().toString(36).slice(2,10); if (g.parentId === undefined) g.parentId = null; if (g.kind !== "org" && g.kind !== "group") g.kind = "group"; if (g.logo === undefined) g.logo = ""; });
+    // 조직은 기본 접힌 상태, 그룹/반은 기본 펼쳐진 상태 (UI 상태만, 저장 안 함)
+    if (!window.expandedOrgs) window.expandedOrgs = new Set();
+    w.chars.forEach(c=>{ if (!Array.isArray(c.rels)) c.rels = []; if (!Array.isArray(c.customRows)) c.customRows = []; c.customRows.forEach(r=>{ if (r && !r.cid) r.cid = "cr_"+Math.random().toString(36).slice(2,10); }); if (c.repImg === undefined) c.repImg = String(c.illust||"").split("\n").find(s=>s.trim()) || ""; if (c.subtitle === undefined) c.subtitle = ""; if (!Array.isArray(c.groupIds)) c.groupIds = []; c.groupIds = c.groupIds.filter(id=>w.groups.some(g=>g.id===id)); if (!c.groupSubs || typeof c.groupSubs !== 'object') c.groupSubs = {}; if (!c.groupSuperior || typeof c.groupSuperior !== 'object') c.groupSuperior = {}; if (c.superiorId && !w.chars.some(x=>x.id===c.superiorId)) c.superiorId = null; });
+  });
+}
+function worldGroups(w){ return (w && Array.isArray(w.groups)) ? w.groups : []; }
+function groupOf(w, id){ return worldGroups(w).find(g=>g.id===id) || null; }
+function charInGroup(c, gid){ return Array.isArray(c.groupIds) && c.groupIds.includes(gid); }
+function groupSubtitle(c, gid){ if (gid && gid !== '__ungrouped' && c.groupSubs && c.groupSubs[gid]) return c.groupSubs[gid]; return c.position || ''; }
+// 조직도 자유 배치 보드 (2026-11-13): 보드 안 카드들의 상급자 연결선을 SVG로 그림. 카드 실제 위치(offsetLeft/Top)로 계산.
+function drawBoardLines(board){
+  if (!board) return;
+  const svg = board.querySelector("svg.orgchart-lines"); if (!svg) return;
+  const orgId = window.orgChartOrg; if (!orgId) return;
+  const w = store[curWorld]; if (!w) return;
+  const nodes = {};
+  board.querySelectorAll("[data-org-node]").forEach(n=>{ nodes[n.dataset.orgNode] = n; });
+  let lines = "";
+  (w.chars||[]).forEach(c=>{
+    const sup = c.groupSuperior && c.groupSuperior[orgId];
+    const a = nodes[c.id], b = sup && nodes[sup];
+    if (!a || !b) return;
+    const x1 = a.offsetLeft + a.offsetWidth/2, y1 = a.offsetTop;
+    const x2 = b.offsetLeft + b.offsetWidth/2, y2 = b.offsetTop + b.offsetHeight;
+    lines += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--line)" stroke-width="2"/>';
+  });
+  svg.innerHTML = lines;
+}
+// 보드 클릭-클릭 상급자 지정: 첫 클릭은 선택, 두 번째 클릭(다른 카드)은 상급자로 지정, 같은 카드 다시 누르면 선택 해제
+function selectBoardNode(board, id){
+  const orgId = window.orgChartOrg; if (!orgId) return;
+  const w = store[curWorld]; if (!w) return;
+  const prev = window.boardSelected;
+  board.querySelectorAll(".orgchart-node.board-selected").forEach(n=>n.classList.remove("board-selected"));
+  if (!prev){ window.boardSelected = id; const n = board.querySelector('[data-org-node="'+id+'"]'); if (n) n.classList.add("board-selected"); return; }
+  if (prev === id){ window.boardSelected = null; return; }
+  const sel = (w.chars||[]).find(x=>x.id===prev);
+  const target = (w.chars||[]).find(x=>x.id===id);
+  if (!sel || !target){ window.boardSelected = null; return; }
+  if (!sel.groupSuperior || typeof sel.groupSuperior !== "object") sel.groupSuperior = {};
+  let curId = id; const seen = new Set(); let ok = true;
+  while (curId && !seen.has(curId)){ seen.add(curId); if (curId === sel.id){ ok = false; break; } const ch = (w.chars||[]).find(x=>x.id===curId); curId = ch && ch.groupSuperior ? ch.groupSuperior[orgId] : null; }
+  if (!ok){ alert("순환이 생겨서 저장하지 않았어요."); window.boardSelected = null; return; }
+  sel.groupSuperior[orgId] = id;
+  window.boardSelected = null;
+  persist(); render();
+}
+function reorderGroupByDom(gid, domIds){ const w = store[curWorld]; if (!w) return; let members; if (gid === null) members = w.chars.slice(); else if (gid === '__ungrouped') members = w.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0); else members = w.chars.filter(c=>charInGroup(c, gid)); const ordered = domIds.map(id=>members.find(c=>c.id===id)).filter(Boolean); if (ordered.length !== members.length) return; const firstIdx = w.chars.findIndex(c=>c.id===members[0].id); const rest = w.chars.filter(c=>!members.some(m=>m.id===c.id)); w.chars = [...rest.slice(0, firstIdx), ...ordered, ...rest.slice(firstIdx)]; persist(); }
+function groupPortrait(c){
+  const rep = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+  if (rep) return rep;
+  if (c.thumb) return c.thumb;
+  return "";
+}
+function moveCharInGroup(charId, groupId, dir){
+  const w = store[curWorld]; if (!w || !Array.isArray(w.chars)) return;
+  let list;
+  if (groupId === null) list = w.chars.slice();
+  else if (groupId === "__ungrouped") list = w.chars.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0);
+  else list = w.chars.filter(c=>charInGroup(c, groupId));
+  const idx = list.findIndex(c=>c.id===charId); const j = idx + dir;
+  if (idx < 0 || j < 0 || j >= list.length) return;
+  const a = w.chars.findIndex(c=>c.id===list[idx].id); const b = w.chars.findIndex(c=>c.id===list[j].id);
+  const t = w.chars[a]; w.chars[a] = w.chars[b]; w.chars[b] = t;
+  persist(); render();
+}
+function setSyncStatus(txt, color){
+  const el = document.getElementById("syncStatus");
+  if (el){ el.textContent = txt; el.style.color = color || "var(--dim)"; }
+}
+function cloudPush(){
+  if (!cloudReady || !cloudRef) return;
+  // store 안에 _updatedAt이 섞여 있으면 제거 (구버전 잔재)
+  if (store._updatedAt) delete store._updatedAt;
+  const data = JSON.stringify({ store, theme, storeUpdatedAt });
+  let payload;
+  try{ payload = JSON.parse(data); }catch(e){ return; }
+  // 자동 백업: 실제 내용이 바뀔 때만 스냅샷 추가, 최근 5개 유지.
+  // wiki 노드 안에 함께 저장돼서 도우미의 전체 읽기-쓰기에도 보존됨.
+  try{
+    if (Object.keys(store).length){
+      const storeStr = JSON.stringify(store);
+      const last = cloudBackups[cloudBackups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        cloudBackups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (cloudBackups.length > 5) cloudBackups.shift();
+      }
+    }
+  }catch(e){}
+  payload.backups = cloudBackups;
+  const sizeKB = Math.round(data.length / 1024);
+  setSyncStatus("저장 중… (" + sizeKB + "KB)", "var(--warm)");
+  cloudRef.set(payload).then(()=>{
+    cloudCache = data;
+    setSyncStatus("동기화됨", "#4CAF50");
+  }).catch((e)=>{
+    console.warn("Firebase 저장 실패, 5초 후 재시도:", e);
+    setSyncStatus("저장 실패! 재시도 중… (" + (e.message || e) + ")", "#f44336");
+    setTimeout(()=>{ if (cloudReady && cloudRef) cloudPush(); }, 5000);
+  });
+}
+function persist(){
+  storeUpdatedAt = Date.now();
+  saveLocal();
+  if (isMaster) cloudPush(); // 게스트는 로컬만 (테마 등), 클라우드 쓰기 불가
+}
+function initCloud(){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    cloudRef = firebase.database().ref("wiki");
+    // 읽기는 게스트도 가능. 쓰기는 마스터만 (규칙에서 강제).
+    cloudRef.once("value").then(snap=>{
+      if (!snap.exists() && isMaster) cloudPush();
+    });
+    cloudRef.on("value", snap=>{
+      const v = snap.val();
+      if (!v || !v.store) return;
+      if (Array.isArray(v.backups)) cloudBackups = v.backups;
+      // 구버전 잔재 _updatedAt이 store 안에 있으면 제거
+      if (v.store._updatedAt) delete v.store._updatedAt;
+      const data = JSON.stringify({ store: v.store, theme: v.theme, storeUpdatedAt: v.storeUpdatedAt || 0 });
+      if (data === cloudCache) return;
+      // 로컬이 더 새로우면 클라우드가 오래된 것. 덮어쓰지 말고 로컬을 푸시.
+      const localTime = storeUpdatedAt || 0;
+      const cloudTime = v.storeUpdatedAt || 0;
+      if (cloudTime < localTime){
+        if (isMaster) cloudPush();
+        return;
+      }
+      cloudCache = data;
+      if (editingTab) return; // 편집 중이면 덮어쓰지 않음
+      store = v.store;
+      normalizeStore();
+      if (v.theme) theme = v.theme;
+      if (v.storeUpdatedAt) storeUpdatedAt = v.storeUpdatedAt;
+      if (!store[curWorld]) curWorld = Object.keys(store)[0];
+      const chars = store[curWorld] ? store[curWorld].chars : [];
+      if (curChar && !chars.some(c=>c.id===curChar)) curChar = chars.length ? chars[0].id : null;
+      saveLocal();
+      applyTheme(); render();
+    });
+    cloudReady = true;
+    setSyncStatus("동기화됨", "#4CAF50");
+    // 마스터 로그인 상태 감시. 한 번 로그인한 브라우저에서는 유지됨.
+    firebase.auth().onAuthStateChanged(user=>{
+      const was = isMaster;
+      isMaster = !!(user && user.email === MASTER_EMAIL);
+      updateAuthUI();
+      if (was !== isMaster){
+        if (!isMaster && editingTab) cancelEdit();
+        render();
+      }
+    });
+  }catch(e){}
+}
+function updateAuthUI(){
+  const b = $("authBtn");
+  if (b) b.textContent = isMaster ? "로그아웃" : "마스터 로그인";
+  const ac = $("addChar"); if (ac) ac.style.display = isMaster ? "" : "none";
+  const dc = $("delChar"); if (dc) dc.style.display = isMaster ? "" : "none";
+  const wr = $("worldMgmtRow"); if (wr) wr.style.display = isMaster ? "" : "none";
+  const ib = $("importBtn"); if (ib) ib.style.display = isMaster ? "" : "none";
+  const br = $("backupRow"); if (br) br.style.display = isMaster ? "" : "none";
+}
+function deriveStarsign(birthday){
+  const s = String(birthday||"");
+  let m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})/) || s.match(/(\d{1,2})[\/.\-](\d{1,2})/) || s.match(/^(\d{2})(\d{2})$/);
+  if (!m) return "";
+  const mo = +m[1], d = +m[2];
+  if (mo<1||mo>12||d<1||d>31) return "";
+  const t = mo*100+d;
+  if (t>=321&&t<=419) return "양자리";
+  if (t>=420&&t<=520) return "황소자리";
+  if (t>=521&&t<=621) return "쌍둥이자리";
+  if (t>=622&&t<=722) return "게자리";
+  if (t>=723&&t<=822) return "사자자리";
+  if (t>=823&&t<=923) return "처녀자리";
+  if (t>=924&&t<=1022) return "천칭자리";
+  if (t>=1023&&t<=1122) return "전갈자리";
+  if (t>=1123&&t<=1224) return "사수자리";
+  if (t>=1225||t<=119) return "염소자리";
+  if (t>=120&&t<=218) return "물병자리";
+  if (t>=219&&t<=320) return "물고기자리";
+  return "";
+}
+loadLocal();
+initCloud();
+let curWorld = "hotel", curChar = null, curTab = "profile", editingTab = null, editBackup = null
+function cancelEdit(){
+  if (editingTab && editBackup){
+    const w = store[curWorld];
+    if (w){ const i = w.chars.findIndex(x=>x.id===editBackup.id); if (i>=0) w.chars[i] = editBackup; }
+  }
+  editingTab = null; editBackup = null;
+}
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Cloudinary display sizing: show a small transformed copy, keep the
+// original URL in data untouched. Only res.cloudinary.com URLs are
+// transformed; base64 / other hosts pass through unchanged.
+// c_limit never upscales beyond the original, so a 1024px source stays
+// 1024px even when asked for 1600. f_auto/q_auto serve WebP/AVIF where
+// supported, at a visually clean quality.
+function cloudImg(url, w){
+  if (!url) return url;
+  const m = String(url).match(/^(https:\/\/res\.cloudinary\.com\/[^\/]+\/image\/upload\/)(.*)$/);
+  if (!m) return url;
+  let rest = m[2];
+  const segs = rest.split('/');
+  if (segs.length > 1 && !/^v\d+$/.test(segs[0])) segs.shift();
+  rest = segs.join('/');
+  return m[1] + 'w_' + w + ',c_limit,q_auto,f_auto/' + rest;
+}
+const imgS = u => cloudImg(u, 400);
+const imgM = u => cloudImg(u, 800);
+const imgL = u => cloudImg(u, 1600);
+const cur = () => { const w = store[curWorld]; return (w && w.chars) ? w.chars.find(c=>c.id===curChar) : null; };
+const nameOf = id => { for (const w of Object.values(store)){ if(!w||!Array.isArray(w.chars)) continue; const c=w.chars.find(c=>c.id===id); if(c) return c.profile.name||"(이름 없음)"; } return "?"; };
+function charThumb(c){
+  const clean = String(c.profile.name||"").replace(/^\(샘플\)\s*/, "").trim();
+  const initial = clean.charAt(0) || "?";
+  const bg = c.color ? ` style="background:${esc(c.color)};color:${pickText(c.color)}"` : "";
+  if (c.thumb) return `<span class="char-thumb"${bg}><img src="${esc(imgS(c.thumb))}" alt="" loading="lazy"></span>`;
+  return `<span class="char-thumb"${bg}>${esc(initial)}</span>`;
+}
+function findCharById(id){
+  for (const [wk,w] of Object.entries(store)){ if(!w||!Array.isArray(w.chars)) continue; if (w.chars.some(c=>c.id===id)) return { id, world:wk }; }
+  return null;
+}
+function findCharByName(name){
+  const norm = s => String(s||"").replace(/^\(샘플\)\s*/,"").trim();
+  const n = norm(name);
+  if (!n) return null;
+  const allChars = [];
+  for (const [wk,w] of Object.entries(store)){ if(!w||!Array.isArray(w.chars)) continue; w.chars.forEach(c=>allChars.push([wk,c])); }
+  for (const [wk,c] of allChars)
+    if (norm(c.profile.name)===n) return { id:c.id, world:wk };
+  for (const [wk,c] of allChars)
+    if (norm(c.profile.name).includes(n)) return { id:c.id, world:wk };
+  return null;
+}
+function linkify(text){
+  return String(text||"").split(/(\[\[[^\]]+\]\])/g).map(part=>{
+    const m = part.match(/^\[\[([^\]]+)\]\]$/);
+    if (!m) return esc(part);
+    const name = m[1].trim();
+    const t = findCharByName(name);
+    if (t) return `<a class="wikilink" data-link="${t.id}">${esc(name)}</a>`;
+    return esc(name);
+  }).join("");
+}
+function gotoChar(id){
+  const t = findCharById(id);
+  if (!t) return;
+  cancelEdit(); // 편집 중 이동하면 미저장 편집을 버리고 이동 (다른 캐릭터 편집이 섞이지 않게)
+  if (t.world!==curWorld) curWorld = t.world;
+  curChar = t.id; curTab = "profile"; render(); window.scrollTo(0,0);
+}
+
+
+function moveChar(id, dir){
+  const chars = store[curWorld].chars;
+  const i = chars.findIndex(c=>c.id===id);
+  const j = i + dir;
+  if (i<0 || j<0 || j>=chars.length) return;
+  const t = chars[i]; chars[i] = chars[j]; chars[j] = t;
+  persist(); render();
+}
+function render(){
+  // 세계관 버튼 (유효한 세계관만)
+  const validWorlds = Object.entries(store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+  // curWorld가 유효하지 않으면 첫 번째 유효 세계관으로
+  if (!store[curWorld] || typeof store[curWorld] !== "object"){
+    curWorld = validWorlds.length ? validWorlds[0][0] : null;
+    curChar = null;
+  }
+  $("worlds").innerHTML = validWorlds.map(([k,w])=>
+    `<button class="${k===curWorld?"on":""}" data-w="${k}">${esc(w.name)}</button>`).join("");
+  document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{
+    cancelEdit();
+    curWorld=b.dataset.w;
+    const w = store[curWorld];
+    curChar=(w && w.chars && w.chars[0]?.id)||null;
+    curTab="profile";
+    render();
+  });
+  // 캐릭터 목록 (그룹 격자: 세계관 > 그룹 > 하위그룹, 한 캐릭터는 여러 그룹에 뜰 수 있음)
+  const cw = store[curWorld];
+  const charList = (cw && cw.chars) ? cw.chars : [];
+  const groups = (cw && cw.name === "마이베이비") ? [] : worldGroups(cw);
+  const listEdit = !!(isMaster && window.listEdit);
+  const cardHtml = (c, list, gid)=>{
+    const img = groupPortrait(c);
+    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
+    const gidKey = gid===null ? "__all" : gid;
+    const dragHtml = listEdit ? '<span class="gcard-drag" data-drag="'+c.id+'" data-gid="'+esc(gidKey)+'">≡ 드래그로 순서 바꾸기</span>' : "";
+    const subHtml = listEdit ? '<input class="gcard-sub-input" data-gsub-char="'+c.id+'" data-gsub-gid="'+esc(gidKey)+'" value="'+esc(groupSubtitle(c, gid))+'" placeholder="이 그룹 부제 (비우면 지위)">' : "";
+    const supHtml = "";
+    const gtileHtml = listEdit ? '<div class="gtile-row">'+groups.filter(g=>g.kind==="org").map(g=>'<button data-gtile-char="'+c.id+'" data-gtile-gid="'+g.id+'" class="'+(charInGroup(c, g.id)?"on":"")+'">'+esc(g.name)+'</button>').join("")+'</div>' : "";
+    const arrowHtml = "";
+    const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+    const isSel = c.id===curChar;
+    const selColor = isSel ? (/^#[0-9a-fA-F]{6}$/.test(c.color||"") ? c.color : worldAccent()) : "";
+    const selStyle = selColor ? ' style="background:'+esc(selColor)+';color:'+pickText(selColor)+';border-color:'+esc(selColor)+'"' : "";
+    return '<div class="gcard-wrap" data-wrap="'+c.id+'"><button class="gcard '+(isSel?"on":"")+'" data-c="'+c.id+'"'+selStyle+'>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button>'+dragHtml+subHtml+supHtml+gtileHtml+arrowHtml+'</div>';
+  };
+  const gridHtml = (list, gid)=> '<div class="group-grid" data-grid="'+esc(gid===null?"__all":gid)+'">'+list.map(c=>cardHtml(c, list, gid)).join("")+'</div>';
+  const supOf = (c, gid)=>{ if (gid && c.groupSuperior && c.groupSuperior[gid]) return c.groupSuperior[gid]; return c.superiorId || null; };
+  const treeHtml = (list, gid)=>{
+    const ids = new Set(list.map(c=>c.id));
+    const children = {}; list.forEach(c=>{ const sup = supOf(c, gid); if (sup && ids.has(sup)){ (children[sup] = children[sup] || []).push(c); } });
+    if (!Object.keys(children).length) return gridHtml(list, gid);
+    // 순환 방지: 상급자 고리를 따라가다 다시 오면 그 연결을 끊어, 빈 화면이 되지 않게 한다
+    const supMap = {}; list.forEach(c=>{ supMap[c.id] = supOf(c, gid); });
+    list.forEach(c=>{
+      const seen = new Set(); let cur = c.id;
+      while (supMap[cur] && ids.has(supMap[cur]) && !seen.has(cur)){ seen.add(cur); cur = supMap[cur]; }
+      if (supMap[cur] && seen.has(cur)){
+        const sup = supMap[c.id];
+        if (sup && children[sup]) children[sup] = children[sup].filter(x=>x.id!==c.id);
+        supMap[c.id] = null;
+      }
+    });
+    const roots = list.filter(c=>{ const sup = supMap[c.id]; return !sup || !ids.has(sup); });
+    const rootsSafe = roots.length ? roots : list;
+    const nodeHtml = (c, depth)=>{
+      if (depth > 10) return '<div class="tree-node">'+cardHtml(c, list, gid)+'</div>';
+      const ch = children[c.id] || []; let h = '<div class="tree-node">'+cardHtml(c, list, gid); if (ch.length) h += '<div class="tree-conn"></div><div class="tree-children">'+ch.map(x=>nodeHtml(x, depth+1)).join("")+'</div>'; return h + '</div>';
+    };
+    return '<div class="tree-children">'+rootsSafe.map(c=>nodeHtml(c, 0)).join("")+'</div>';
+  };
+  const groupHeadHtml = (g)=>{
+    const isOrg = g.kind === "org";
+    const expanded = !isOrg || window.expandedOrgs.has(g.id);
+    if (!isMaster || !window.listEdit){
+      if (isOrg) return '<div class="group-head"><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button></div>';
+      return '<div class="group-head"><h4>'+esc(g.name)+'</h4></div>';
+    }
+    const logoBtn = isOrg ? '<button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">' : '';
+    const sibCount = groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind).length;
+    const orderBtn = sibCount > 1 ? '<button data-gup="'+g.id+'" title="그룹 순서 위로">▲</button><button data-gdown="'+g.id+'" title="그룹 순서 아래로">▼</button>' : '';
+    if (isOrg) return '<div class="group-head"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">조직</div><button class="group-org" data-gorg="'+g.id+'">'+(expanded?"▾ ":"▸ ")+esc(g.name)+'</button>'+logoBtn+'</div><div class="group-head" style="margin-top:6px"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+    const parentName = g.parentId ? (groupOf(cw, g.parentId) ? groupOf(cw, g.parentId).name + " › " : "") : "";
+    return '<div class="group-head"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">'+(parentName ? esc(parentName) + '하위 그룹' : '상위 없는 그룹')+'</div><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'">'+orderBtn+'</div>';
+  };
+  // 재귀 렌더: 조직은 눌러서 펼치고(기본 접힘), 반/그룹은 펼치는 탭이 아니라 구별되게 떨어트려서 표시(기본 펼침)
+  const renderGroupBlock = (g)=>{
+    const isOrg = g.kind === "org";
+    const expanded = !isOrg || window.expandedOrgs.has(g.id);
+    let html = '<div class="group-block '+(isOrg ? 'org-block' : 'grp-block')+'">'+groupHeadHtml(g);
+    if (!expanded) return html + '</div>';
+    const children = groups.filter(x=>x.parentId===g.id);
+    const childIds = children.map(x=>x.id);
+    // 하위 그룹에 속한 캐릭터는 상위 직접 칸에 다시 뜨지 않게 (삼총사는 모니카반/청량고 직접 칸에 중복으로 안 뜸)
+    const descendantIds = new Set();
+    const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ descendantIds.add(x.id); collect(x.id); }); };
+    collect(g.id);
+    const direct = charList.filter(c=>charInGroup(c, g.id) && !childIds.some(id=>charInGroup(c, id)) && ![...descendantIds].some(id=>charInGroup(c, id)));
+    // 직접 소속이 아닌데 하위만 있는 경우(예: 삼총사만 있는 모니카반의 상위 조직)는 빈 그리드를 그리지 않음
+    if (direct.length) html += gridHtml(direct, g.id);
+    children.forEach(ch=>{
+      html += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>';
+    });
+    if (listEdit){ const cand2 = charList.filter(c=>!charInGroup(c, g.id)); html += '<div class="group-bigrow"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand2.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand2.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>'; }
+    return html + '</div>';
+  };
+  let charsHtml = "";
+  if (!groups.length){
+    charsHtml = gridHtml(charList, null);
+  } else {
+    const topGroups = groups.filter(g=>!g.parentId);
+    const topOrgs = topGroups.filter(g=>g.kind==="org");
+    const topNonOrgs = topGroups.filter(g=>g.kind!=="org");
+    // 조직은 긴 바 대신 갤러리 타일(문양 위·이름 아래, 선택 시 파랑)로, 그 자리에서 펼침
+    const groupedIdsPre = new Set(groups.map(g=>g.id));
+    const ungroupedPre = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIdsPre.has(id)));
+    if (topOrgs.length){
+      charsHtml += '<div class="org-grid">'+topOrgs.map(g=>{
+        const expanded = window.expandedOrgs.has(g.id);
+        const tileImg = g.logo || "";
+        const imgHtml = tileImg ? '<span class="org-tile-img"><img src="'+esc(imgS(tileImg))+'" alt="" loading="lazy"></span>' : '<span class="org-tile-img"></span>';
+        return '<button class="org-tile '+(expanded?"on":"")+'" data-gorg="'+g.id+'">'+imgHtml+'<span class="org-tile-name">'+esc(g.name)+'</span></button>';
+      }).join("")+(ungroupedPre.length ? '<button class="org-tile '+((window.expandedUngrouped)?"on":"")+'" data-ungrouped="1"><span class="org-tile-img"></span><span class="org-tile-name">미분류 ('+ungroupedPre.length+')</span></button>' : "")+'</div>';
+      // 펼친 조직의 내용만 타일 아래에 (접힌 조직은 타일만)
+      topOrgs.forEach(g=>{
+        if (!window.expandedOrgs.has(g.id)) return;
+        const children = groups.filter(x=>x.parentId===g.id);
+        const descendantIds = new Set();
+        const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ descendantIds.add(x.id); collect(x.id); }); };
+        collect(g.id);
+        const direct = charList.filter(c=>charInGroup(c, g.id) && ![...descendantIds].some(id=>charInGroup(c, id)));
+        charsHtml += '<div class="group-block org-block"><div class="group-head"><h4>'+esc(g.name)+'</h4></div>' + (g.logo ? '<div style="text-align:center;margin:8px 0 12px"><img src="'+esc(imgM(g.logo))+'" alt="" style="max-width:220px;width:100%;border-radius:12px;display:block;margin:0 auto" loading="lazy"></div>' : '');
+        if (isMaster && window.listEdit){ const cand = charList.filter(c=>!charInGroup(c, g.id)); charsHtml += '<div class="group-head"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+'</div>'; }
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-head"><input class="group-name" data-gname="'+g.id+'" value="'+esc(g.name)+'"><button data-glogo-btn="'+g.id+'">로고 사진 고르기</button><input type="file" accept="image/*" style="display:none" data-glogo-file="'+g.id+'">'+(topOrgs.length > 1 ? '<button data-orgup="'+g.id+'" title="조직 순서 왼쪽으로">◀</button><button data-orgdown="'+g.id+'" title="조직 순서 오른쪽으로">▶</button>' : '')+'</div>';
+        if (direct.length) charsHtml += gridHtml(direct, g.id);
+        children.forEach(ch=>{ charsHtml += '<div class="group-sub">'+renderGroupBlock(ch)+'</div>'; });
+        if (isMaster && window.listEdit) charsHtml += '<div class="group-bigrow"><input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button><button data-gdel="'+g.id+'">이 조직 삭제</button></div>';
+        charsHtml += '</div>';
+      });
+    }
+    topNonOrgs.forEach(g=>{ charsHtml += renderGroupBlock(g); });
+    const groupedIds = new Set(groups.map(g=>g.id));
+    const ungrouped = charList.filter(c=>!Array.isArray(c.groupIds) || c.groupIds.length===0 || !c.groupIds.some(id=>groupedIds.has(id)));
+    if (ungrouped.length){
+      const ungOn = !!window.expandedUngrouped;
+      if (!topOrgs.length){ charsHtml += '<div class="group-block"><div class="group-head"><button class="group-org" data-ungrouped="1">'+(ungOn?"▾ ":"▸ ")+'미분류 ('+ungrouped.length+')</button></div></div>'; }
+      if (ungOn) charsHtml += '<div class="group-block"><div class="group-head"><h4>미분류</h4></div>'+gridHtml(ungrouped, "__ungrouped")+'</div>';
+    }
+  }
+  if (isMaster){
+    charsHtml = '<div class="group-editbar"><button id="listEditBtn" class="'+(window.listEdit?"on":"")+'">'+(window.listEdit?"목록 수정 끝":"목록 수정")+'</button><span>'+(window.listEdit?"수정 중: 이름·로고·부제·드래그 순서가 보여요":"수정하려면 목록 수정을 누르세요")+'</span>'+(window.listEdit && !(cw && cw.name === "마이베이비") ? '<span style="margin-left:12px"><input id="org-new-name" placeholder="새 조직 이름" style="width:140px"><button id="org-new-btn" type="button">조직 추가</button></span>' : '')+'</div>' + charsHtml;
+  }
+  $("chars").innerHTML = charsHtml;
+  const leb = $("listEditBtn"); if (leb) leb.onclick=()=>{ window.listEdit = !window.listEdit; render(); };
+  const orgNewBtn = document.getElementById("org-new-btn");
+  if (orgNewBtn) orgNewBtn.onclick=()=>{ const inp = document.getElementById("org-new-name"); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 조직 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "org", logo: ""}); persist(); render(); };
+  document.querySelectorAll("#chars [data-glogo-btn]").forEach(b=>b.onclick=()=>{ const f = document.querySelector('[data-glogo-file="'+b.dataset.glogoBtn+'"]'); if (f) f.click(); });
+  document.querySelectorAll("#chars [data-glogo-file]").forEach(f=>f.onchange=async ()=>{ const file = f.files && f.files[0]; if (!file) return; try{ const url = await uploadToCloudinary(file); const g = groupOf(cw, f.dataset.glogoFile); if (g){ g.logo = url; persist(); render(); } }catch(e){ alert("로고 업로드 실패: " + (e && e.message)); } });
+  document.querySelectorAll("#chars [data-gtile-char]").forEach(b=>b.onclick=()=>{ const ch = cw.chars.find(x=>x.id===b.dataset.gtileChar); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; const gid = b.dataset.gtileGid; if (ch.groupIds.includes(gid)) ch.groupIds = ch.groupIds.filter(id=>id!==gid); else ch.groupIds.push(gid); persist(); render(); });
+  document.querySelectorAll("#chars [data-gsub-char]").forEach(inp=>inp.onchange=()=>{ const ch = cw.chars.find(x=>x.id===inp.dataset.gsubChar); if (!ch) return; if (!ch.groupSubs) ch.groupSubs = {}; const gid = inp.dataset.gsubGid; if (gid === "__all" || gid === "__ungrouped"){ ch.position = inp.value.trim(); } else { if (inp.value.trim()) ch.groupSubs[gid] = inp.value.trim(); else delete ch.groupSubs[gid]; } persist(); render(); });
+  document.querySelectorAll("#chars [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render();});
+  // 드래그: 순서만 바꾼다 (상급자는 건드리지 않음, 트리 동급자 안에서도 순서만)
+  document.querySelectorAll("#chars [data-drag]").forEach(h=>{
+    h.onpointerdown = (e)=>{
+      e.preventDefault();
+      const wrap = h.closest(".gcard-wrap"); if (!wrap) return;
+      const container = wrap.closest("[data-grid], .tree-children"); if (!container) return;
+      const gidRaw = h.dataset.gid; const gid = gidRaw==="__all" ? null : gidRaw;
+      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY;
+      const move = (ev)=>{
+        if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+        if (!moved){ moved = true; wrap.classList.add("dragging"); ghost = document.createElement("div"); ghost.className = "drag-ghost"; ghost.innerHTML = wrap.innerHTML; document.body.appendChild(ghost); }
+        if (ghost){ ghost.style.left = (ev.clientX-80)+"px"; ghost.style.top = (ev.clientY-40)+"px"; }
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const target = el ? el.closest(".gcard-wrap") : null;
+        if (target && target !== wrap && container.contains(target)){
+          const r = target.getBoundingClientRect(); const after = ev.clientX > r.left + r.width/2;
+          if (after) target.after(wrap); else target.before(wrap);
+        }
+      };
+      const up = ()=>{
+        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+        if (ghost) ghost.remove();
+        if (moved){
+          window.lastDragEnd = Date.now();
+          const ids = [...container.querySelectorAll(":scope > .tree-node > .gcard-wrap, :scope > .gcard-wrap")].map(x=>x.dataset.wrap);
+          // tree-children의 직접 자식은 tree-node 안에 있으므로, 그 안의 wrap까지 모은다
+          const peerIds = [...container.querySelectorAll(".gcard-wrap")].map(x=>x.dataset.wrap).filter((id, i, arr)=>arr.indexOf(id)===i);
+          if (container.hasAttribute("data-grid")){
+            reorderGroupByDom(gid, ids.length ? ids : peerIds); render();
+          } else {
+            // 동급자 순서만: cw.chars에서 동급자들을 새 순서로 재배치, 나머지는 그대로
+            const firstIdx = cw.chars.findIndex(c=>c.id===peerIds[0]);
+            if (firstIdx >= 0){
+              const peerChars = peerIds.map(id=>cw.chars.find(c=>c.id===id)).filter(Boolean);
+              const rest = cw.chars.filter(c=>!peerIds.includes(c.id));
+              cw.chars = [...rest.slice(0, firstIdx), ...peerChars, ...rest.slice(firstIdx)];
+              persist();
+            }
+            render();
+          }
+        }
+        wrap.classList.remove("dragging");
+      };
+      document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+    };
+  });
+  document.querySelectorAll("#chars [data-gname]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.gname); if (g && inp.value.trim()){ g.name = inp.value.trim(); persist(); render(); } });
+  document.querySelectorAll("#chars [data-glogo]").forEach(inp=>inp.onchange=()=>{ const g = groupOf(cw, inp.dataset.glogo); if (g){ g.logo = inp.value.trim(); persist(); render(); } });
+  document.querySelectorAll("#chars [data-ungrouped]").forEach(b=>b.onclick=()=>{ const wasOn = !!window.expandedUngrouped; window.expandedOrgs.clear(); window.expandedUngrouped = !wasOn; render(); });
+  document.querySelectorAll("#chars [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
+  const moveGroup = (gid, dir)=>{ const g = cw.groups.find(x=>x.id===gid); if (!g) return; const sibs = cw.groups.filter(x=>(x.parentId||null)===(g.parentId||null) && x.kind===g.kind); const pos = sibs.findIndex(x=>x.id===gid); const target = sibs[pos+dir]; if (!target) return; const i1 = cw.groups.findIndex(x=>x.id===gid); const i2 = cw.groups.findIndex(x=>x.id===target.id); const tmp = cw.groups[i1]; cw.groups[i1] = cw.groups[i2]; cw.groups[i2] = tmp; persist(); render(); };
+  document.querySelectorAll("#chars [data-gup]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gup, -1));
+  document.querySelectorAll("#chars [data-gdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.gdown, 1));
+  document.querySelectorAll("#chars [data-orgup]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.orgup, -1));
+  document.querySelectorAll("#chars [data-orgdown]").forEach(b=>b.onclick=()=>moveGroup(b.dataset.orgdown, 1));
+  document.querySelectorAll("#chars [data-addchar-existing]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.addcharExisting; const container = b.closest("div"); const sel = container ? container.querySelector('[data-addchar-select="'+gid+'"]') : document.querySelector('[data-addchar-select="'+gid+'"]'); const cid = sel ? sel.value : ""; if (!cid) return; const ch = cw.chars.find(x=>x.id===cid); if (!ch) return; if (!Array.isArray(ch.groupIds)) ch.groupIds = []; if (!ch.groupIds.includes(gid)) ch.groupIds.push(gid); persist(); render(); });
+  document.querySelectorAll("#chars [data-sub-org]").forEach(b=>b.onclick=()=>{ const pid = b.dataset.subOrg; const inp = document.querySelector('[data-sub-name="'+pid+'"]'); const name = inp ? inp.value.trim() : ""; if (!name) return; if (!Array.isArray(cw.groups)) cw.groups = []; if (cw.groups.some(g=>g.name===name)) { alert("이미 있는 그룹 이름이에요."); return; } cw.groups.push({id: "g_" + Math.random().toString(36).slice(2,10), name: name, kind: "group", parentId: pid, logo: ""}); persist(); render(); });
+  document.querySelectorAll("#chars [data-gdel]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gdel; if (!confirm("이 그룹을 삭제할까요? 캐릭터는 삭제되지 않고, 그룹 소속만 빠집니다.")) return; cw.groups = cw.groups.filter(g=>g.id!==gid); cw.groups.forEach(g=>{ if (g.parentId===gid) g.parentId = null; }); cw.chars.forEach(c=>{ if (Array.isArray(c.groupIds)) c.groupIds = c.groupIds.filter(id=>id!==gid); }); persist(); render(); });
+
+  // 탭 (무기 탭은 판타지 호텔에만)
+  const tabs = TABS.filter(([k])=> k!=="weapon" || (cw && cw.hasWeapon));
+  if (!tabs.some(([k])=>k===curTab)) curTab = "profile";
+  $("tabs").innerHTML = tabs.map(([k,n])=>`<button class="${k===curTab?"on":""}" data-t="${k}">${n}</button>`).join("");
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{cancelEdit(); curTab=b.dataset.t; render();});
+  const c = cur();
+  $("sampleNote").style.display = (c && c.sample) ? "" : "none";
+  let bodyH = "";
+  bodyH += c ? renderTab(c) : `<p class="empty">캐릭터를 선택하세요.</p>`;
+  if (c && cw && cw.chars){
+    const others = cw.chars.filter(x=>x.id!==c.id);
+    if (others.length){
+      bodyH += `<div class="navbox"><div class="navbox-title">둘러보기 — ${esc(cw.name)}</div><div class="navbox-links">`;
+      others.forEach(o=>{ bodyH += `<button data-nav="${o.id}">${esc(o.profile.name||"(이름 없음)")}</button>`; });
+      bodyH += `</div></div>`;
+    }
+  }
+  $("body").innerHTML = bodyH;
+  document.querySelectorAll("[data-link]").forEach(a=>{ a.onclick = ()=>gotoChar(a.dataset.link); });
+  const fb = $("foldBtn");
+  if (fb) fb.onclick = ()=>{
+    const v = $("foldCustom");
+    const open = v.classList.toggle("open");
+    fb.textContent = open ? "접기 ▴" : "펼치기 ▾";
+  };
+  document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
+  // 조직도 프로토타입: 하위탭, 탭 순서, 드래그 상급자 지정
+  document.querySelectorAll("[data-orgchart-tab]").forEach(b=>b.onclick=()=>{ window.orgChartOrg = b.dataset.orgchartTab; render(); });
+  document.querySelectorAll("[data-orgchart-up]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartUp; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos > 0){ const tmp = ordered[pos-1]; ordered[pos-1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
+  document.querySelectorAll("[data-orgchart-down]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartDown; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos >= 0 && pos < ordered.length-1){ const tmp = ordered[pos+1]; ordered[pos+1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
+  document.querySelectorAll("[data-org-node]").forEach(n=>{
+    n.onclick = ()=>{ if (editingTab !== "relations") gotoChar(n.dataset.orgNode); };
+    if (editingTab !== "relations") return;
+    n.onpointerdown = (e)=>{
+      const dragId = n.dataset.orgDrag; const orgId = window.orgChartOrg; if (!orgId) return;
+      let ghost = null, moved = false, startX = e.clientX, startY = e.clientY;
+      const move = (ev)=>{
+        if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+        moved = true;
+        if (!ghost){ ghost = n.cloneNode(true); ghost.style.cssText = "position:fixed;z-index:9999;width:120px;pointer-events:none;opacity:0.9;box-shadow:0 8px 20px rgba(0,0,0,0.3);"; document.body.appendChild(ghost); }
+        ghost.style.left = (ev.clientX-60)+"px"; ghost.style.top = (ev.clientY-40)+"px";
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        document.querySelectorAll(".orgchart-node.drop-target, .orgchart-topzone.drop-target").forEach(x=>x.classList.remove("drop-target"));
+        const tgt = el ? el.closest("[data-org-node], [data-org-top]") : null;
+        if (tgt) tgt.classList.add("drop-target");
+      };
+      const up = (ev)=>{
+        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+        if (ghost) ghost.remove();
+        document.querySelectorAll(".orgchart-node.drop-target, .orgchart-topzone.drop-target").forEach(x=>x.classList.remove("drop-target"));
+        if (!moved) return;
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const tgt = el ? el.closest("[data-org-node], [data-org-top]") : null;
+        if (!tgt) return;
+        const w = store[curWorld]; const dragged = (w.chars||[]).find(x=>x.id===dragId); if (!dragged) return;
+        if (!dragged.groupSuperior || typeof dragged.groupSuperior !== "object") dragged.groupSuperior = {};
+        if (tgt.dataset.orgTop){ delete dragged.groupSuperior[orgId]; persist(); render(); return; }
+        const targetId = tgt.dataset.orgNode;
+        if (!targetId || targetId === dragId) return;
+        // 순환 검사: 타겟의 상급자 체인을 따라가다 드래그한 사람이 나오면 거부
+        let curId = targetId; const seen = new Set();
+        while (curId && !seen.has(curId)){ seen.add(curId); if (curId === dragId){ alert("순환이 생겨서 저장하지 않았어요."); return; } const ch = (w.chars||[]).find(x=>x.id===curId); curId = ch && ch.groupSuperior ? ch.groupSuperior[orgId] : null; }
+        dragged.groupSuperior[orgId] = targetId; persist(); render();
+      };
+      document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+    };
+  });
+  // 조직도 자유 배치 보드 (2026-11-13): 편집 모드에서 카드 드래그로 위치 저장, 클릭-클릭으로 상급자 지정
+  document.querySelectorAll(".orgchart-board").forEach(board=>{
+    const orgId = window.orgChartOrg; if (!orgId) return;
+    const w = store[curWorld];
+    window.boardSelected = null;
+    if (editingTab === "relations"){
+      board.querySelectorAll("[data-org-node]").forEach(n=>{
+        n.style.touchAction = "none";
+        n.onpointerdown = (e)=>{
+          e.preventDefault();
+          const dragId = n.dataset.orgDrag;
+          const startX = e.clientX, startY = e.clientY;
+          const origLeft = parseInt(n.style.left||"0",10), origTop = parseInt(n.style.top||"0",10);
+          let moved = false;
+          const move = (ev)=>{
+            if (!moved && Math.hypot(ev.clientX-startX, ev.clientY-startY) < 6) return;
+            moved = true;
+            n.style.left = Math.max(0, origLeft + ev.clientX - startX) + "px";
+            n.style.top = Math.max(0, origTop + ev.clientY - startY) + "px";
+            drawBoardLines(board);
+          };
+          const up = (ev)=>{
+            document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up);
+            if (!moved){ selectBoardNode(board, dragId); return; }
+            const dragged = (w.chars||[]).find(x=>x.id===dragId); if (!dragged) return;
+            if (!dragged.orgPos || typeof dragged.orgPos !== "object") dragged.orgPos = {};
+            dragged.orgPos[orgId] = { x: parseInt(n.style.left,10), y: parseInt(n.style.top,10) };
+            persist(); render();
+          };
+          document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
+        };
+      });
+      const topzone = document.querySelector(".orgchart-topzone[data-org-top]");
+      if (topzone) topzone.onclick = ()=>{
+        const selId = window.boardSelected;
+        if (!selId) return;
+        const sel = (w.chars||[]).find(x=>x.id===selId); if (!sel) return;
+        if (!sel.groupSuperior || typeof sel.groupSuperior !== "object") sel.groupSuperior = {};
+        delete sel.groupSuperior[orgId];
+        window.boardSelected = null;
+        persist(); render();
+      };
+    }
+    drawBoardLines(board);
+  });
+  if (editingTab) bindEdit(c);
+  const te = $("tabEdit");
+  if (te) te.onclick = ()=>{ editingTab = curTab; editBackup = JSON.parse(JSON.stringify(cur())); render(); };
+  const ts = $("tabSave");
+  if (ts) ts.onclick = ()=>{ persist(); editingTab = null; editBackup = null; render(); };
+  const tc = $("tabCancel");
+  if (tc) tc.onclick = ()=>{ cancelEdit(); render(); };
+  applyAccent();
+}
+
+function fieldRow(label, val, key, type, ed){
+  if (!ed){
+    return `<div class="field"><label>${label}</label><div class="val">${esc(val)||'<span class="empty">—</span>'}</div></div>`;
+  }
+  const input = type==="area"
+    ? `<textarea data-k="${key}">${esc(val)}</textarea>`
+    : `<input data-k="${key}" value="${esc(val)}">`;
+  return `<div class="field"><label>${label}</label>${input}</div>`;
+}
+
+function renderTab(c){
+  if (!isMaster) return renderTabInner(c); // 게스트는 보기만
+  const bar = editingTab === curTab
+    ? `<div class="tab-editbar"><button class="hdr-btn acc" id="tabSave">저장</button><button class="hdr-btn" id="tabCancel">취소</button></div>`
+    : `<div class="tab-editbar"><button class="hdr-btn" id="tabEdit">수정</button></div>`;
+  return bar + renderTabInner(c);
+}
+function galleryField(c, label, textKey, imgKey, ed){
+  const imgs = c[imgKey] || [];
+  let h = fieldRow(label, ""+c[textKey], textKey, "area", ed);
+  if (!ed){
+    if (imgs.length){
+      h += '<div class="gal-grid">';
+      imgs.forEach(g=>{
+        h += '<div class="gal-item"><img src="'+esc(imgS(g.img))+'" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in" loading="lazy">';
+        if (g.title) h += '<div class="gal-title">'+esc(g.title)+'</div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+    return h;
+  }
+  h += '<div class="gal-edit" id="gal-'+imgKey+'">';
+  imgs.forEach((g,i)=>{
+    h += '<div class="gal-edrow" data-i="'+i+'">';
+    h += '<img src="'+esc(imgS(g.img))+'" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in" loading="lazy">';
+    h += '<input class="gal-edtitle" data-gi="'+i+'" value="'+esc(g.title||"")+'" placeholder="제목">';
+    h += '<button class="hdr-btn gal-del" data-gdel="'+i+'">삭제</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  h += '<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-'+imgKey+'" accept="image/*" style="display:none"></label></div>';
+  return h;
+}
+function wardrobeField(c, ed){
+  const pairs = c.wardrobeImgs || [];
+  const ap = c.appearance || "", pc = c.promptChar || "";
+  const bodyImg = c.bodyImg || "";
+  const defDesc = c.defaultDesc || "", defPrompt = c.promptOutfit || "";
+  const repImg = c.repImg || (c.illust||"").split("\n").find(s=>s.trim()) || "";
+  const num = (i)=> String(i+3).padStart(2, "0");
+  if (!ed){
+    let h = "";
+    h += `<div class="pair-list"><div class="pair-row${pc ? " copybox" : ""}"${pc ? ` onclick="copyBox(this, event)"` : ""}>`;
+    h += `<div class="pair-head"><span class="pair-no">No. 01</span><span class="pair-name">신체정보</span></div>`;
+    h += `<div class="pair-body">`;
+    if (bodyImg) h += `<div class="pair-frame"><img src="${esc(imgM(bodyImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
+    h += `<div class="pair-side">`;
+    if (ap) h += `<div class="pair-desc">${esc(ap)}</div>`;
+    if (pc) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(pc)}</div>`;
+    else h += `<div class="copyhint"><span class="empty">아직 작성된 내용이 없습니다.</span></div>`;
+    h += `</div></div></div></div>`;
+    h += `<div class="pair-list"><div class="pair-row${defPrompt ? " copybox" : ""}"${defPrompt ? ` onclick="copyBox(this, event)"` : ""}>`;
+    h += `<div class="pair-head"><span class="pair-no">No. 02</span><span class="pair-name">기본복장</span></div>`;
+    h += `<div class="pair-body">`;
+    if (repImg) h += `<div class="pair-frame"><img src="${esc(imgM(repImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
+    h += `<div class="pair-side">`;
+    if (defDesc) h += `<div class="pair-desc">${esc(defDesc)}</div>`;
+    if (defPrompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(defPrompt)}</div>`;
+    else h += `<div class="copyhint"><span class="empty">프롬 없음</span></div>`;
+    h += `</div></div></div></div>`;
+    if (pairs.length){
+      h += `<div class="pair-list">`;
+      pairs.forEach((g,i)=>{
+        const name = g.title || ("옷 " + num(i));
+        h += `<div class="pair-row${g.prompt ? " copybox" : ""}"${g.prompt ? ` onclick="copyBox(this, event)"` : ""}>`;
+        h += `<div class="pair-head"><span class="pair-no">No. ${num(i)}</span><span class="pair-name">${esc(name)}</span></div>`;
+        h += `<div class="pair-body">`;
+        h += `<div class="pair-frame"><img src="${esc(imgM(g.img))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
+        h += `<div class="pair-side">`;
+        if (g.desc) h += `<div class="pair-desc">${esc(g.desc)}</div>`;
+        if (g.prompt) h += `<div class="copytip"><span>💡 박스를 누르면 프롬이 복사돼요</span></div><div class="prompttext" style="display:none">${esc(g.prompt)}</div>`;
+        else h += `<div class="copyhint"><span class="empty">프롬 없음</span></div>`;
+        h += `</div></div></div>`;
+      });
+      h += `</div>`;
+    }
+    return h;
+  }
+  let h = "";
+  h += `<div class="pair-list"><div class="pair-row">`;
+  h += `<div class="pair-head"><span class="pair-no">No. 01</span><span class="pair-name">신체정보</span></div>`;
+  h += `<div class="pair-body"><div style="flex-shrink:0">`;
+  if (bodyImg) h += `<img id="bodyImgPreview" src="${esc(imgS(bodyImg))}" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px;display:block;margin-bottom:8px">`;
+  h += `<div><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="bodyImgFile" accept="image/*" style="display:none"></label>`;
+  if (bodyImg) h += ` <button class="hdr-btn" id="bodyImgClear" type="button">지우기</button>`;
+  h += `</div></div>`;
+  h += `<div style="flex:1;min-width:0"><textarea data-k="appearance" class="desc-note" rows="3" placeholder="신체정보 설명 (옷 제외)" style="width:100%;box-sizing:border-box">${esc(ap)}</textarea><textarea data-k="promptChar" rows="3" placeholder="옷 없는 신체 프롬" style="width:100%;box-sizing:border-box">${esc(pc)}</textarea></div>`;
+  h += `</div></div></div>`;
+  h += `<div class="pair-list"><div class="pair-row">`;
+  h += `<div class="pair-head"><span class="pair-no">No. 02</span><span class="pair-name">기본복장</span></div>`;
+  h += `<div class="pair-body">`;
+  if (repImg) h += `<div class="pair-frame"><img src="${esc(imgM(repImg))}" alt="" onclick="openLightbox(this.src)" loading="lazy"></div>`;
+  h += `<div style="flex:1;min-width:0"><div class="copyhint" style="margin:0 0 8px">대표 일러스트를 따라갑니다</div><textarea data-k="defaultDesc" class="desc-note" rows="3" placeholder="기본복장 설명" style="width:100%;box-sizing:border-box">${esc(defDesc)}</textarea><textarea data-k="promptOutfit" rows="3" placeholder="옷 포함 프롬" style="width:100%;box-sizing:border-box">${esc(defPrompt)}</textarea></div>`;
+  h += `</div></div></div>`;
+  h += `<div class="pair-list" id="pairList">`;
+  pairs.forEach((g,i)=>{
+    h += `<div class="pair-row" data-i="${i}">`;
+    h += `<div class="pair-head"><span class="pair-handle" style="cursor:grab;touch-action:none;padding:0 4px;font-size:16px">≡</span><span class="pair-no">No. ${num(i)}</span><input class="pair-title" value="${esc(g.title||"")}" placeholder="제목 (예: 교복)"><button type="button" class="hdr-btn pair-del">삭제</button></div>`;
+    h += `<div class="pair-body"><div style="flex-shrink:0"><img src="${esc(imgS(g.img))}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" style="cursor:zoom-in;width:120px;height:120px" loading="lazy"><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 변경<input type="file" class="pair-imgfile" accept="image/*" style="display:none"></label></div></div><div style="flex:1;min-width:0"><textarea class="pair-desc desc-note" rows="2" placeholder="컨셉 설명 (한글로 자세히, 예: 빅토리아풍 메이드복)">${esc(g.desc||"")}</textarea><textarea class="pair-prompt" rows="3" placeholder="이 옷의 프롬을 적어주세요" style="width:100%;box-sizing:border-box">${esc(g.prompt||"")}</textarea></div></div>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  h += `<div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="gal-file-wardrobeImgs" accept="image/*" style="display:none"></label></div>`;
+  return h;
+}
+function relMindmap(c){
+  const rels = c.rels||[];
+  if (!rels.length) return "";
+  const W=400, H=300, cx=200, cy=145, R=105;
+  const nodeImg = (ch, x, y, r, id)=>{
+    const img = (ch.thumb || ch.repImg || (ch.illust||"").split("\n").find(s=>s.trim()) || "");
+    const name = esc(ch.profile.name||"(이름 없음)");
+    let inner = "";
+    if (img){
+      inner = `<clipPath id="mc-${id}"><circle cx="${x}" cy="${y}" r="${r}"/></clipPath>`
+        + `<image href="${esc(img)}" x="${x-r}" y="${y-r}" width="${r*2}" height="${r*2}" clip-path="url(#mc-${id})" preserveAspectRatio="xMidYMid slice"/>`;
+    } else {
+      const initial = esc((ch.profile.name||"?").replace(/^\(샘플\)\s*/,"").charAt(0));
+      inner = `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--plabel-bg)"/><text x="${x}" y="${y+6}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--dim)">${initial}</text>`;
+    }
+    return `<g class="mm-node" data-nav="${id}" style="cursor:pointer">${inner}`
+      + `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="var(--acc)" stroke-width="2"/>`
+      + `<text x="${x}" y="${y+r+16}" text-anchor="middle" font-size="12" fill="var(--txt)">${name}</text></g>`;
+  };
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="mm-svg" style="width:100%;max-width:440px;display:block;margin:0 auto 10px">`;
+  rels.forEach((r,i)=>{
+    const ch = findCharById(r.to);
+    if (!ch) return;
+    const target = store[ch.world].chars.find(x=>x.id===ch.id);
+    if (!target) return;
+    const ang = (2*Math.PI*i/rels.length) - Math.PI/2;
+    const x = cx + R*Math.cos(ang), y = cy + (R*0.85)*Math.sin(ang);
+    const kind = REL_KINDS[r.kind]||r.kind;
+    const mx = (cx+x)/2, my = (cy+y)/2;
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1.5"/>`;
+    svg += `<rect x="${mx-24}" y="${my-10}" width="48" height="20" rx="10" fill="var(--panel)" stroke="var(--line)"/>`;
+    svg += `<text x="${mx}" y="${my+4}" text-anchor="middle" font-size="11" fill="var(--dim)">${esc(kind)}</text>`;
+    svg += nodeImg(target, x, y, 26, r.to);
+  });
+  svg += nodeImg(c, cx, cy, 32, c.id);
+  svg += `</svg>`;
+  return svg;
+}
+function renderTabInner(c){
+  const ed = (editingTab === curTab);
+  const p = c.profile;
+  if (curTab==="profile"){
+    const p = c.profile;
+    const dispLabel = (key,def)=>((c.rowLabels && c.rowLabels[key]) || def);
+    const dragHandle = (rowId)=> ed && rowId ? `<span class="draghandle" data-row="${rowId}" style="cursor:grab;touch-action:none;padding:0 4px;margin-right:3px;font-size:14px">≡</span>` : "";
+    const labelCell = (key,def,rowId)=>{
+      if (!ed) return `<td class="plabel">${esc(dispLabel(key,def))}</td>`;
+      return `<td class="plabel">${dragHandle(rowId)}<input class="rowlabel" data-cell="${key}" data-def="${esc(def)}" value="${esc(dispLabel(key,def))}" style="width:70px"></td>`;
+    };
+    const tcell = (label,val,key,rowId)=>{
+      if (ed) return `${labelCell(key,label,rowId)}<td><input data-k="${key}" value="${esc(val||"")}"></td>`;
+      return `<td class="plabel">${esc(dispLabel(key,label))}</td><td>${esc(val||"")||'<span class="empty">—</span>'}</td>`;
+    };
+    const trow = (id,l1,v1,k1,l2,v2,k2)=>{
+      if (!ed && !v1 && !v2) return "";
+      return `<tr>${tcell(l1,v1,k1,id)}${tcell(l2,v2,k2,"")}</tr>`;
+    };
+    const colorRow = ()=>{
+      if (!ed && !c.color) return "";
+      if (ed) return `<tr>${labelCell("color","이미지 컬러","color")}<td colspan="3"><input data-k="color" value="${esc(c.color||"")}" placeholder="#0C7BBB"></td></tr>`;
+      return `<tr><td class="plabel">${esc(dispLabel("color","이미지 컬러"))}</td><td colspan="3">${c.color?`<span class="colorchip" style="background:${esc(c.color)};color:${pickText(c.color)}">${esc(c.color)}</span>`:'<span class="empty">—</span>'}</td></tr>`;
+    };
+    let h = `<div class="field"><label>대표 일러스트</label>`;
+    if (ed){
+      const repPreview = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+      if (repPreview) h += `<img id="repPreview" src="${esc(imgM(repPreview))}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
+      h += `<input data-k="repImg" value="${esc(c.repImg||"")}" placeholder="대표 이미지 링크 또는 파일 첨부">`;
+      h += `<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="illustFile" accept="image/*" style="display:none"></label>`;
+      h += `</div>`;
+      h += `<div class="field" style="margin-top:10px"><label>썸네일 (목록용)</label>`;
+      if (c.thumb) h += `<img id="thumbPreview" src="${esc(imgS(c.thumb))}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px">`;
+      h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="thumbFile" accept="image/*" style="display:none"></label>`;
+      if (c.thumb) h += `<button class="hdr-btn" id="thumbClear" type="button">지우기</button>`;
+      h += `</div></div>`;
+      h += `<div class="field" style="margin-top:10px"><label>로고 / 사인</label>`;
+      if (c.logo) h += `<img id="logoPreview" src="${esc(imgM(c.logo))}" style="max-width:220px;border-radius:8px;display:block;margin:0 auto 8px">`;
+      h += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">`;
+      h += `<label class="hdr-btn" style="cursor:pointer">파일 첨부<input type="file" id="logoFile" accept="image/*" style="display:none"></label>`;
+      if (c.logo) h += `<button class="hdr-btn" id="logoClear" type="button">지우기</button>`;
+      h += `</div></div>`;
+    } else if (c.repImg || c.illust){
+      const firstIllust = c.repImg || String(c.illust||"").split("\n").find(x=>x.trim()) || "";
+      h += `<div class="polaroid"><img src="${esc(imgM(firstIllust))}" alt="대표 일러스트" loading="lazy"></div>`;
+    } else {
+      h += `<div class="val"><span class="empty">—</span></div>`;
+    }
+    h += `</div>`;
+    if (c.logo && !ed){
+      h += `<div class="field"><label>로고 / 사인</label><img src="${esc(imgM(c.logo))}" alt="로고" loading="lazy" style="max-width:280px;border-radius:8px;display:block;margin:0 auto;"></div>`;
+    }
+    if (ed || c.quote){
+    h += `<div class="field"><label>명대사</label>`;
+    if (ed){
+      h += `<input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디">`;
+    } else if (c.quote){
+      h += `<div class="quotebanner">${esc(c.quote)}</div>`;
+    } else {
+      h += `<div class="val"><span class="empty">—</span></div>`;
+    }
+    h += `</div>`;
+    }
+    h += `<div class="field"><label>이름</label>`;
+    h += ed
+      ? `<input data-k="profile.name" value="${esc(p.name||"")}">`
+      : `<div class="val bigname">${esc(p.name||"")||'<span class="empty">—</span>'}</div>`;
+    if (!ed && c.subtitle) h += `<div class="val">${esc(c.subtitle)}</div>`;
+    if (ed) h += `<div class="field"><label>호칭 (부제, 비우면 직책이 뜹니다)</label><input data-k="subtitle" value="${esc(c.subtitle||"")}"></div>`;
+    h += `</div>`;
+    h += `<table class="ptable">`;
+    if (ed){
+      h += `<tr><td class="plabel">사이즈 표시</td><td colspan="3"><label style="font-weight:normal"><input type="checkbox" data-k="hideSizes" ${c.hideSizes?"checked":""}> 쓰리사이즈·속옷 사이즈 숨기기</label></td></tr>`;
+    }
+    const rows = [];
+    const prow = (id, html)=>{ if (html) rows.push({id, tr: html}); };
+    prow("nick", trow("nick","별명",p.nickname,"profile.nickname","영문명",p.ename,"profile.ename"));
+    prow("names", trow("names","개명 전 이름",c.formerName,"formerName","다른 이름",c.otherNames,"otherNames"));
+    prow("oldNick", (ed || c.oldNick) ? (ed ? `<tr>${labelCell("oldNick","옛 별명","oldNick")}<td colspan="3"><input data-k="oldNick" value="${esc(c.oldNick||"")}"></td></tr>` : `<tr><td class="plabel">${esc(dispLabel("oldNick","옛 별명"))}</td><td colspan="3">${esc(c.oldNick||"")||'<span class="empty">—</span>'}</td></tr>`) : "");
+    const starCell = ()=>{
+      const derived = deriveStarsign(p.birthday);
+      if (ed) return `${labelCell("starsign","별자리","")}<td><input data-k="starsign" value="${esc(c.starsign||"")}" placeholder="${esc(derived||"예: 쌍둥이자리")}"></td>`;
+      const v = c.starsign || derived;
+      return `<td class="plabel">${esc(dispLabel("starsign","별자리"))}</td><td>${esc(v)||'<span class="empty">—</span>'}</td>`;
+    };
+    prow("age", trow("age","나이",p.age,"profile.age","혈액형",c.blood,"blood"));
+    prow("birth", (ed || p.birthday || c.starsign) ? `<tr>${tcell("생일",p.birthday,"profile.birthday","birth")}${starCell()}</tr>` : "");
+    prow("height", trow("height","키",p.height,"profile.height","몸무게",c.weight,"weight"));
+    if (!c.hideSizes || ed){
+      prow("sizes", trow("sizes","쓰리사이즈",c.three,"three","속옷 사이즈",c.bra,"bra"));
+    }
+    prow("hand", trow("hand","쓰는 손",c.hand,"hand","성별",c.gender,"gender"));
+    prow("color", colorRow());
+    const wide = (id,label,val,key)=>{
+      if (ed) return `<tr>${labelCell(key,label,id)}<td colspan="3"><input data-k="${key}" value="${esc(val||"")}"></td></tr>`;
+      if (!val) return "";
+      return `<tr><td class="plabel">${esc(dispLabel(key,label))}</td><td colspan="3">${esc(val||"")||'<span class="empty">—</span>'}</td></tr>`;
+    };
+    prow("pos", wide("pos","지위/직책",c.position,"position"));
+    prow("subtitle", wide("subtitle","호칭 (부제)",c.subtitle,"subtitle"));
+    prow("series", wide("series","출연 작품",c.series,"series"));
+    prow("affil", wide("affil","소속/진영",c.affil,"affil"));
+    prow("birthplace", wide("birthplace","출신지",c.birthplace,"birthplace"));
+    prow("hobby", wide("hobby","취미",c.hobby,"hobby"));
+    prow("specialty", wide("specialty","특기",c.specialty,"specialty"));
+    prow("likes", wide("likes","좋아하는 것",c.likes,"likes"));
+    prow("dislikes", wide("dislikes","싫어하는 것",c.dislikes,"dislikes"));
+    (c.customRows||[]).forEach((r,i)=>{
+      if (!r) return;
+      const cid = "c:" + (r.cid || ("tmp" + i));
+      if (ed){
+        rows.push({id: cid, tr: `<tr><td colspan="4"><div class="crow" data-i="${i}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">`
+          + `<span class="draghandle" data-row="${cid}" style="cursor:grab;touch-action:none;padding:0 4px;font-size:14px">≡</span>`
+          + `<input class="crow-label" value="${esc(r.label||"")}" placeholder="항목 이름" style="flex:1;min-width:110px">`
+          + `<input class="crow-value" value="${esc(r.value||"")}" placeholder="내용" style="flex:2;min-width:150px">`
+          + `<select class="crow-span"><option value="full" ${r.span!=="half"?"selected":""}>1개 넓게</option><option value="half" ${r.span==="half"?"selected":""}>한 행에 2개</option></select>`
+          + `<button type="button" class="hdr-btn crow-del">삭제</button></div></td></tr>`});
+      } else {
+        if (!r.label && !r.value) return;
+        if (r.span === "half") rows.push({id: cid, half: tcell(r.label, r.value, "")});
+        else rows.push({id: cid, tr: `<tr><td class="plabel">${esc(r.label)}</td><td colspan="3">${esc(r.value)}</td></tr>`});
+      }
+    });
+    const orderIdx = {};
+    (c.rowOrder||[]).forEach((id,i)=>{ orderIdx[id] = i; });
+    rows.sort((a,b)=>{
+      const ai = Object.prototype.hasOwnProperty.call(orderIdx, a.id) ? orderIdx[a.id] : 1e9;
+      const bi = Object.prototype.hasOwnProperty.call(orderIdx, b.id) ? orderIdx[b.id] : 1e9;
+      return ai - bi;
+    });
+    let buf = null;
+    for (const r of rows){
+      if (r.half){
+        if (buf){ h += `<tr>${buf.half}${r.half}</tr>`; buf = null; }
+        else buf = r;
+      } else {
+        if (buf){ h += `<tr>${buf.half}<td class="plabel"></td><td></td></tr>`; buf = null; }
+        h += r.tr;
+      }
+    }
+    if (buf) h += `<tr>${buf.half}<td class="plabel"></td><td></td></tr>`;
+    h += `</table>`;
+    if (ed){
+      h += `<div style="margin-top:8px"><button type="button" class="hdr-btn" id="crowAdd">＋ 행 추가</button></div>`;
+    }
+    if (ed || c.overview){
+    h += `<div class="field" style="margin-top:14px"><label>개요</label>`;
+    if (ed){
+      h += `<textarea data-k="overview" rows="2" placeholder="이 캐릭터를 한두 줄로 소개해주세요">${esc(c.overview||"")}</textarea>`;
+    } else {
+      h += `<div class="val overview">${c.overview?linkify(c.overview):'<span class="empty">—</span>'}</div>`;
+    }
+    h += `</div>`;
+    }
+    // 그룹 소속 (세계관 단위 그룹 목록에서 고르기, 여러 개 가능)
+    {
+      const w = store[curWorld]; const gs = worldGroups(w);
+      const myIds = Array.isArray(c.groupIds) ? c.groupIds : [];
+      if (ed){
+        h += `<div class="field" style="margin-top:14px"><label>그룹 소속 (목록에서 여러 그룹에 뜰 수 있어요)</label>`;
+        gs.forEach(g=>{
+          const parent = g.parentId ? groupOf(w, g.parentId) : null;
+          const label = parent ? esc(parent.name)+" › "+esc(g.name) : esc(g.name);
+          h += `<label style="display:block;font-weight:normal;margin:4px 0"><input type="checkbox" class="grp-check" data-gid="${g.id}" ${myIds.includes(g.id)?"checked":""}> ${label}</label>`;
+        });
+        h += `<div style="margin-top:10px"><input id="grp-new-name" placeholder="새 소속 이름 (예: 안씨네)" style="width:60%"><button id="grp-new-btn" type="button" style="margin-left:6px">새 소속 추가</button><div style="font-size:12px;color:var(--dim);margin-top:4px">새 소속은 평범한 그룹으로만 만들어요. 상위·하위나 상급자는 안 붙어요. 만들면 이 캐릭터에 바로 넣어요.</div></div>`;
+        h += `</div>`;
+      } else if (myIds.length){
+        // 보기에서는 그룹 이름만 (청량고랑 삼총사를 같이 적지 않음, 상위는 목록의 중첩으로 알 수 있음)
+        const names = myIds.map(id=>{ const g = groupOf(w, id); return g ? g.name : null; }).filter(Boolean);
+        if (names.length) h += `<div class="field" style="margin-top:14px"><label>그룹 소속</label><div class="val">${esc(names.join(", "))}</div></div>`;
+      }
+    }
+    return `<div class="notebook">${h}</div>`;
+  }
+  if (curTab==="relations"){
+    let h = ``;
+    // 조직도 (프로토타입): 인간관계 탭 안에, 조직별 하위탭 + 트리 + 드래그 상급자 지정
+    {
+      const w = store[curWorld]; const gs = worldGroups(w);
+      const descIds = (orgId)=>{ const out = new Set(); const collect = (pid)=>{ gs.filter(x=>x.parentId===pid).forEach(x=>{ out.add(x.id); collect(x.id); }); }; collect(orgId); return out; };
+      let orgs = gs.filter(g=>g.kind==="org" && (charInGroup(c, g.id) || [...descIds(g.id)].some(id=>charInGroup(c, id))));
+      // 멤버 1명 이하인 조직(마이베이비 1인 조직 등)은 조직도에서 제외
+      orgs = orgs.filter(g=>{ const d = descIds(g.id); return (w.chars||[]).filter(ch=>charInGroup(ch, g.id) || [...d].some(id=>charInGroup(ch, id))).length > 1; });
+      if (Array.isArray(c.orgChartOrder) && c.orgChartOrder.length){ orgs.sort((a,b)=>{ const ia = c.orgChartOrder.indexOf(a.id); const ib = c.orgChartOrder.indexOf(b.id); return (ia<0?999:ia) - (ib<0?999:ib); }); }
+      h += `<div class="field"><label>조직도</label>`;
+      if (!orgs.length){ h += `<div class="val"><span class="empty">소속된 조직이 없어요</span></div>`; }
+      else {
+        const selOrgId = (window.orgChartOrg && orgs.some(g=>g.id===window.orgChartOrg)) ? window.orgChartOrg : orgs[0].id;
+        window.orgChartOrg = selOrgId;
+        h += `<div class="orgchart-tabs">` + orgs.map(g=>`<button class="${g.id===selOrgId?"on":""}" data-orgchart-tab="${g.id}">${esc(g.name)}</button>` + (ed ? `<button data-orgchart-up="${g.id}" title="조직 탭 순서 위로">▲</button><button data-orgchart-down="${g.id}" title="조직 탭 순서 아래로">▼</button>` : ``)).join("") + `</div>`;
+        const selOrg = orgs.find(g=>g.id===selOrgId);
+        const dsel = descIds(selOrgId);
+        const members = (w.chars||[]).filter(ch=>charInGroup(ch, selOrgId) || [...dsel].some(id=>charInGroup(ch, id)));
+        const supOf = (m)=> (m.groupSuperior && m.groupSuperior[selOrgId]) || null;
+        const memberIds = new Set(members.map(m=>m.id));
+        const childrenMap = {}; members.forEach(m=>{ const sup = supOf(m); if (sup && memberIds.has(sup)){ (childrenMap[sup] = childrenMap[sup] || []).push(m); } });
+        const roots = members.filter(m=>{ const sup = supOf(m); return !sup || !memberIds.has(sup); });
+        const nodeHtml = (m, depth, seen)=>{
+          if (depth > 10) return "";
+          if (seen.has(m.id)) return "";
+          const seen2 = new Set(seen); seen2.add(m.id);
+          const img = groupPortrait(m);
+          const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId);
+          const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null;
+          let html = `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`;
+          const chs = childrenMap[m.id] || [];
+          if (chs.length) html = `<div class="orgchart-tree-node"><div>${html}</div><div class="orgchart-children">` + chs.map(ch=>nodeHtml(ch, depth+1, seen2)).join("") + `</div></div>`;
+          else html = `<div class="orgchart-tree-node">${html}</div>`;
+          return html;
+        };
+        if (ed) h += `<div class="orgchart-topzone" data-org-top="1">최상위 (상급자 없음) — 여기로 끌어다 놓으면 상급자가 없어져요</div><div class="val" style="font-size:12px">조직도 편집 중: 카드를 다른 카드 위에 올려놓으면 그 사람의 하급자가 돼요</div>`;
+        // 자유 배치 보드 (2026-11-13) — 자동 레벨 정렬 대신 카드 위치를 직접 저장해서 배치. 롤백: 이 블록을 레벨 렌더링으로 되돌리기 (백업 index-before-orgchart-board.html)
+        {
+          const levelCard = (m, pos)=>{ const img = groupPortrait(m); const sub = m.subtitle ? m.subtitle : groupSubtitle(m, selOrgId); const nodeColor = (m.color && /^#[0-9a-fA-F]{6}$/.test(m.color)) ? m.color : null; return `<div class="orgchart-node" data-org-node="${m.id}" data-org-drag="${m.id}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:140px;cursor:${ed ? "grab" : "pointer"}${nodeColor ? ";border-top-color:"+nodeColor : ""}">` + (img ? `<img src="${esc(imgS(img))}" alt="" loading="lazy">` : `<div style="width:56px;height:56px;border-radius:50%;background:var(--plabel-bg);margin:0 auto"></div>`) + `<div class="orgchart-node-name">${esc(m.profile.name||"(이름 없음)")}</div>` + (sub ? `<div class="orgchart-node-sub">${esc(sub)}</div>` : ``) + `</div>`; };
+          let levels = []; let curLevel = roots.length ? roots : members; let seenLevel = new Set();
+          for (let lv=0; lv<10 && curLevel.length; lv++){
+            const filtered = curLevel.filter(m=>!seenLevel.has(m.id)); filtered.forEach(m=>seenLevel.add(m.id));
+            if (!filtered.length) break; levels.push(filtered);
+            let next = []; filtered.forEach(m=>{ (childrenMap[m.id]||[]).forEach(ch=>{ if (!seenLevel.has(ch.id)) next.push(ch); }); }); curLevel = next;
+          }
+          if (!levels.length && members.length) levels = [members];
+          const CARD_W = 140, CARD_H = 170, GAP_X = 165, GAP_Y = 195;
+          const posOf = (m)=>{
+            const p = m.orgPos && m.orgPos[selOrgId];
+            if (p && typeof p.x === "number" && typeof p.y === "number") return {x: p.x, y: p.y};
+            let lv = 0, idx = 0;
+            for (let i=0;i<levels.length;i++){ const j = levels[i].findIndex(x=>x.id===m.id); if (j>=0){ lv=i; idx=j; break; } }
+            return {x: 20 + idx*GAP_X, y: 20 + lv*GAP_Y};
+          };
+          const boardW = Math.max(760, ...members.map(m=>posOf(m).x + CARD_W + 20));
+          const boardH = Math.max(480, ...members.map(m=>posOf(m).y + CARD_H + 20));
+          h += `<div class="orgchart-board" style="position:relative;width:100%;height:${boardH}px;min-height:480px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:10px"><svg class="orgchart-lines" style="position:absolute;left:0;top:0;pointer-events:none" width="${boardW}" height="${boardH}"></svg>` + members.map(m=>levelCard(m, posOf(m))).join("") + `</div>`;
+          if (ed) h += `<div class="val" style="font-size:12px">보드 편집 중: 카드를 끌어다 놓으면 위치가 저장돼요. 카드를 한 번 누른 뒤 다른 카드를 누르면 상급자가 바뀌어요. 상급자를 없애려면 카드를 선택한 뒤 위의 '최상위' 칸을 눌러주세요.</div>`;
+        }
+        // 하위 그룹 섹션 표시 (모니카반은 청량고 탭 안에)
+        const childGroups = gs.filter(x=>x.parentId===selOrgId);
+        if (childGroups.length){ h += `<div style="margin-top:10px;font-size:12px;color:var(--dim)">하위 그룹: ` + childGroups.map(x=>esc(x.name)).join(", ") + `</div>`; }
+      }
+      h += `</div>`;
+    }
+    h += `<div class="field" style="margin-top:18px"><label>메모</label>` + (ed ? `<textarea data-k="orgMemo" rows="5" placeholder="조직도 관련 메모, 여담을 자유롭게 적어주세요">${esc(c.orgMemo||"")}</textarea>` : `<div class="val">${c.orgMemo ? linkify(c.orgMemo) : '<span class="empty">—</span>'}</div>`) + `</div>`;
+    return h + `</div>`;
+  }
+  if (curTab==="illust"){
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    if (!ed){
+      const isImgLn = (ln)=> /^https?:\/\//.test(ln)||ln.startsWith("data:image");
+      const rep = (c.repImg && isImgLn(c.repImg)) ? c.repImg : (lines.find(isImgLn) || "");
+      const rest = rep ? lines.filter(ln=>ln !== rep) : lines;
+      if (!rep && !rest.length) return `<div class="field"><label>일러스트</label><div class="val"><span class="empty">—</span></div></div>`;
+      const imgs = rest.filter(isImgLn);
+      const txts = rest.filter(ln => !isImgLn(ln));
+      const grid = imgs.length
+        ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:6px">`+
+          imgs.map(ln=>`<img src="${esc(imgS(ln))}" class="zoomable" onclick="openLightbox(this.src)" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in">`).join("")+
+          `</div>`
+        : "";
+      const tparts = txts.map(ln=>`<div class="val">${esc(ln)}</div>`).join("");
+      const repHtml = rep ? `<div class="polaroid"><img src="${esc(imgM(rep))}" alt="대표 일러스트" loading="lazy"></div>` : "";
+      return `<div class="field"><label>일러스트</label>${repHtml}${grid}${tparts}</div>`;
+    }
+    return `<div class="field"><label>일러스트</label><div class="gal-edit" id="gal-illust">`+
+      lines.map((ln,i)=>{
+        const isRep = (c.repImg||"") && ln === c.repImg;
+        return `<div class="gal-edrow" data-i="${i}"><img src="${esc(imgS(ln))}" class="gal-edimg" alt="" onclick="openLightbox(this.src)" loading="lazy" style="cursor:zoom-in">`+
+        (isRep ? `<span style="font-size:12px;color:var(--acc);font-weight:700">★대표</span>` : ``)+
+        `<button class="hdr-btn" data-ilup="${i}" ${i===0?"disabled":""}>▲</button><button class="hdr-btn" data-ildown="${i}" ${i===lines.length-1?"disabled":""}>▼</button>`+
+        `<button class="hdr-btn" data-ildel="${i}">삭제</button></div>`;
+      }).join("")+
+      `</div><div style="margin-top:8px"><label class="hdr-btn" style="cursor:pointer">이미지 추가<input type="file" id="illustFiles" accept="image/*" multiple style="display:none"></label></div></div>`;
+  }
+  if (curTab==="wardrobe") return wardrobeField(c, ed);
+  if (curTab==="weapon") return galleryField(c, "무기", "weapon", "weaponImgs", ed);
+  if (ed) return `<div class="field"><label>여담</label><textarea data-k="custom" rows="5" placeholder="자유롭게 적어주세요">${esc(c.custom||"")}</textarea></div>`;
+  const t = ""+(c.custom||"");
+  if (t.length > 160){
+    return `<div class="field"><label>여담</label><div class="val foldable" id="foldCustom">${linkify(t)}</div>`
+      + `<button class="foldbtn" id="foldBtn">펼치기 ▾</button></div>`;
+  }
+  return `<div class="field"><label>여담</label><div class="val">${t?linkify(t):'<span class="empty">—</span>'}</div></div>`;
+}
+
+function bindEdit(c){
+  document.querySelectorAll("#body [data-k]").forEach(el=>{
+    el.oninput = ()=>{
+      const k = el.dataset.k;
+      const v = el.type==="checkbox" ? el.checked : el.value;
+      if (k.startsWith("profile.")) c.profile[k.slice(8)] = v; else c[k] = v;
+    };
+  });
+  document.querySelectorAll(".rel-del").forEach(b=>b.onclick=()=>{ c.rels.splice(+b.closest(".rel").dataset.i,1); render(); });
+  document.querySelectorAll(".rel-to").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].to = s.value; });
+  document.querySelectorAll(".rel-kind").forEach(s=>s.onchange=()=>{ c.rels[+s.closest(".rel").dataset.i].kind = s.value; });
+  const add = $("relAdd"); if (add) add.onclick = ()=>{ const other = Object.values(store).filter(w=>w&&Array.isArray(w.chars)).flatMap(w=>w.chars).find(x=>x.id!==c.id); if(other){ (c.rels = c.rels || []).push({to:other.id, kind:"friend"}); render(); } };
+  document.querySelectorAll(".crow-label").forEach(inp=>inp.oninput=()=>{ c.customRows[+inp.closest(".crow").dataset.i].label = inp.value; });
+  document.querySelectorAll(".crow-value").forEach(inp=>inp.oninput=()=>{ c.customRows[+inp.closest(".crow").dataset.i].value = inp.value; });
+  document.querySelectorAll(".crow-span").forEach(s=>s.onchange=()=>{ c.customRows[+s.closest(".crow").dataset.i].span = s.value; });
+  document.querySelectorAll(".crow-del").forEach(b=>b.onclick=()=>{ c.customRows.splice(+b.closest(".crow").dataset.i,1); render(); });
+  const ca = $("crowAdd"); if (ca) ca.onclick = ()=>{ (c.customRows = c.customRows || []).push({label:"", value:"", span:"full", cid:"cr_"+Math.random().toString(36).slice(2,10)}); render(); };
+  document.querySelectorAll(".rowlabel").forEach(inp=>inp.oninput=()=>{
+    c.rowLabels = c.rowLabels || {};
+    const v = inp.value;
+    if (!v || v === inp.dataset.def) delete c.rowLabels[inp.dataset.cell];
+    else c.rowLabels[inp.dataset.cell] = v;
+  });
+  document.querySelectorAll(".grp-check").forEach(box=>box.onchange=()=>{
+    c.groupIds = c.groupIds || [];
+    const gid = box.dataset.gid;
+    if (box.checked){ if (!c.groupIds.includes(gid)) c.groupIds.push(gid); }
+    else c.groupIds = c.groupIds.filter(id=>id!==gid);
+    persist();
+  });
+  const grpNewBtn = document.getElementById("grp-new-btn");
+  if (grpNewBtn) grpNewBtn.onclick=()=>{
+    const inp = document.getElementById("grp-new-name");
+    const name = inp ? inp.value.trim() : "";
+    if (!name) return;
+    const w = store[curWorld]; if (!w) return;
+    if (!Array.isArray(w.groups)) w.groups = [];
+    const existing = w.groups.find(g=>g.name === name);
+    c.groupIds = c.groupIds || [];
+    if (existing){ if (!c.groupIds.includes(existing.id)) c.groupIds.push(existing.id); }
+    else { const gid = "g_" + Math.random().toString(36).slice(2,10); w.groups.push({id: gid, name: name, kind: "group", logo: ""}); c.groupIds.push(gid); }
+    persist(); render();
+  };
+  document.querySelectorAll(".draghandle").forEach(hnd=>{
+    hnd.onpointerdown = (e)=>{
+      e.preventDefault();
+      const tr = hnd.closest("tr"); if (!tr) return;
+      const table = tr.closest("table"); if (!table) return;
+      const rect = tr.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      const clone = tr.cloneNode(true);
+      const srcFields = tr.querySelectorAll("input,select,textarea");
+      clone.querySelectorAll("input,select,textarea").forEach((el,i)=>{ if (srcFields[i]) el.value = srcFields[i].value; });
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:fixed;left:" + rect.left + "px;top:" + rect.top + "px;width:" + rect.width + "px;pointer-events:none;opacity:0.92;z-index:9999;";
+      const tbl = document.createElement("table");
+      tbl.className = "ptable";
+      tbl.style.cssText = "margin:0;box-shadow:0 10px 28px rgba(0,0,0,0.28);background:var(--panel);";
+      tbl.appendChild(clone);
+      wrap.appendChild(tbl);
+      document.body.appendChild(wrap);
+      tr.style.visibility = "hidden";
+      const move = (ev)=>{
+        wrap.style.left = (ev.clientX - offsetX) + "px";
+        wrap.style.top = (ev.clientY - offsetY) + "px";
+        const all = [...table.querySelectorAll("tr")].filter(x=>x !== tr);
+        const before = new Map(all.map(x=>[x, x.getBoundingClientRect().top]));
+        let target = null;
+        for (const x of all){
+          const r = x.getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2){ target = x; break; }
+        }
+        if (target){ if (target !== tr.nextSibling) tr.parentNode.insertBefore(tr, target); }
+        else if (tr !== tr.parentNode.lastElementChild){ tr.parentNode.appendChild(tr); }
+        for (const x of all){
+          const dy = before.get(x) - x.getBoundingClientRect().top;
+          if (dy){
+            x.style.transition = "none";
+            x.style.transform = "translateY(" + dy + "px)";
+            void x.offsetHeight;
+            x.style.transition = "transform 0.18s ease";
+            x.style.transform = "";
+          }
+        }
+      };
+      const up = ()=>{
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", up);
+        wrap.remove();
+        tr.style.visibility = "";
+        table.querySelectorAll("tr").forEach(x=>{ x.style.transition = ""; x.style.transform = ""; });
+        c.rowOrder = [...table.querySelectorAll("tr")].map(t=>t.querySelector(".draghandle")?.dataset.row).filter(Boolean);
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", up);
+    };
+  });
+  const sf = $("illustFile");
+  if (sf) sf.onchange = async ()=>{
+    const f = sf.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      const url = await uploadToCloudinary(f);
+      // 대표 이미지는 전용 칸에만 저장, 일러스트 목록은 건드리지 않음
+      c.repImg = url;
+      const inp = document.querySelector('#body [data-k="repImg"]'); if (inp) inp.value = c.repImg;
+      let pv = $("repPreview");
+      if (pv) pv.src = url;
+      else if (inp){
+        pv = document.createElement("img");
+        pv.id = "repPreview"; pv.src = url;
+        pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
+        inp.parentElement.insertBefore(pv, inp);
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+  };
+  const tf = $("thumbFile");
+  if (tf) tf.onchange = async ()=>{
+    const f = tf.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.thumb = await uploadToCloudinary(f);
+      let pv = $("thumbPreview");
+      if (pv){ pv.src = c.thumb; }
+      else {
+        pv = document.createElement("img");
+        pv.id = "thumbPreview"; pv.src = c.thumb;
+        pv.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin-bottom:8px";
+        tf.closest(".field").insertBefore(pv, tf.closest("div"));
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+  };
+  const tc2 = $("thumbClear");
+  if (tc2) tc2.onclick = ()=>{ c.thumb = ""; const pv = $("thumbPreview"); if (pv) pv.remove(); tc2.remove(); };
+  const bf = $("bodyImgFile");
+  if (bf) bf.onchange = async ()=>{
+    const f = bf.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.bodyImg = await uploadToCloudinary(f);
+      let pv = $("bodyImgPreview");
+      if (pv){ pv.src = c.bodyImg; }
+      else {
+        pv = document.createElement("img");
+        pv.id = "bodyImgPreview"; pv.src = c.bodyImg;
+        pv.style.cssText = "cursor:zoom-in;width:120px;height:120px;display:block;margin-bottom:8px";
+        pv.onclick = ()=>openLightbox(pv.src);
+        bf.closest("div").parentElement.insertBefore(pv, bf.closest("div"));
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+  };
+  const bc = $("bodyImgClear");
+  if (bc) bc.onclick = ()=>{ c.bodyImg = ""; const pv = $("bodyImgPreview"); if (pv) pv.remove(); bc.remove(); };
+  const lf = $("logoFile");
+  if (lf) lf.onchange = async ()=>{
+    const f = lf.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      c.logo = await uploadToCloudinary(f);
+      let pv = $("logoPreview");
+      if (pv){ pv.src = c.logo; }
+      else {
+        pv = document.createElement("img");
+        pv.id = "logoPreview"; pv.src = c.logo;
+        pv.style.cssText = "max-width:220px;border-radius:8px;display:block;margin:0 auto 8px";
+        lf.closest(".field").insertBefore(pv, lf.closest("div"));
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+  };
+  const lc2 = $("logoClear");
+  if (lc2) lc2.onclick = ()=>{ c.logo = ""; const pv = $("logoPreview"); if (pv) pv.remove(); lc2.remove(); };
+  const mf = $("illustFiles");
+  if (mf) mf.onchange = async ()=>{
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      for (const f of mf.files){
+        const url = await uploadToCloudinary(f);
+        c.illust = (c.illust ? c.illust + "\n" : "") + url;
+      }
+      setSyncStatus("동기화됨", "#4CAF50");
+      persist();
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+    render();
+  };
+  document.querySelectorAll("[data-ildel]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    lines.splice(+b.dataset.ildel,1);
+    c.illust = lines.join("\n");
+    persist(); render();
+  });
+  document.querySelectorAll("[data-ilup]").forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.ilup; if (i<=0) return;
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    [lines[i-1], lines[i]] = [lines[i], lines[i-1]];
+    c.illust = lines.join("\n");
+    persist(); render();
+  });
+  document.querySelectorAll("[data-ildown]").forEach(b=>b.onclick=()=>{
+    const lines = String(c.illust||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    const i = +b.dataset.ildown; if (i>=lines.length-1) return;
+    [lines[i], lines[i+1]] = [lines[i+1], lines[i]];
+    c.illust = lines.join("\n");
+    persist(); render();
+  });
+  ["wardrobeImgs","weaponImgs","promptRefImgs"].forEach(imgKey=>{
+    const gf = $("gal-file-"+imgKey);
+    if (gf) gf.onchange = async ()=>{
+      const f = gf.files[0]; if (!f) return;
+      setSyncStatus("이미지 업로드 중…", "var(--warm)");
+      try{
+        const url = await uploadToCloudinary(f);
+        if (!c[imgKey]) c[imgKey] = [];
+        c[imgKey].push({img:url, title:""});
+        setSyncStatus("동기화됨", "#4CAF50");
+      }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+      render();
+    };
+  });
+  document.querySelectorAll(".gal-edtitle").forEach(inp=>inp.onchange=()=>{
+    const row = inp.closest(".gal-edrow"); if (!row) return;
+    const key = inp.closest(".gal-edit").id.replace("gal-","");
+    const i = +inp.dataset.gi;
+    if (c[key] && c[key][i]) c[key][i].title = inp.value;
+  });
+  document.querySelectorAll("[data-gdel]").forEach(b=>b.onclick=()=>{
+    const row = b.closest(".gal-edrow"); if (!row) return;
+    const key = b.closest(".gal-edit").id.replace("gal-","");
+    const i = +b.dataset.gdel;
+    if (c[key]) c[key].splice(i,1);
+    render();
+  });
+  document.querySelectorAll(".pair-title").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].title = inp.value;
+  });
+  document.querySelectorAll(".pair-prompt").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].prompt = inp.value;
+  });
+  document.querySelectorAll(".pair-desc").forEach(inp=>inp.oninput=()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].desc = inp.value;
+  });
+  document.querySelectorAll(".pair-imgfile").forEach(inp=>inp.onchange=async ()=>{
+    const row = inp.closest(".pair-row"); if (!row) return;
+    const f = inp.files[0]; if (!f) return;
+    setSyncStatus("이미지 업로드 중…", "var(--warm)");
+    try{
+      const url = await uploadToCloudinary(f);
+      const arr = c.wardrobeImgs || []; if (arr[+row.dataset.i]) arr[+row.dataset.i].img = url;
+      const im = row.querySelector("img.gal-edimg"); if (im) im.src = url;
+      setSyncStatus("동기화됨", "#4CAF50");
+    }catch(e){ setSyncStatus("업로드 실패: " + (e.message||e), "#f44336"); }
+  });
+  document.querySelectorAll(".pair-del").forEach(b=>b.onclick=()=>{
+    const row = b.closest(".pair-row"); if (!row) return;
+    (c.wardrobeImgs || []).splice(+row.dataset.i, 1);
+    render();
+  });
+  document.querySelectorAll(".pair-handle").forEach(hnd=>{
+    hnd.onpointerdown = (e)=>{
+      e.preventDefault();
+      const list = $("pairList"); if (!list) return;
+      const row = hnd.closest(".pair-row"); if (!row) return;
+      const rect = row.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      const clone = row.cloneNode(true);
+      const srcFields = row.querySelectorAll("input,textarea");
+      clone.querySelectorAll("input,textarea").forEach((el,i)=>{ if (srcFields[i]) el.value = srcFields[i].value; });
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:fixed;left:" + rect.left + "px;top:" + rect.top + "px;width:" + rect.width + "px;pointer-events:none;opacity:0.92;z-index:9999;";
+      wrap.appendChild(clone);
+      document.body.appendChild(wrap);
+      row.style.visibility = "hidden";
+      const move = (ev)=>{
+        wrap.style.left = (ev.clientX - offsetX) + "px";
+        wrap.style.top = (ev.clientY - offsetY) + "px";
+        const all = [...list.querySelectorAll(".pair-row")].filter(x=>x !== row);
+        const before = new Map(all.map(x=>[x, x.getBoundingClientRect().top]));
+        let target = null;
+        for (const x of all){
+          const r = x.getBoundingClientRect();
+          if (ev.clientY < r.top + r.height / 2){ target = x; break; }
+        }
+        if (target){ if (target !== row.nextSibling) list.insertBefore(row, target); }
+        else if (row !== list.lastElementChild){ list.appendChild(row); }
+        for (const x of all){
+          const dy = before.get(x) - x.getBoundingClientRect().top;
+          if (dy){
+            x.style.transition = "none";
+            x.style.transform = "translateY(" + dy + "px)";
+            void x.offsetHeight;
+            x.style.transition = "transform 0.18s ease";
+            x.style.transform = "";
+          }
+        }
+      };
+      const up = ()=>{
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", up);
+        document.removeEventListener("pointercancel", up);
+        wrap.remove();
+        row.style.visibility = "";
+        list.querySelectorAll(".pair-row").forEach(x=>{ x.style.transition = ""; x.style.transform = ""; });
+        const order = [...list.querySelectorAll(".pair-row")].map(el=>+el.dataset.i);
+        const old = c.wardrobeImgs || [];
+        const reordered = order.map(i=>old[i]).filter(v=>v !== undefined);
+        if (reordered.length === old.length) c.wardrobeImgs = reordered;
+        list.querySelectorAll(".pair-row").forEach((el,idx)=>{ el.dataset.i = idx; const no = el.querySelector(".pair-no"); if (no) no.textContent = "No. " + String(idx+3).padStart(2, "0"); });
+        window.__pairDragEnd = Date.now();
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", up);
+      document.addEventListener("pointercancel", up);
+    };
+  });
+  document.querySelectorAll(".gal-item img, img.zoomable, .gal-edimg").forEach(img=>{
+    img.style.cursor = "zoom-in";
+  });
+  const lb = $("lightbox");
+  if (lb) lb.onclick = ()=>{ lb.style.display = "none"; };
+}
+function openLightbox(src){
+  if (window.__pairDragEnd && Date.now() - window.__pairDragEnd < 300) return;
+  const lb = document.getElementById("lightbox");
+  const im = document.getElementById("lightboxImg");
+  if (lb && im){ im.src = imgL(src); lb.style.display = "flex"; }
+}
+async function copyPrompt(btn){
+  const box = btn.closest(".promptbox");
+  const txt = box ? box.querySelector(".prompttext").textContent : "";
+  if (!txt) return;
+  let ok = false;
+  try{ await navigator.clipboard.writeText(txt); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+  }
+  const old = btn.textContent;
+  btn.textContent = ok ? "복사됨!" : "복사 실패";
+  setTimeout(()=>{ btn.textContent = old; }, 1500);
+}
+async function copyBox(card, ev){
+  if (ev && ev.target.closest("img")) return;
+  const txtEl = card.querySelector(".prompttext");
+  const txt = txtEl ? txtEl.textContent : "";
+  if (!txt) return;
+  let ok = false;
+  try{ await navigator.clipboard.writeText(txt); ok = true; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+  }
+  const hint = card.querySelector(".copytip span") || card.querySelector(".copyhint");
+  if (hint){ const old = hint.textContent; hint.textContent = ok ? "복사됨!" : "복사 실패"; setTimeout(()=>{ hint.textContent = old; }, 1500); }
+}
+function fileToDataURL(file, maxW, quality){
+  maxW = maxW || 1200; quality = quality || 0.85;
+  return new Promise((resolve, reject)=>{
+    if (file.type==="image/png" && file.size < 800*1024 && maxW >= 1200){
+      const r = new FileReader();
+      r.onload = ()=>resolve(r.result); r.onerror = reject;
+      r.readAsDataURL(file); return;
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    const keepPng = file.type==="image/png";
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(cv.toDataURL(keepPng ? "image/png" : "image/jpeg", quality));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+$("addChar").onclick = ()=>{
+  cancelEdit();
+  const w = store[curWorld];
+  if (!w){ alert("세계관을 먼저 선택하세요."); return; }
+  if (!w.chars) w.chars = [];
+  const id = "c"+Date.now();
+  w.chars.push({id, profile:{name:"새 캐릭터",age:"",height:"",birthday:""}, rels:[], groupIds:[], illust:"", repImg:"", thumb:"", logo:"", position:"", subtitle:"", series:"", affil:"", wardrobe:"", wardrobeImgs:[], appearance:"", promptChar:"", promptOutfit:"", bodyImg:"", defaultDesc:"", promptRefImgs:[], weapon:"", weaponImgs:[], three:"", overview:"", quote:"", color:"", blood:"", weight:"", birthplace:"", starsign:"", hand:"", hobby:"", specialty:"", likes:"", dislikes:"", formerName:"", otherNames:"", oldNick:"", customRows:[], custom:""});
+  curChar=id; window.expandedUngrouped = true; window.expandedOrgs.clear(); persist(); render();
+};
+$("delChar").onclick = ()=>{
+  const w = store[curWorld], c = cur();
+  if (!c) return;
+  if (!confirm("\""+(c.profile.name||"(이름 없음)")+"\" 캐릭터를 삭제할까요?")) return;
+  w.chars = w.chars.filter(x=>x.id!==c.id);
+  Object.values(store).forEach(ww=>ww.chars.forEach(x=>{ x.rels = (x.rels||[]).filter(r=>r.to!==c.id); }));
+  curChar = w.chars[0]?.id || null; curTab = "profile";
+  persist(); render();
+};
+
+const setTheme = (t)=>{
+  theme = t;
+  applyTheme(); applyAccent(); persist();
+};
+document.getElementById("themeDarkBtn").onclick = ()=>setTheme("dark");
+document.getElementById("themeLightBtn").onclick = ()=>setTheme("light");
+const modal = document.getElementById("settingsModal");
+document.getElementById("settingsBtn").onclick = ()=>{ renderWorldList(); renderBackupList(); modal.style.display = "flex"; };
+// 마스터 로그인 / 로그아웃
+const loginModal = document.getElementById("loginModal");
+document.getElementById("authBtn").onclick = ()=>{
+  if (isMaster){
+    if (editingTab) cancelEdit();
+    firebase.auth().signOut();
+  } else {
+    document.getElementById("loginErr").style.display = "none";
+    loginModal.style.display = "flex";
+  }
+};
+document.getElementById("loginClose").onclick = ()=>{ loginModal.style.display = "none"; };
+const doLogin = ()=>{
+  const em = document.getElementById("loginEmail").value.trim();
+  const pw = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginErr");
+  err.style.display = "none";
+  firebase.auth().signInWithEmailAndPassword(em, pw).then(()=>{
+    loginModal.style.display = "none";
+    document.getElementById("loginPass").value = "";
+  }).catch(e=>{
+    err.textContent = "로그인 실패: " + (e.code === "auth/invalid-credential" ? "이메일 또는 비밀번호가 맞지 않아요." : (e.message || e));
+    err.style.display = "";
+  });
+};
+document.getElementById("loginGo").onclick = doLogin;
+document.getElementById("loginPass").addEventListener("keydown", e=>{ if (e.key === "Enter") doLogin(); });
+function renderWorldList(){
+  const wl = document.getElementById("worldList");
+  if (!wl) return;
+  wl.innerHTML = Object.entries(store).map(([wid,w])=>
+    `<div class="worldrow"><input type="text" data-wname="${wid}" value="${esc(w.name)}">`+
+    `<input type="color" data-waccent="${wid}" value="${esc(w.accent||ACCENTS[theme])}" title="강조 색상">`+
+    `<label><input type="checkbox" data-wweapon="${wid}" ${w.hasWeapon?"checked":""}> 무기 탭</label>`+
+    `<button class="wdel" data-wdel="${wid}">삭제</button></div>`
+  ).join("");
+  wl.querySelectorAll("[data-wname]").forEach(inp=>{
+    inp.oninput = ()=>{ store[inp.dataset.wname].name = inp.value; };
+    inp.onchange = ()=>{ persist(); render(); renderWorldList(); };
+  });
+  wl.querySelectorAll("[data-wweapon]").forEach(cb=>{
+    cb.onchange = ()=>{ store[cb.dataset.wweapon].hasWeapon = cb.checked; render(); };
+  });
+  wl.querySelectorAll("[data-waccent]").forEach(inp=>{
+    inp.oninput = ()=>{ store[inp.dataset.waccent].accent = inp.value; applyAccent(); persist(); };
+  });
+  wl.querySelectorAll("[data-wdel]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const wid = btn.dataset.wdel;
+      if (Object.keys(store).length<=1){ alert("세계관은 최소 1개 필요해요."); return; }
+      if (!confirm("\""+store[wid].name+"\" 세계관을 삭제할까요?\n캐릭터도 함께 지워져요.")) return;
+      delete store[wid];
+      if (curWorld===wid){ curWorld = Object.keys(store)[0]; curChar = store[curWorld].chars[0]?.id||null; }
+      persist(); render(); renderWorldList();
+    };
+  });
+}
+document.getElementById("addWorldBtn").onclick = ()=>{
+  cancelEdit();
+  const wid = "w"+Date.now();
+  store[wid] = { name:"새 세계관", hasWeapon:false, accent:null, chars:[] };
+  curWorld = wid; curChar = null; curTab = "profile";
+  persist(); render(); renderWorldList();
+  const inp = document.querySelector('[data-wname="'+wid+'"]');
+  if (inp){ inp.focus(); inp.select(); }
+};
+document.getElementById("settingsClose").onclick = ()=>{ modal.style.display = "none"; };
+function renderBackupList(){
+  const el = document.getElementById("backupList"); if (!el) return;
+  if (!cloudBackups.length){ el.innerHTML = `<p class="hint">아직 자동 백업이 없어요. 저장하면 생겨요.</p>`; return; }
+  el.innerHTML = cloudBackups.slice().reverse().map((b, i)=>{
+    const idx = cloudBackups.length - 1 - i;
+    const n = Object.values(b.store || {}).reduce((s, w)=>s + ((w && w.chars) ? w.chars.length : 0), 0);
+    const d = b.t ? new Date(b.t).toLocaleString("ko-KR") : "시간 미상";
+    return `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span style="font-size:13px">${d} · 캐릭터 ${n}명</span><button class="hdr-btn" data-restore="${idx}">복원</button></div>`;
+  }).join("");
+  el.querySelectorAll("[data-restore]").forEach(btn=>{ btn.onclick = ()=>{
+    const b = cloudBackups[+btn.dataset.restore]; if (!b) return;
+    if (!confirm(new Date(b.t).toLocaleString("ko-KR") + " 시점으로 되돌릴까요? 현재 상태도 백업 목록에 남겨둘게요.")) return;
+    try{
+      const curStr = JSON.stringify(store);
+      const last = cloudBackups[cloudBackups.length - 1];
+      if (!last || JSON.stringify(last.store) !== curStr){
+        cloudBackups.push({ t: storeUpdatedAt, store: JSON.parse(curStr) });
+        while (cloudBackups.length > 5) cloudBackups.shift();
+      }
+    }catch(e){}
+    cancelEdit();
+    store = JSON.parse(JSON.stringify(b.store));
+    normalizeStore();
+    curWorld = Object.keys(store)[0] || null;
+    curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
+    curTab = "profile";
+    persist(); render(); renderBackupList();
+  }; });
+}
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify({ tabs: TABS, worlds: store }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "wiki-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("importBtn").onclick = ()=>{ document.getElementById("importFile").click(); };
+function recompressDataURL(dataUrl, maxW, quality){
+  return new Promise((resolve)=>{
+    if (!dataUrl || !dataUrl.startsWith("data:image/")){ resolve(dataUrl); return; }
+    // PNG 투명도는 유지
+    const keepPng = dataUrl.startsWith("data:image/png");
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if (w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      // 이미 충분히 작으면 그대로
+      if (img.width <= maxW && dataUrl.length < 300*1024){ resolve(dataUrl); return; }
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL(keepPng ? "image/png" : "image/jpeg", quality));
+    };
+    img.onerror = ()=>resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+document.getElementById("importFile").onchange = (e)=>{
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      if (!d.worlds) throw new Error("bad");
+      cancelEdit();
+      store = d.worlds;
+      curWorld = Object.keys(store)[0] || null;
+      curChar = curWorld ? (store[curWorld].chars[0]?.id || null) : null;
+      curTab = "profile";
+      persist(); render();
+    }catch(err){ alert("가져오기 실패: 올바른 백업 파일이 아니에요."); }
+  };
+  r.readAsText(f); e.target.value = "";
+};
+modal.addEventListener("click", (e)=>{ if (e.target===modal) modal.style.display = "none"; });
+applyTheme(); applyAccent();
+curChar = store[curWorld].chars[0]?.id || null;
+updateAuthUI(); // 게스트 기본: 편집 UI 숨김
+render();
+</script>
+<div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:100;align-items:center;justify-content:center;cursor:zoom-out;padding:16px"><img id="lightboxImg" onclick="event.stopPropagation();this.parentElement.style.display='none'" style="max-width:94vw;max-height:94vh;border-radius:12px;object-fit:contain"></div>
+</body>
+</html>
