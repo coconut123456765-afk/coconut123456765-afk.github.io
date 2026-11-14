@@ -389,7 +389,7 @@
   .gal-item img { height:auto; object-fit:contain; }
   .ptable { table-layout:auto; border:2px solid var(--theme, var(--acc)); }
   .ptable td { border-color:var(--theme, var(--acc)); }
-  .ptable td.plabel { background:var(--theme, var(--acc)); color:var(--theme-text, #fff); width:auto; }
+  .ptable td.plabel { background:var(--theme, var(--acc)); color:var(--theme-text, #fff); width:1%; white-space:nowrap; }
   .ptable td.plabel:empty { background:transparent; }
   .plabel-pill { font-size:12px; padding:3px 10px; }
   @media (max-width:700px){
@@ -412,6 +412,8 @@
   .navbox-title { background:var(--acc); color:var(--on-acc); }
   .navbox-links button { background:none; border:0; color:var(--acc); padding:4px 2px; }
   .navbox-links button:hover { border-color:transparent; text-decoration:underline; }
+  .wiki-infobox-name-jp { font-size:13px; font-weight:600; opacity:.85; }
+  .wiki-infobox-name-en { font-size:14px; font-weight:600; opacity:.9; text-transform:uppercase; letter-spacing:.5px; }
 </style>
 </head>
 <body>
@@ -1555,6 +1557,7 @@ function renderTabInner(c, orgBlock){
       h += `</div>`;
       h += `<div class="field"><label>명대사</label><input data-k="quote" value="${esc(c.quote||"")}" placeholder="캐릭터를 대표하는 한마디"></div>`;
       h += `<div class="field"><label>이름</label><input data-k="profile.name" value="${esc(p.name||"")}">`;
+      h += `<div class="field"><label>일본어 이름 (이름줄 위에 작게 뜹니다)</label><input data-k="profile.jname" value="${esc(p.jname||"")}" placeholder="일본어 이름 (없으면 비워두기)"></div>`;
       h += `<div class="field"><label>호칭 (부제, 비우면 직책이 뜹니다)</label><input data-k="subtitle" value="${esc(c.subtitle||"")}"></div>`;
       h += `</div>`;
       h += `<table class="ptable" style="--theme:${theme};--theme-text:${themeText}">`;
@@ -1563,7 +1566,7 @@ function renderTabInner(c, orgBlock){
       h += `<div class="wiki-infobox" style="--theme:${theme};--theme-text:${themeText}">`;
       if (firstIllust) h += `<div class="wiki-infobox-img"><img src="${esc(imgM(firstIllust))}" alt="대표 일러스트" loading="lazy"></div>`;
       if (c.quote) h += `<div class="wiki-infobox-quote">${esc(c.quote)}</div>`;
-      h += `<div class="wiki-infobox-title">${esc(p.name||"(이름 없음)")}</div>`;
+      h += `<div class="wiki-infobox-title">${p.jname?`<div class="wiki-infobox-name-jp">${esc(p.jname)}</div>`:""}<div class="wiki-infobox-name-main">${esc(p.name||"(이름 없음)")}</div>${p.ename?`<div class="wiki-infobox-name-en">${esc(p.ename)}</div>`:""}</div>`;
       h += `<table class="ptable">`;
     }
     if (ed){
