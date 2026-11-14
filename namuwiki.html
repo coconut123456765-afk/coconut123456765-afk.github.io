@@ -418,6 +418,9 @@
   .wiki-article-sub:first-child { margin-top:0; }
   .wiki-article-p { margin:6px 0; line-height:1.7; }
 
+  /* 조직 로고 (2026-11-14, Don: 로고는 데이터에 있는데 나무위키 개요에 안 뜸 — 도시에 모드는 보여줌) */
+  .wiki-orglogo { margin:6px 0 10px; text-align:center; }
+  .wiki-orglogo img { max-width:220px; width:100%; height:auto; display:block; margin:0 auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
   /* 화면 짤림(가로 넘침) 수정 (2026-11-14, Don 스크린샷): flex 자식이 내용 너비 때문에 안 줄어들어서 본문이 화면보다 넓어지던 문제 */
   .wiki-profile-row > * { min-width:0; }
   main > * { min-width:0; }
@@ -1159,7 +1162,9 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g, false, undefined, useCards);
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>';
+      if (x.g.logo) h += '<div class="wiki-orglogo"><img src="'+esc(imgM(x.g.logo))+'" alt="로고" loading="lazy"></div>';
+      h += orgBlockHtml(x.g, false, undefined, useCards);
     });
     topNonOrgs.forEach(g=>{
       const mem = charList.filter(c=>charInGroup(c, g.id));
