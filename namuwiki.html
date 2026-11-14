@@ -420,8 +420,8 @@
 
   /* 개요 섹션 접기/펼치기 (2026-11-14, Don: 평소엔 접혀있다가 클릭하면 펼쳐지고 다시 누르면 접힘) */
   .wiki-ovsec { margin-top:28px; }
-  .wiki-ovsec > .wiki-sec { margin:0 0 12px; display:flex; align-items:baseline; gap:6px; }
-  .wiki-ovsec.wiki-sec-collapsed > :not(.wiki-sec) { display:none; }
+  .wiki-ovsec > .wiki-sec { margin:0 0 12px; display:flex; align-items:baseline; gap:6px; cursor:pointer; }
+  .wiki-ovsec.wiki-sec-collapsed > .wiki-ovsec-body { display:none; }
   /* 조직 로고 (2026-11-14, Don: 로고는 데이터에 있는데 나무위키 개요에 안 뜸 — 도시에 모드는 보여줌) */
   .wiki-orglogo { margin:6px 0 10px; text-align:center; }
   .wiki-orglogo img { max-width:220px; width:100%; height:auto; display:block; margin:0 auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
@@ -1166,9 +1166,9 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><button class="wiki-sec-fold" data-sec-fold="ovsec-'+secNo+'" type="button">＞</button><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>';
+      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>';
       if (x.g.logo) h += '<div class="wiki-orglogo"><img src="'+esc(imgM(x.g.logo))+'" alt="로고" loading="lazy"></div>';
-      h += orgBlockHtml(x.g, false, undefined, useCards) + '</section>';
+      h += '<div class="wiki-ovsec-body">' + orgBlockHtml(x.g, false, undefined, useCards) + '</div></section>';
     });
     topNonOrgs.forEach(g=>{
       const mem = charList.filter(c=>charInGroup(c, g.id));
@@ -1176,18 +1176,18 @@ function render(){
       const hasAny = mem.length || subs.some(s=>charList.some(c=>charInGroup(c, s.id)));
       if (!hasAny) return;
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><button class="wiki-sec-fold" data-sec-fold="ovsec-'+secNo+'" type="button">＞</button><span class="wiki-sec-no">'+secNo+'.</span> '+esc(g.name)+'</div>';
+      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+esc(g.name)+'</div><div class="wiki-ovsec-body">';
       if (mem.length) h += listHtml(mem, g.id);
       subs.forEach(s=>{
         const sm = charList.filter(c=>charInGroup(c, s.id));
         if (!sm.length) return;
         h += '<div class="wiki-rowhead'+(useCards ? ' wiki-navsec' : '')+'">'+esc(s.name)+'</div>' + listHtml(sm, s.id);
       });
-      h += '</section>';
+      h += '</div></section>';
     });
     if (rest.length){
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><button class="wiki-sec-fold" data-sec-fold="ovsec-'+secNo+'" type="button">＞</button><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div>' + listHtml(rest, null) + '</section>';
+      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><div class="wiki-ovsec-body">' + listHtml(rest, null) + '</div></section>';
     }
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
     return h;
@@ -1369,6 +1369,7 @@ function render(){
   document.querySelectorAll("[data-toc-jump]").forEach(b=>b.onclick=()=>{ const t = document.querySelector(".wiki-toc"); if (t){ t.classList.remove("collapsed"); const a = t.querySelector("[data-toc-arrow]"); if (a) a.textContent = "▼"; t.scrollIntoView({behavior:"smooth", block:"start"}); } });
   document.querySelectorAll("[data-toc-collapse]").forEach(b=>b.onclick=()=>{ const box = b.closest(".wiki-toc"); if (!box) return; const closed = box.classList.toggle("collapsed"); const a = box.querySelector("[data-toc-arrow]"); if (a) a.textContent = closed ? "▶" : "▼"; });
   document.querySelectorAll("[data-sec-fold]").forEach(b=>b.onclick=()=>{ const sec = document.getElementById(b.dataset.secFold); if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); b.textContent = closed ? "＞" : "∨"; });
+  document.querySelectorAll(".wiki-ovsec > .wiki-sec").forEach(h=>h.onclick=()=>{ const sec = h.parentElement; if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); const a = h.querySelector(".wiki-sec-fold"); if (a) a.textContent = closed ? "＞" : "∨"; });
   document.querySelectorAll("[data-sec-edit]").forEach(b=>b.onclick=()=>{ editingTab = "all"; editBackup = JSON.parse(JSON.stringify(cur())); render(); });
   // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
