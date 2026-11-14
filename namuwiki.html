@@ -1371,7 +1371,7 @@ function render(){
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
   // 세계관 개요 (2026-11-14): 개요 카드 클릭, 반 탭
   document.querySelectorAll("#body [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render(); });
-  document.querySelectorAll("[data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; render(); });
+  document.querySelectorAll("[data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; if (!window.expandedNavbox) window.expandedNavbox = new Set(); window.expandedNavbox.add(b.dataset.orgsecOrg); render(); });
   // 개요 조직 타일 (사이드바와 같은 펼침 방식)
   document.querySelectorAll("#body [data-gorg]").forEach(b=>b.onclick=()=>{ const gid = b.dataset.gorg; window.expandedUngrouped = false; if (window.expandedOrgs.has(gid)) window.expandedOrgs.delete(gid); else { window.expandedOrgs.clear(); window.expandedOrgs.add(gid); } render(); });
   // 목차: 펼치고 그쪽으로 이동
