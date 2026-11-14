@@ -418,6 +418,16 @@
   .wiki-article-sub:first-child { margin-top:0; }
   .wiki-article-p { margin:6px 0; line-height:1.7; }
 
+  /* 세계관 개요 내비박스 (2026-11-14, Don 미도리야 내비박스 참고): 테두리 박스+로고+제목+[펼치기·접기], 평소엔 접힘 */
+  .wiki-navbox2 { border:2px solid var(--acc); border-radius:10px; overflow:hidden; margin:28px 0 0; background:var(--panel); }
+  .wiki-navbox2-head { text-align:center; padding:14px 10px 10px; cursor:pointer; }
+  .wiki-navbox2-logo img { max-width:180px; width:100%; height:auto; display:block; margin:0 auto 8px; }
+  .wiki-navbox2-title { font-size:18px; font-weight:800; }
+  .wiki-navbox2-toggle { font-size:14px; color:var(--dim); margin-top:6px; }
+  .wiki-navbox2-body { padding:0 10px 12px; }
+  .wiki-navbox2.wiki-sec-collapsed > .wiki-navbox2-body { display:none; }
+  .wiki-navbox2 .wiki-orgblock.wiki-navbox { border:0; padding:0; margin:0; background:none; }
+  .wiki-navbox2 .wiki-rowhead.wiki-navsec { background:none; color:var(--txt); text-align:left; padding:0 0 4px; margin:14px 0 8px; border-bottom:1px solid var(--line); font-size:15px; }
   /* 개요 섹션 접기/펼치기 (2026-11-14, Don: 평소엔 접혀있다가 클릭하면 펼쳐지고 다시 누르면 접힘) */
   .wiki-ovsec { margin-top:28px; }
   .wiki-ovsec > .wiki-sec { margin:0 0 12px; display:flex; align-items:baseline; gap:6px; cursor:pointer; }
@@ -1147,8 +1157,13 @@ function render(){
   };
   // 나무위키식 세계관 개요: 문서처럼 — 조직마다 번호 붙은 문단 + 링크 목록 (타일 없음, 전부 펼침)
   const worldOverviewHtml = ()=>{
-    const useCards = (curWorld === "w1792508654855"); // 마이베이비만 카드 내비박스, 살룬·청량고는 도시에식 링크 목록으로 (Don 2026-11-14)
-    const listHtml = (list, gid)=> useCards ? '<div class="wiki-navbox">'+navGridHtml(list, gid)+'</div>' : '<ul class="wiki-linklist">'+list.map(c=>linkItemHtml(c, gid)).join("")+'</ul>';
+    const useCards = true; // 내비박스 스타일: 전 조직 카드 격자 (Don 2026-11-14, 미도리야 내비박스 참고)
+    const listHtml = (list, gid)=> '<div class="wiki-navbox">'+navGridHtml(list, gid)+'</div>';
+    const collapsedCls = window.orgSecEdit ? '' : ' wiki-sec-collapsed'; // 편집 중엔 펼쳐진 채로
+    const navHead = (title, logo)=> '<div class="wiki-navbox2-head">'
+      + (logo ? '<div class="wiki-navbox2-logo"><img src="'+esc(imgM(logo))+'" alt="로고" loading="lazy"></div>' : '')
+      + '<div class="wiki-navbox2-title">'+esc(title)+'</div>'
+      + '<div class="wiki-navbox2-toggle">[ 펼치기 · 접기 ]</div></div>';
     const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
     const orgInfo = topOrgs.map(g=>({g, ...orgLevels(g.id)})).filter(x=>x.members.length>=2);
     const topNonOrgs = groups.filter(g=>g.kind!=="org" && !g.parentId);
@@ -1166,9 +1181,8 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>';
-      if (x.g.logo) h += '<div class="wiki-orglogo"><img src="'+esc(imgM(x.g.logo))+'" alt="로고" loading="lazy"></div>';
-      h += '<div class="wiki-ovsec-body">' + orgBlockHtml(x.g, false, undefined, useCards) + '</div></section>';
+      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead(x.g.name, x.g.logo)
+        + '<div class="wiki-navbox2-body">' + orgBlockHtml(x.g, false, undefined, true) + '</div></div>';
     });
     topNonOrgs.forEach(g=>{
       const mem = charList.filter(c=>charInGroup(c, g.id));
@@ -1176,18 +1190,20 @@ function render(){
       const hasAny = mem.length || subs.some(s=>charList.some(c=>charInGroup(c, s.id)));
       if (!hasAny) return;
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+esc(g.name)+'</div><div class="wiki-ovsec-body">';
+      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead(g.name, g.logo)
+        + '<div class="wiki-navbox2-body">';
       if (mem.length) h += listHtml(mem, g.id);
       subs.forEach(s=>{
         const sm = charList.filter(c=>charInGroup(c, s.id));
         if (!sm.length) return;
-        h += '<div class="wiki-rowhead'+(useCards ? ' wiki-navsec' : '')+'">'+esc(s.name)+'</div>' + listHtml(sm, s.id);
+        h += '<div class="wiki-rowhead wiki-navsec">'+esc(s.name)+'</div>' + listHtml(sm, s.id);
       });
-      h += '</div></section>';
+      h += '</div></div>';
     });
     if (rest.length){
       secNo++;
-      h += '<section id="ovsec-'+secNo+'" class="wiki-ovsec wiki-sec-collapsed"><div class="wiki-sec"><span class="wiki-sec-fold">＞</span><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><div class="wiki-ovsec-body">' + listHtml(rest, null) + '</div></section>';
+      h += '<div class="wiki-navbox2'+collapsedCls+'" id="ovsec-'+secNo+'">' + navHead((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터", null)
+        + '<div class="wiki-navbox2-body">' + listHtml(rest, null) + '</div></div>';
     }
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
     return h;
@@ -1370,6 +1386,7 @@ function render(){
   document.querySelectorAll("[data-toc-collapse]").forEach(b=>b.onclick=()=>{ const box = b.closest(".wiki-toc"); if (!box) return; const closed = box.classList.toggle("collapsed"); const a = box.querySelector("[data-toc-arrow]"); if (a) a.textContent = closed ? "▶" : "▼"; });
   document.querySelectorAll("[data-sec-fold]").forEach(b=>b.onclick=()=>{ const sec = document.getElementById(b.dataset.secFold); if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); b.textContent = closed ? "＞" : "∨"; });
   document.querySelectorAll(".wiki-ovsec > .wiki-sec").forEach(h=>h.onclick=()=>{ const sec = h.parentElement; if (!sec) return; const closed = sec.classList.toggle("wiki-sec-collapsed"); const a = h.querySelector(".wiki-sec-fold"); if (a) a.textContent = closed ? "＞" : "∨"; });
+  document.querySelectorAll(".wiki-navbox2-head").forEach(hd=>hd.onclick=()=>{ const box = hd.parentElement; if (!box) return; box.classList.toggle("wiki-sec-collapsed"); });
   document.querySelectorAll("[data-sec-edit]").forEach(b=>b.onclick=()=>{ editingTab = "all"; editBackup = JSON.parse(JSON.stringify(cur())); render(); });
   // 수동 섹션 편집 (개요·사이드바·인간관계 모두 같은 바인드)
   document.querySelectorAll("[data-orgsec-edit-toggle]").forEach(b=>b.onclick=()=>{ window.orgSecEdit = !window.orgSecEdit; render(); });
