@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>섹션 이름 바꾸기 도우미 (어시스턴트용)</title>
+<style>
+  body{font-family:'Noto Sans KR',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background:#f6f3fa;color:#2a1f1f}
+  h1{font-size:20px} .card{background:#fff;border:1px solid #ddd6e8;border-radius:12px;padding:16px;margin:12px 0}
+  button{background:#7b5aa6;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+  button:disabled{background:#bbb} input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd6e8;border-radius:8px;font-size:15px;margin:6px 0}
+  .ok{color:#2e7d32;font-weight:700} .err{color:#c0392b;font-weight:700}
+  .hint{font-size:13px;color:#9c8a84}
+  li{margin:4px 0}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<h1>섹션 이름 바꾸기 도우미 (어시스턴트용)</h1>
+<p class="hint">조직도 섹션 이름을 바꿔요. 살룬 라군의 "레비테리아 캬라멜 직속"을 "파트 매니저"로, 안씨네의 "최상위"를 "부모"로 바꿔요. 해당 섹션에 속한 사람들에게만 섹션 이름을 직접 적어주는 거라, 다른 필드·이미지는 그대로예요. 비밀번호는 이 브라우저에서만 쓰고, 아냐한테는 안 보내요. 이 페이지는 어시스턴트 계정(dossier@don.local)으로도 쓸 수 있어요.</p>
+<div id="status" class="card">불러오는 중…</div>
+
+<div id="loginCard" class="card" style="display:none">
+  <h3>어시스턴트 로그인</h3>
+  <input id="loginEmail" type="email" value="dossier@don.local">
+  <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button id="loginBtn">로그인</button>
+  <p id="loginErr" class="err" style="display:none"></p>
+</div>
+
+<div id="previewCard" class="card" style="display:none">
+  <h3>바꿀 내용 미리보기</h3>
+  <p id="scanInfo" class="hint"></p>
+  <ul id="previewList"></ul>
+  <button id="applyBtn">적용하기</button>
+</div>
+
+<div id="doneCard" class="card" style="display:none"></div>
+
+<script>
+const WRITER_EMAILS = ["coconut123456765@gmail.com", "dossier@don.local"];
+// [world, orgId, oldTitle, newTitle, charIds]
+const RENAMES = [
+  { world: "hotel", org: "g-saloon-new", oldTitle: "레비테리아 캬라멜 직속", newTitle: "파트 매니저",
+    ids: ["c1792343484050", "c1792311336476", "c1792343506979", "c1792343506127", "c1793551208320"] },
+  { world: "siblings", org: "g-ahn", oldTitle: "최상위", newTitle: "부모",
+    ids: ["c1792660050682", "c1792660051543"] }
+];
+const firebaseConfig = {
+  apiKey: "AIzaSyDv1cDTHmynjnvHI79dddtmyrQgd_sl9xA",
+  authDomain: "don-wiki.firebaseapp.com",
+  databaseURL: "https://don-wiki-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "don-wiki",
+  storageBucket: "don-wiki.firebasestorage.app",
+  messagingSenderId: "146328839370",
+  appId: "1:146328839370:web:2fd7c1b79538fb5ab34033"
+};
+const $ = id => document.getElementById(id);
+function setStatus(t){ $("status").textContent = t; }
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const cloudRef = db.ref("wiki");
+let isWriter = false;
+let scan = null;
+
+firebase.auth().onAuthStateChanged(user=>{
+  isWriter = !!(user && WRITER_EMAILS.includes(user.email));
+  if (isWriter){ $("loginCard").style.display = "none"; loadPreview(); }
+  else { $("loginCard").style.display = "block"; setStatus("어시스턴트 로그인이 필요해요. 위에서 로그인해주세요."); }
+});
+
+$("loginBtn").onclick = async ()=>{
+  const em = $("loginEmail").value.trim();
+  const pw = $("loginPw").value;
+  const err = $("loginErr"); err.style.display = "none";
+  try{ await firebase.auth().signInWithEmailAndPassword(em, pw); }
+  catch(e){ err.textContent = "로그인 실패: " + (e && e.message); err.style.display = "block"; }
+};
+
+async function loadPreview(){
+  setStatus("도시 데이터 읽는 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("도시 데이터가 없어요."); return; }
+    const worlds = Object.entries(v.store).filter(([k,w])=>w && typeof w === "object" && typeof w.name === "string");
+    scan = { worldCount: worlds.length, rows: [] };
+    RENAMES.forEach(r=>{
+      const w = v.store[r.world];
+      if (!w){ scan.rows.push({world:r.world, name:r.org, state:"missing-world"}); return; }
+      const chars = Array.isArray(w.chars) ? w.chars : [];
+      r.ids.forEach(id=>{
+        const c = chars.find(x=>x && x.id === id);
+        if (!c){ scan.rows.push({world:r.world, id, name:id, state:"missing"}); return; }
+        const name = (c.profile && c.profile.name) || id;
+        const inOrg = Array.isArray(c.groupIds) && c.groupIds.includes(r.org);
+        const cur = (c.orgSec && c.orgSec[r.org] !== undefined) ? c.orgSec[r.org] : null;
+        scan.rows.push({world:r.world, org:r.org, id, name, state: cur === r.newTitle ? "done" : (inOrg ? "rename" : "not-member"), cur});
+      });
+    });
+    $("scanInfo").textContent = "세계관 " + worlds.length + "개 스캔.";
+    const list = $("previewList"); list.innerHTML = "";
+    RENAMES.forEach(r=>{
+      const head = document.createElement("li");
+      head.innerHTML = "<b>" + esc(r.oldTitle) + " → " + esc(r.newTitle) + "</b> (" + (r.world === "hotel" ? "살룬 라군" : "안씨네") + ")";
+      list.appendChild(head);
+      scan.rows.filter(x=>x.org === r.org).forEach(x=>{
+        const li = document.createElement("li");
+        if (x.state === "rename") li.textContent = "  " + x.name + " — '" + r.oldTitle + "'에서 '" + r.newTitle + "'로";
+        else if (x.state === "done") li.textContent = "  " + x.name + " — 이미 '" + r.newTitle + "' (건너뜀)";
+        else if (x.state === "not-member") li.textContent = "  " + x.name + " — 조직원이 아님 (건너뜀)";
+        else li.textContent = "  " + x.name + " — 못 찾음";
+        list.appendChild(li);
+      });
+    });
+    $("previewCard").style.display = "block";
+    setStatus("위 내용이 맞으면 적용하기를 눌러주세요.");
+  }catch(e){ setStatus("읽기 실패: " + (e && e.message)); }
+}
+
+$("applyBtn").onclick = ()=>applyChange($("applyBtn"));
+
+async function applyChange(btn){
+  if (!btn.dataset.armed){
+    btn.dataset.armed = "1";
+    btn.textContent = "정말 적용할까요? 다시 눌러주세요";
+    setStatus("한 번 더 누르면 위 내용이 저장돼요. 그 외에는 아무것도 안 바뀌어요.");
+    return;
+  }
+  setStatus("저장 중…");
+  try{
+    const snap = await cloudRef.once("value");
+    const v = snap.val();
+    if (!v || !v.store){ setStatus("데이터가 바뀌었어요. 새로고침하고 다시 해주세요."); return; }
+    let changed = [], skipped = [];
+    RENAMES.forEach(r=>{
+      const w = v.store[r.world];
+      if (!w || !Array.isArray(w.chars)) return;
+      const g = (w.groups || []).find(x=>x && x.id === r.org);
+      // secOrder에 옛 이름이 있으면 새 이름으로 교체
+      if (g && Array.isArray(g.secOrder)){
+        g.secOrder = g.secOrder.map(t=> t === r.oldTitle ? r.newTitle : t);
+      }
+      r.ids.forEach(id=>{
+        const c = w.chars.find(x=>x && x.id === id);
+        if (!c){ skipped.push(id); return; }
+        if (!Array.isArray(c.groupIds) || !c.groupIds.includes(r.org)){ skipped.push((c.profile&&c.profile.name)||id); return; }
+        if (!c.orgSec || typeof c.orgSec !== "object") c.orgSec = {};
+        if (c.orgSec[r.org] === r.newTitle){ skipped.push((c.profile&&c.profile.name)||id); return; }
+        c.orgSec[r.org] = r.newTitle;
+        changed.push((c.profile&&c.profile.name)||id);
+      });
+    });
+    const storeUpdatedAt = Date.now();
+    let backups = Array.isArray(v.backups) ? v.backups : [];
+    try{
+      const storeStr = JSON.stringify(v.store);
+      const last = backups[backups.length - 1];
+      if (!last || JSON.stringify(last.store) !== storeStr){
+        backups.push({ t: storeUpdatedAt, store: JSON.parse(storeStr) });
+        while (backups.length > 5) backups.shift();
+      }
+    }catch(e){}
+    await cloudRef.set({ store: v.store, theme: v.theme || "light", storeUpdatedAt, backups });
+    $("previewCard").style.display = "none";
+    const done = $("doneCard");
+    done.innerHTML = '<p class="ok">DONE: 섹션 이름 바꾸기를 마쳤어요.</p>' +
+      '<p>스캔한 세계관 ' + scan.worldCount + '개. 바꾼 사람 ' + changed.length + '명(' + esc(changed.join(", ")) + '), 건너뛴 사람 ' + skipped.length + '명(' + esc(skipped.join(", ")) + '). 이미지·다른 필드는 건드리지 않았어요.</p>' +
+      '<p class="hint">도시 위키를 새로고침하면 살룬은 "파트 매니저", 안씨네는 "부모" 섹션으로 보여요.</p>';
+    done.style.display = "block";
+    setStatus("완료!");
+  }catch(e){ setStatus("저장 실패: " + (e && e.message)); }
+}
+</script>
+</body>
+</html>
