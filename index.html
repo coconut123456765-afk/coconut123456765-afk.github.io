@@ -91,6 +91,16 @@
   .org-tile-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .org-tile-name { font-size:12px; font-weight:700; padding:6px 3px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .group-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 8px; }
+  /* 나무위키식 세계관 개요 (2026-11-14) — 롤백: index-before-namuwiki.html */
+  body.overview-mode aside { display:none; }
+  body.overview-mode section { max-width:980px; margin:0 auto; width:100%; }
+  .wiki-title { font-size:24px; font-weight:700; margin:2px 0 12px; }
+  .wiki-sec { background:var(--acc); color:var(--on-acc); border-radius:10px; padding:10px 14px; font-size:16px; font-weight:700; margin:20px 0 10px; }
+  .wiki-sec:first-child { margin-top:0; }
+  .wiki-rowhead { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--acc); border-radius:8px; padding:7px 12px; font-size:14px; font-weight:700; margin:14px 0 8px; }
+  .wiki-orggrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin:6px 0 8px; }
+  .wiki-sublabel { text-align:center; font-size:12px; color:var(--dim); margin-top:10px; }
+  .wiki-conn { text-align:center; color:var(--line); font-size:18px; line-height:1; }
   .gcard-wrap { display:flex; flex-direction:column; gap:2px; min-width:0; }
   /* Astryx Card 시범 (2026-11-12) — 롤백: index-before-astryx.html */
   button.gcard { display:flex; flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; border-radius:16px; text-align:center; border:1px solid var(--line); }
@@ -740,8 +750,7 @@ function render(){
   document.querySelectorAll("#worlds button").forEach(b=>b.onclick=()=>{
     cancelEdit();
     curWorld=b.dataset.w;
-    const w = store[curWorld];
-    curChar=(w && w.chars && w.chars[0]?.id)||null;
+    curChar=null; // 세계관 개요 페이지로 (나무위키식, 2026-11-14)
     curTab="profile";
     render();
   });
@@ -824,6 +833,101 @@ function render(){
     });
     if (listEdit){ const cand2 = charList.filter(c=>!charInGroup(c, g.id)); html += '<div class="group-bigrow"><span style="font-size:12px;color:var(--dim);margin-right:6px">'+esc(g.name)+'에 추가:</span>'+(cand2.length ? '<select data-addchar-select="'+g.id+'"><option value="">기존 캐릭터 선택</option>'+cand2.map(c=>'<option value="'+c.id+'">'+esc(c.profile.name||"(이름 없음)")+'</option>').join("")+'</select><button data-addchar-existing="'+g.id+'" type="button">기존 캐릭터 추가</button>' : '<span>추가할 캐릭터가 없어요</span>')+(isOrg ? '<input data-sub-name="'+g.id+'" placeholder="새 반/그룹 이름" style="width:140px"><button data-sub-org="'+g.id+'" type="button">하위 그룹 추가</button>' : '')+'<button data-gdel="'+g.id+'">이 그룹 삭제</button></div>'; }
     return html + '</div>';
+  };
+  // 나무위키식 세계관 개요: 조직도 섹션 (2026-11-14) — 세계관 탭 아래에 조직과 캐릭터를 한눈에. 롤백: 이 블록 삭제 + overview 분기 되돌리기
+  const orgCardHtml = (c, gid)=>{
+    const img = groupPortrait(c);
+    const imgHtml = img ? '<span class="gcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>' : '<span class="gcard-img"><span class="gcard-img-empty"></span></span>';
+    const cardSub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+    const isSel = c.id===curChar;
+    const selColor = isSel ? (/^#[0-9a-fA-F]{6}$/.test(c.color||"") ? c.color : worldAccent()) : "";
+    const selStyle = selColor ? ' style="background:'+esc(selColor)+';color:'+pickText(selColor)+';border-color:'+esc(selColor)+'"' : "";
+    return '<div class="gcard-wrap"><button class="gcard '+(isSel?"on":"")+'" data-c="'+c.id+'"'+selStyle+'>'+imgHtml+'<span class="gcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'+(cardSub ? '<span class="gcard-sub">'+esc(cardSub)+'</span>' : '')+'</button></div>';
+  };
+  const orgGridHtml = (list, gid)=> '<div class="wiki-orggrid">'+list.map(c=>orgCardHtml(c, gid)).join("")+'</div>';
+  const orgDescIds = (orgId)=>{
+    const d = new Set([orgId]);
+    const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ d.add(x.id); collect(x.id); }); };
+    collect(orgId);
+    return d;
+  };
+  const orgLevels = (orgId)=>{
+    const d = orgDescIds(orgId);
+    const members = charList.filter(c=>(c.groupIds||[]).some(id=>d.has(id)));
+    const ids = new Set(members.map(c=>c.id));
+    const supOfOrg = (c)=> (c.groupSuperior && c.groupSuperior[orgId]) || null;
+    const children = {};
+    members.forEach(c=>{ const s = supOfOrg(c); if (s && ids.has(s)) (children[s] = children[s] || []).push(c); });
+    const roots = members.filter(c=>{ const s = supOfOrg(c); return !s || !ids.has(s); });
+    const levels = []; let cur = roots.length ? roots : members; const seen = new Set();
+    for (let lv=0; lv<10 && cur.length; lv++){
+      const f = cur.filter(m=>!seen.has(m.id)); f.forEach(m=>seen.add(m.id));
+      if (!f.length) break; levels.push(f);
+      let next = []; f.forEach(m=>{ (children[m.id]||[]).forEach(ch=>{ if (!seen.has(ch.id)) next.push(ch); }); }); cur = next;
+    }
+    if (!levels.length && members.length) levels = [members];
+    return {members, levels};
+  };
+  const orgRowLabel = (row, orgId, isRoot)=>{
+    const subs = row.map(m=>groupSubtitle(m, orgId));
+    if (subs.length && subs.every(s=>s) && new Set(subs).size === 1) return subs[0];
+    const sups = [...new Set(row.map(m=>m.groupSuperior && m.groupSuperior[orgId]).filter(Boolean))];
+    if (sups.length === 1){ const sup = charList.find(c=>c.id===sups[0]); if (sup) return (sup.profile.name||"") + " 직속"; }
+    if (isRoot) return "최상위";
+    return "";
+  };
+  const orgLevelRowHtml = (row, orgId)=>{
+    const d = orgDescIds(orgId);
+    const main = row.filter(m=>charInGroup(m, orgId));
+    const subs = row.filter(m=>!charInGroup(m, orgId));
+    let out = "";
+    if (main.length) out += orgGridHtml(main, orgId);
+    const bySub = {};
+    subs.forEach(m=>{ const gid = (m.groupIds||[]).find(id=>d.has(id) && id!==orgId); if (!gid) return; (bySub[gid] = bySub[gid] || []).push(m); });
+    Object.keys(bySub).forEach(gid=>{
+      const gname = (groups.find(g=>g.id===gid) || {}).name || "하위 그룹";
+      out += '<div class="wiki-sublabel">'+esc(gname)+'</div>' + orgGridHtml(bySub[gid], gid);
+    });
+    return out;
+  };
+  const orgSectionHtml = ()=>{
+    const shown = new Set();
+    const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
+    let html = "";
+    topOrgs.forEach(g=>{
+      const {members, levels} = orgLevels(g.id);
+      if (members.length < 2) return;
+      const d = orgDescIds(g.id);
+      // 조직에만 있고 하위 그룹에는 없는 사람이 한 명도 없으면 하위 그룹을 탭으로 (청량고: 반 탭)
+      const directOnly = members.filter(m=>charInGroup(m, g.id) && ![...d].some(id=>id!==g.id && charInGroup(m, id)));
+      const subs = groups.filter(x=>x.parentId===g.id && members.some(m=>charInGroup(m, x.id)));
+      let block = '<div class="wiki-sec">'+esc(g.name)+'</div>';
+      if (!directOnly.length && subs.length){
+        // 직접 소속이 없으면 하위 그룹을 탭으로 (청량고: 모니카반/청량중학교)
+        if (!window.orgSecTab) window.orgSecTab = {};
+        const sel = window.orgSecTab[g.id] || subs[0].id;
+        block += '<div class="orgchart-tabs">' + subs.map(s=>'<button class="'+(s.id===sel?"on":"")+'" data-orgsec-tab="'+s.id+'" data-orgsec-org="'+g.id+'">'+esc(s.name)+'</button>').join("") + '</div>';
+        const tabLevels = levels.map(lv=>lv.filter(m=>charInGroup(m, sel))).filter(lv=>lv.length);
+        block += tabLevels.map(lv=>orgLevelRowHtml(lv, g.id)).join('<div class="wiki-conn">│</div>');
+        members.forEach(m=>shown.add(m.id));
+      } else {
+        block += levels.map((lv, i)=>{
+          const label = orgRowLabel(lv, g.id, i===0);
+          return (label ? '<div class="wiki-rowhead">'+esc(label)+'</div>' : '') + orgLevelRowHtml(lv, g.id);
+        }).join('<div class="wiki-conn">│</div>');
+        members.forEach(m=>shown.add(m.id));
+      }
+      html += block;
+    });
+    return {html, shown};
+  };
+  const worldOverviewHtml = ()=>{
+    const sec = orgSectionHtml();
+    let h = '<div class="wiki-title">'+esc(cw.name)+'</div>';
+    if (sec.html) h += '<div class="wiki-sec">조직도</div>' + sec.html;
+    const rest = charList.filter(c=>!sec.shown.has(c.id));
+    if (rest.length) h += '<div class="wiki-sec">'+(sec.html ? "미분류" : "전체 캐릭터")+'</div>' + orgGridHtml(rest, null);
+    return h;
   };
   let charsHtml = "";
   if (!groups.length){
@@ -945,9 +1049,12 @@ function render(){
   $("tabs").innerHTML = tabs.map(([k,n])=>`<button class="${k===curTab?"on":""}" data-t="${k}">${n}</button>`).join("");
   document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{cancelEdit(); curTab=b.dataset.t; render();});
   const c = cur();
+  document.body.classList.toggle("overview-mode", !c);
+  if (!c) $("tabs").innerHTML = "";
   $("sampleNote").style.display = (c && c.sample) ? "" : "none";
   let bodyH = "";
-  bodyH += c ? renderTab(c) : `<p class="empty">캐릭터를 선택하세요.</p>`;
+  if (c) bodyH += '<div style="margin-bottom:10px"><button data-back-overview>← '+esc(cw.name)+'</button></div>';
+  bodyH += c ? renderTab(c) : worldOverviewHtml();
   if (c && cw && cw.chars){
     const others = cw.chars.filter(x=>x.id!==c.id);
     if (others.length){
@@ -965,6 +1072,10 @@ function render(){
     fb.textContent = open ? "접기 ▴" : "펼치기 ▾";
   };
   document.querySelectorAll("[data-nav]").forEach(b=>{ b.onclick = ()=>gotoChar(b.dataset.nav); });
+  // 세계관 개요 (2026-11-14): 프로필로 돌아가기, 개요 카드 클릭, 반 탭
+  document.querySelectorAll("[data-back-overview]").forEach(b=>b.onclick=()=>{ cancelEdit(); curChar=null; curTab="profile"; render(); });
+  document.querySelectorAll("#body [data-c]").forEach(b=>b.onclick=()=>{ if (window.lastDragEnd && Date.now()-window.lastDragEnd < 300) return; cancelEdit(); curChar=b.dataset.c; curTab="profile"; render(); });
+  document.querySelectorAll("#body [data-orgsec-tab]").forEach(b=>b.onclick=()=>{ if (!window.orgSecTab) window.orgSecTab = {}; window.orgSecTab[b.dataset.orgsecOrg] = b.dataset.orgsecTab; render(); });
   // 조직도 프로토타입: 하위탭, 탭 순서, 드래그 상급자 지정
   document.querySelectorAll("[data-orgchart-tab]").forEach(b=>b.onclick=()=>{ window.orgChartOrg = b.dataset.orgchartTab; render(); });
   document.querySelectorAll("[data-orgchart-up]").forEach(b=>b.onclick=()=>{ const cc = cur(); if (!cc) return; if (!Array.isArray(cc.orgChartOrder)) cc.orgChartOrder = []; const gid = b.dataset.orgchartUp; const w = store[curWorld]; const gs = worldGroups(w); const orgs = gs.filter(g=>g.kind==="org" && (charInGroup(cc, g.id) || gs.some(x=>x.parentId===g.id && charInGroup(cc, x.id)))); const ordered = orgs.map(g=>g.id); if (cc.orgChartOrder.length) ordered.sort((a,b)=>{ const ia = cc.orgChartOrder.indexOf(a); const ib = cc.orgChartOrder.indexOf(b); return (ia<0?999:ia)-(ib<0?999:ib); }); const pos = ordered.indexOf(gid); if (pos > 0){ const tmp = ordered[pos-1]; ordered[pos-1] = ordered[pos]; ordered[pos] = tmp; cc.orgChartOrder = ordered; persist(); render(); } });
