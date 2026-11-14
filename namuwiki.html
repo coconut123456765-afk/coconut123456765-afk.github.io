@@ -417,6 +417,22 @@
   .wiki-article-sub { font-size:16px; font-weight:700; margin:18px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--line, #e8e2d9); }
   .wiki-article-sub:first-child { margin-top:0; }
   .wiki-article-p { margin:6px 0; line-height:1.7; }
+
+  /* 나무위키식 둘러보기 내비박스 (2026-11-14, Don 스크린샷 2·3장): 초상 카드 격자 — 마이베이비·살룬 개요용, 청량고는 나중에 */
+  html, body { overflow-x:hidden; }
+  img { max-width:100%; }
+  .wiki-navbox { border:1px solid var(--line); border-radius:10px; padding:10px; margin:8px 0 14px; background:var(--panel); }
+  .wiki-rowhead.wiki-navsec { background:#3a3230; color:#fff; border:0; border-radius:6px; text-align:center; padding:8px 12px; }
+  .wiki-navgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:10px; }
+  .wiki-navcard { background:var(--input-bg); border:1px solid var(--line); border-radius:10px; padding:0 0 8px; cursor:pointer; overflow:hidden; text-align:center; }
+  .wiki-navcard:hover { border-color:var(--acc); }
+  .wiki-navcard.on { outline:2px solid var(--acc); }
+  .wiki-navcard-img { display:block; width:100%; aspect-ratio:3/4; overflow:hidden; background:var(--panel); }
+  .wiki-navcard-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .wiki-navcard-noimg { display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:var(--dim); }
+  .wiki-navcard-name { display:block; font-size:14px; font-weight:700; color:var(--acc); margin-top:6px; padding:0 4px; }
+  .wiki-navcard-sub { display:block; font-size:12px; color:var(--dim); padding:0 4px; }
+  @media (max-width:700px){ .wiki-navgrid { grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px; } body.overview-mode aside { display:none; } }
 </style>
 </head>
 <body>
@@ -938,7 +954,20 @@ function render(){
     const secInput = (secTitle !== null && secTitle !== undefined && window.orgSecEdit) ? ' <input class="gcard-sub-input" data-orgsec-char="'+c.id+'" data-orgsec-gid="'+esc(gid)+'" value="'+esc(secTitle)+'" placeholder="섹션 이름 (비우면 미지정)">' : "";
     return linkItemHtml(c, gid, secInput);
   };
-  const orgGridHtml = (list, gid, secOf)=> '<ul class="wiki-linklist">'+list.map(c=>orgCardHtml(c, gid, secOf ? secOf(c) : null)).join("")+'</ul>';
+  // 나무위키식 둘러보기 내비박스 (2026-11-14, Don 스크린샷 2·3장): 초상 카드 격자 — 마이베이비(카드 격자), 살룬(섹션+카드). 청량고는 나중에.
+  const navCardHtml = (c, gid)=>{
+    const img = groupPortrait(c);
+    const sub = c.subtitle ? c.subtitle : groupSubtitle(c, gid);
+    const isSel = c.id===curChar;
+    return '<button type="button" class="wiki-navcard'+(isSel?" on":"")+'" data-c="'+c.id+'">'
+      + (img ? '<span class="wiki-navcard-img"><img src="'+esc(imgS(img))+'" alt="" loading="lazy"></span>'
+             : '<span class="wiki-navcard-img wiki-navcard-noimg">'+esc((c.profile.name||"?").slice(0,1))+'</span>')
+      + '<span class="wiki-navcard-name">'+esc(c.profile.name||"(이름 없음)")+'</span>'
+      + (sub ? '<span class="wiki-navcard-sub">'+esc(sub)+'</span>' : '')
+      + '</button>';
+  };
+  const navGridHtml = (list, gid)=> '<div class="wiki-navgrid">'+list.map(c=>navCardHtml(c, gid)).join("")+'</div>';
+  const orgGridHtml = (list, gid, secOf, useCards)=> useCards ? navGridHtml(list, gid) : '<ul class="wiki-linklist">'+list.map(c=>orgCardHtml(c, gid, secOf ? secOf(c) : null)).join("")+'</ul>';
   const orgDescIds = (orgId)=>{
     const d = new Set([orgId]);
     const collect = (pid)=>{ groups.filter(x=>x.parentId===pid).forEach(x=>{ d.add(x.id); collect(x.id); }); };
@@ -1053,35 +1082,35 @@ function render(){
     if (ch.orgSec[orgId]){ const order = ensureSecOrder(orgId); if (!order.includes(ch.orgSec[orgId])) order.push(ch.orgSec[orgId]); }
     persist(); render();
   };
-  const orgLevelRowHtml = (row, orgId)=>{
+  const orgLevelRowHtml = (row, orgId, useCards)=>{
     const d = orgDescIds(orgId);
     const main = row.filter(m=>charInGroup(m, orgId));
     const subs = row.filter(m=>!charInGroup(m, orgId));
     let out = "";
-    if (main.length) out += orgGridHtml(main, orgId, null);
+    if (main.length) out += orgGridHtml(main, orgId, null, useCards);
     const bySub = {};
     subs.forEach(m=>{ const gid = (m.groupIds||[]).find(id=>d.has(id) && id!==orgId); if (!gid) return; (bySub[gid] = bySub[gid] || []).push(m); });
     Object.keys(bySub).forEach(gid=>{
       const gname = (groups.find(g=>g.id===gid) || {}).name || "하위 그룹";
-      out += '<div class="wiki-sublabel">'+esc(gname)+'</div>' + orgGridHtml(bySub[gid], gid, null);
+      out += (useCards ? '<div class="wiki-rowhead wiki-navsec">'+esc(gname)+'</div>' : '<div class="wiki-sublabel">'+esc(gname)+'</div>') + orgGridHtml(bySub[gid], gid, null, useCards);
     });
     return out;
   };
   // 펼쳐진 조직 하나분의 내용 (반 탭이거나 수동 섹션)
-  const orgBlockHtml = (g, forceEdit, useId)=>{
+  const orgBlockHtml = (g, forceEdit, useId, useCards)=>{
     const {members, levels} = orgLevels(g.id);
     const d = orgDescIds(g.id);
     const directOnly = members.filter(m=>charInGroup(m, g.id) && ![...d].some(id=>id!==g.id && charInGroup(m, id)));
     const subs = groups.filter(x=>x.parentId===g.id && members.some(m=>charInGroup(m, x.id)));
     const edit = !!(isMaster && (window.orgSecEdit || forceEdit));
-    let h = '<div class="wiki-orgblock"' + (useId === false ? '' : ' id="wiki-org-'+g.id+'"') + '>';
+    let h = '<div class="wiki-orgblock'+(useCards ? ' wiki-navbox' : '')+'"' + (useId === false ? '' : ' id="wiki-org-'+g.id+'"') + '>';
     if (!directOnly.length && subs.length){
       // 반 탭 (청량고: 모니카반/청량중학교)
       if (!window.orgSecTab) window.orgSecTab = {};
       const sel = window.orgSecTab[g.id] || subs[0].id;
       h += '<div class="orgchart-tabs">' + subs.map(s=>'<button class="'+(s.id===sel?"on":"")+'" data-orgsec-tab="'+s.id+'" data-orgsec-org="'+g.id+'">'+esc(s.name)+'</button>').join("") + '</div>';
       const tabLevels = levels.map(lv=>lv.filter(m=>charInGroup(m, sel))).filter(lv=>lv.length);
-      h += tabLevels.map(lv=>orgLevelRowHtml(lv, g.id)).join("");
+      h += tabLevels.map(lv=>orgLevelRowHtml(lv, g.id, useCards)).join("");
     } else {
       // 수동 섹션
       const order = secOrderOf(g.id, levels, members);
@@ -1091,9 +1120,9 @@ function render(){
         if (edit){
           h += '<div class="wiki-rowhead" style="display:flex;gap:6px;align-items:center"><input data-orgsec-title-org="'+g.id+'" data-orgsec-title-old="'+esc(title)+'" value="'+esc(title)+'"><button data-orgsec-up="'+esc(title)+'" data-orgsec-up-org="'+g.id+'" title="섹션 위로">▲</button><button data-orgsec-down="'+esc(title)+'" data-orgsec-down-org="'+g.id+'" title="섹션 아래로">▼</button><button data-orgsec-del="'+esc(title)+'" data-orgsec-del-org="'+g.id+'" title="섹션 삭제">✕</button></div>';
         } else {
-          h += '<div class="wiki-rowhead">'+esc(title)+'</div>';
+          h += '<div class="wiki-rowhead'+(useCards ? ' wiki-navsec' : '')+'">'+esc(title)+'</div>';
         }
-        if (secMembers.length) h += orgGridHtml(secMembers, g.id, (m)=>effSecOf(m, g.id, levels));
+        if (secMembers.length) h += orgGridHtml(secMembers, g.id, (m)=>effSecOf(m, g.id, levels), useCards);
         else if (edit) h += '<div class="wiki-sublabel">비어 있음 — 이름 옆 칸에 이 섹션 이름을 적으면 여기로 와요</div>';
       });
       if (edit){
@@ -1104,6 +1133,8 @@ function render(){
   };
   // 나무위키식 세계관 개요: 문서처럼 — 조직마다 번호 붙은 문단 + 링크 목록 (타일 없음, 전부 펼침)
   const worldOverviewHtml = ()=>{
+    const useCards = (curWorld === "w1792508654855" || curWorld === "hotel"); // 마이베이비·살룬만 카드 내비박스, 청량고는 나중에
+    const listHtml = (list, gid)=> useCards ? '<div class="wiki-navbox">'+navGridHtml(list, gid)+'</div>' : '<ul class="wiki-linklist">'+list.map(c=>linkItemHtml(c, gid)).join("")+'</ul>';
     const topOrgs = groups.filter(g=>g.kind==="org" && !g.parentId);
     const orgInfo = topOrgs.map(g=>({g, ...orgLevels(g.id)})).filter(x=>x.members.length>=2);
     const topNonOrgs = groups.filter(g=>g.kind!=="org" && !g.parentId);
@@ -1121,7 +1152,7 @@ function render(){
     let secNo = 0;
     orgInfo.forEach(x=>{
       secNo++;
-      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g);
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(x.g.name)+'</div>' + orgBlockHtml(x.g, false, undefined, useCards);
     });
     topNonOrgs.forEach(g=>{
       const mem = charList.filter(c=>charInGroup(c, g.id));
@@ -1130,16 +1161,16 @@ function render(){
       if (!hasAny) return;
       secNo++;
       h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+esc(g.name)+'</div>';
-      if (mem.length) h += '<ul class="wiki-linklist">'+mem.map(c=>linkItemHtml(c, g.id)).join("")+'</ul>';
+      if (mem.length) h += listHtml(mem, g.id);
       subs.forEach(s=>{
         const sm = charList.filter(c=>charInGroup(c, s.id));
         if (!sm.length) return;
-        h += '<div class="wiki-rowhead">'+esc(s.name)+'</div><ul class="wiki-linklist">'+sm.map(c=>linkItemHtml(c, s.id)).join("")+'</ul>';
+        h += '<div class="wiki-rowhead'+(useCards ? ' wiki-navsec' : '')+'">'+esc(s.name)+'</div>' + listHtml(sm, s.id);
       });
     });
     if (rest.length){
       secNo++;
-      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div><ul class="wiki-linklist">'+rest.map(c=>linkItemHtml(c, null)).join("")+'</ul>';
+      h += '<div class="wiki-sec"><span class="wiki-sec-no">'+secNo+'.</span> '+((orgInfo.length || topNonOrgs.length) ? "미분류" : "전체 캐릭터")+'</div>' + listHtml(rest, null);
     }
     h += '<button class="wiki-topbtn" data-wiki-top type="button">↑ 맨 위로</button>';
     return h;
