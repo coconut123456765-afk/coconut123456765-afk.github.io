@@ -80,6 +80,15 @@
   .tile-body{padding:12px 14px}
   .tile-name{font-family:'Noto Serif KR',serif;font-weight:700;font-size:15px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile-prompt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
+  .variant-btns{display:flex;gap:6px;margin-top:8px}
+  .variant-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.15);cursor:pointer;padding:0}
+  .variant-btn.active{border-color:#1a1a1a;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a1a1a}
+  .variant-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+  .variant-row input[type="text"]{flex:1;min-width:0;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px}
+  .variant-row input[type="text"]:nth-child(3){flex:2}
+  .variant-row input[type="color"]{width:36px;height:32px;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
+  .variant-del{border:1px solid var(--border);background:#fff;border-radius:6px;width:28px;height:32px;cursor:pointer}
+  .btn-variant-add{margin-top:2px;margin-bottom:10px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:13px}
   .tile-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
   .tile:hover .tile-actions{opacity:1}
   .icon-btn{background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted)}
@@ -239,6 +248,9 @@
     <div id="tileTagRow"><label>태그 (여러 개 가능)</label><div class="modal-theme-checks" id="tileTagChecks"><label class="theme-check"><input type="checkbox" value="casual">사복</label><label class="theme-check"><input type="checkbox" value="uniform">유니폼</label><label class="theme-check"><input type="checkbox" value="athletic">운동복</label><label class="theme-check"><input type="checkbox" value="costume">코스튬</label><label class="theme-check"><input type="checkbox" value="dress">드레스</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="underwear">속옷</label><label class="theme-check"><input type="checkbox" value="pajamas">잠옷</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label><label class="theme-check"><input type="checkbox" value="lolita">로리타</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="franchise">프랜차이즈</label></div></div>
 <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
+    <label>바리에이션 (색 버튼으로 프롬이 바뀌는 타일 — 비워두면 그냥 타일 하나)</label>
+    <div id="variantEditor"></div>
+    <button type="button" class="btn-variant-add" onclick="addVariantRow()">＋ 바리에이션 추가</button>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
     <input type="file" id="tileImage" accept="image/*">
     <img id="tileImagePreview" class="img-preview" alt="">
@@ -550,18 +562,26 @@ render();
   window.copyRandomRandomTile = async function(){
     await copyRandomFromList(getRandomTiles().filter(x=>(x.prompt || '').trim()));
   };
-  let organizeMode = false;
+  let organizeMode = false;   let selectedVariant = {};   let variantRows = [];
   function themeChipsHTML(t){
     const has = tileTags(t);
     return `<div class="theme-chips" onclick="event.stopPropagation()">` + TAGS.map(th=>`<button class="theme-chip ${has.includes(th[0]) ? 'active' : ''}" onclick="toggleTileTag('${t.id}', '${th[0]}')">${th[1]}</button>`).join('') + `</div>`;
   }
+  function tileVariants(t){
+    const v = Array.isArray(t.variants) ? t.variants.filter(x=>x && (x.prompt || '').trim()) : [];
+    return v;
+  }
   function tileHTML(t){
+    const vars = tileVariants(t);
+    const sel = vars.length ? Math.min(selectedVariant[t.id] || 0, vars.length - 1) : 0;
+    const showPrompt = vars.length ? vars[sel].prompt : (t.prompt || '프롬 없음');
     return `
       <div class="tile" onclick="copyTile('${t.id}', event)">
         ${t.img ? `<img class="tile-img" src="${esc(t.img)}" alt="" loading="lazy">` : '<div class="tile-img-empty">이미지 없음</div>'}
         <div class="tile-body">
           <div class="tile-name">${esc(t.name || '이름 없음')}</div>
-          <div class="tile-prompt">${esc(t.prompt || '프롬 없음')}</div>
+          <div class="tile-prompt">${esc(showPrompt)}</div>
+          ${vars.length ? `<div class="variant-btns" onclick="event.stopPropagation()">${vars.map((v,i)=>`<button class="variant-btn${i===sel ? ' active' : ''}" title="${esc(v.label || ('변형 ' + (i+1)))}" style="background:${esc(v.color || '#999')}" onclick="selectVariant('${t.id}', ${i}, event)"></button>`).join('')}</div>` : ''}
           ${(organizeMode && tileCat(t) === 'outfit') ? themeChipsHTML(t) : ''}
         </div>
         <div class="tile-actions" onclick="event.stopPropagation()">
@@ -622,13 +642,21 @@ return;
 }
 el.innerHTML = normal.map(tileHTML).join('');
 }
+window.selectVariant = function(id, idx, ev){
+    if (ev) ev.stopPropagation();
+    selectedVariant[id] = idx;
+    render();
+  };
 window.copyTile = async function(id, ev){
     const t = tiles.find(x=>x.id===id);
-    if (!t || !t.prompt) return;
-    try{ await navigator.clipboard.writeText(t.prompt); }
+    if (!t) return;
+    const vars = tileVariants(t);
+    const text = vars.length ? vars[Math.min(selectedVariant[id] || 0, vars.length - 1)].prompt : t.prompt;
+    if (!text) return;
+    try{ await navigator.clipboard.writeText(text); }
     catch(e){
       const ta = document.createElement('textarea');
-      ta.value = t.prompt; document.body.appendChild(ta); ta.select();
+      ta.value = text; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
     }
     const toast = document.getElementById('toast');
@@ -667,6 +695,35 @@ window.copyTile = async function(id, ev){
   window.toggleTileTheme = window.toggleTileTag;
   // 태그 수동 분류 (Don 결정 2026-11-06): 자동 분류(tagsFromText)와 전체 정리(fillThemes)는 제거함.
   // 태그는 타일당 여러 개 가능, Don이 정리 모드 칩이나 모달에서 직접 고름. 이상한 태그는 Don이 직접 바꿈.
+  function renderVariantEditor(){
+    const el = document.getElementById('variantEditor');
+    if (!el) return;
+    el.innerHTML = variantRows.map((v, i)=>`
+      <div class="variant-row">
+        <input type="text" placeholder="이름 (예: 레번클로)" value="${esc(v.label || '')}" data-vrow="${i}" data-vk="label">
+        <input type="color" value="${esc(v.color || '#999999')}" data-vrow="${i}" data-vk="color">
+        <input type="text" placeholder="이 변형의 프롬" value="${esc(v.prompt || '')}" data-vrow="${i}" data-vk="prompt">
+        <button type="button" class="variant-del" onclick="removeVariantRow(${i})">✕</button>
+      </div>`).join('');
+    el.querySelectorAll('[data-vrow]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const i = +inp.dataset.vrow;
+        const k = inp.dataset.vk;
+        if (variantRows[i]) variantRows[i][k] = inp.value;
+      });
+    });
+  }
+  window.addVariantRow = function(){
+    variantRows.push({label:'', color:'#999999', prompt:''});
+    renderVariantEditor();
+  };
+  window.removeVariantRow = function(i){
+    variantRows.splice(i, 1);
+    renderVariantEditor();
+  };
+  function collectVariants(){
+    return variantRows.filter(v=>v && (v.prompt || '').trim()).map(v=>({label:(v.label||'').trim(), color:v.color || '#999999', prompt:v.prompt.trim()}));
+  }
   window.openTileModal = function(id){
     editId = id || null;
     pendingImage = null;
@@ -691,6 +748,8 @@ window.copyTile = async function(id, ev){
       document.getElementById('tileName').value = '';
       document.getElementById('tilePrompt').value = '';
     }
+    variantRows = (editId && et0 && Array.isArray(et0.variants)) ? et0.variants.map(v=>({label:v.label||'', color:v.color||'#999999', prompt:v.prompt||''})) : [];
+    renderVariantEditor();
     document.getElementById('tileModal').classList.add('show');
     setTimeout(()=>document.getElementById('tileName').focus(), 100);
   };
@@ -732,11 +791,11 @@ window.copyTile = async function(id, ev){
     const saveCat = existing ? tileCat(existing) : currentCat;
     const saveTags = saveCat === 'outfit' ? [...document.querySelectorAll('#tileTagChecks input:checked')].map(c=>c.value) : (existing ? tileTags(existing) : []);
     if (editId){
-      const data = { name: name || '이름 없음', prompt, cat: saveCat, tags: saveTags };
+      const data = { name: name || '이름 없음', prompt, cat: saveCat, tags: saveTags, variants: collectVariants() };
       if (pendingImage) data.img = pendingImage;
       await updateDoc(doc(db, 'atelierTiles', editId), data);
     } else {
-      const data = { name: name || '이름 없음', prompt, img: pendingImage || '', cat: saveCat, tags: saveTags, sub: '', themes: [], createdAt: serverTimestamp() };
+      const data = { name: name || '이름 없음', prompt, img: pendingImage || '', cat: saveCat, tags: saveTags, variants: collectVariants(), sub: '', themes: [], createdAt: serverTimestamp() };
       await addDoc(collection(db, 'atelierTiles'), data);
     }
     closeTileModal();
