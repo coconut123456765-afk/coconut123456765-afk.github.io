@@ -542,13 +542,23 @@ render();
       return;
     }
     const picked = candidates[Math.floor(Math.random() * candidates.length)];
-    try{ await navigator.clipboard.writeText(tileEffectivePrompt(picked)); }
+    const pvars = tileVariants(picked);
+    let pickText;
+    if (pvars.length){
+      const vi = Math.floor(Math.random() * pvars.length);
+      selectedVariant[picked.id] = vi;
+      pickText = pvars[vi].prompt;
+    } else {
+      pickText = picked.prompt || '';
+    }
+    try{ await navigator.clipboard.writeText(pickText); }
     catch(e){
       const ta = document.createElement('textarea');
-      ta.value = tileEffectivePrompt(picked); document.body.appendChild(ta); ta.select();
+      ta.value = pickText; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
     }
     if (toast){
+      if (pvars.length) render();
       toast.textContent = '🎲 ' + (picked.name || '이름 없음') + ' 복사됨';
       toast.classList.add('show');
       setTimeout(()=>{ toast.classList.remove('show'); toast.textContent = '클립보드에 복사됨 ✓'; }, 1600);
