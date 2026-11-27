@@ -88,8 +88,11 @@
   .variant-row input[type="color"]{width:36px;height:32px;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
   .variant-del{border:1px solid var(--border);background:#fff;border-radius:6px;width:28px;height:32px;cursor:pointer}
   .btn-variant-add{margin-top:2px;margin-bottom:10px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:13px}
-  .variant-check{display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0 10px;cursor:pointer}
-  .variant-check input{width:16px;height:16px}
+  .variant-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;margin:4px 0 10px}
+  .toggle-switch{width:44px;height:24px;border-radius:999px;background:#cbd5e1;border:none;position:relative;cursor:pointer;transition:background .2s;flex:none;padding:0}
+  .toggle-switch .toggle-knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+  .toggle-switch.on{background:#7b5aa6}
+  .toggle-switch.on .toggle-knob{left:22px}
   .tile-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
   .tile:hover .tile-actions{opacity:1}
   .icon-btn{background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted)}
@@ -246,7 +249,8 @@
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
     <div id="tileTagRow"><label>태그</label><div class="modal-theme-checks" id="tileTagChecks"><label class="theme-check"><input type="checkbox" value="casual">사복</label><label class="theme-check"><input type="checkbox" value="uniform">유니폼</label><label class="theme-check"><input type="checkbox" value="athletic">운동복</label><label class="theme-check"><input type="checkbox" value="costume">코스튬</label><label class="theme-check"><input type="checkbox" value="dress">드레스</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="underwear">속옷</label><label class="theme-check"><input type="checkbox" value="pajamas">잠옷</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label><label class="theme-check"><input type="checkbox" value="lolita">로리타</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="franchise">프랜차이즈</label></div></div>
-<label class="variant-check"><input type="checkbox" id="tileUseVariants" onchange="toggleVariantMode()"> 바리에이션 사용</label>
+<div class="variant-toggle-row"><span>바리에이션 사용</span><button type="button" class="toggle-switch" id="tileUseVariantsToggle" onclick="toggleVariantSwitch()" aria-pressed="false"><span class="toggle-knob"></span></button></div>
+    <input type="checkbox" id="tileUseVariants" style="display:none">
     <div id="tilePromptRow">
     <label>프롬</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
@@ -743,8 +747,15 @@ window.copyTile = async function(id, ev){
   function collectVariants(){
     return variantRows.filter(v=>v && (v.prompt || '').trim()).map(v=>({label:(v.label||'').trim(), color:v.color || '#999999', prompt:v.prompt.trim()}));
   }
+  window.toggleVariantSwitch = function(){
+    const cb = document.getElementById('tileUseVariants');
+    cb.checked = !cb.checked;
+    toggleVariantMode();
+  };
   window.toggleVariantMode = function(){
     const on = document.getElementById('tileUseVariants').checked;
+    const btn = document.getElementById('tileUseVariantsToggle');
+    if (btn){ btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     document.getElementById('tilePromptRow').style.display = on ? 'none' : '';
     document.getElementById('tileVariantRow').style.display = on ? '' : 'none';
     if (on && !variantRows.length) addVariantRow();
