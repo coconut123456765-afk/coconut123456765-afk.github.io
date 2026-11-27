@@ -89,6 +89,8 @@
   .variant-row input[type="color"]{width:36px;height:32px;padding:2px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
   .variant-del{border:1px solid var(--border);background:#fff;border-radius:6px;width:28px;height:32px;cursor:pointer}
   .btn-variant-add{margin-top:2px;margin-bottom:10px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:13px}
+  .variant-check{display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0 10px;cursor:pointer}
+  .variant-check input{width:16px;height:16px}
   .tile-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
   .tile:hover .tile-actions{opacity:1}
   .icon-btn{background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted)}
@@ -246,11 +248,16 @@
     <label>옷 이름</label>
     <input id="tileName" placeholder="예: 겨울 코트">
     <div id="tileTagRow"><label>태그 (여러 개 가능)</label><div class="modal-theme-checks" id="tileTagChecks"><label class="theme-check"><input type="checkbox" value="casual">사복</label><label class="theme-check"><input type="checkbox" value="uniform">유니폼</label><label class="theme-check"><input type="checkbox" value="athletic">운동복</label><label class="theme-check"><input type="checkbox" value="costume">코스튬</label><label class="theme-check"><input type="checkbox" value="dress">드레스</label><label class="theme-check"><input type="checkbox" value="swim">수영복</label><label class="theme-check"><input type="checkbox" value="underwear">속옷</label><label class="theme-check"><input type="checkbox" value="pajamas">잠옷</label><label class="theme-check"><input type="checkbox" value="special">특수</label><label class="theme-check"><input type="checkbox" value="maid">메이드</label><label class="theme-check"><input type="checkbox" value="school">교복</label><label class="theme-check"><input type="checkbox" value="nun">수녀</label><label class="theme-check"><input type="checkbox" value="military">군복</label><label class="theme-check"><input type="checkbox" value="hanbok">한복</label><label class="theme-check"><input type="checkbox" value="china">중국</label><label class="theme-check"><input type="checkbox" value="japan">일본</label><label class="theme-check"><input type="checkbox" value="fantasy">판타지</label><label class="theme-check"><input type="checkbox" value="party">파티</label><label class="theme-check"><input type="checkbox" value="specialday">스페셜데이</label><label class="theme-check"><input type="checkbox" value="lolita">로리타</label><label class="theme-check"><input type="checkbox" value="pervert">변태</label><label class="theme-check"><input type="checkbox" value="franchise">프랜차이즈</label></div></div>
-<label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
+<label class="variant-check"><input type="checkbox" id="tileUseVariants" onchange="toggleVariantMode()"> 바리에이션 사용 (색 버튼으로 프롬이 바뀌는 타일)</label>
+    <div id="tilePromptRow">
+    <label>프롬 (타일을 누르면 이 내용이 복사돼요)</label>
     <textarea id="tilePrompt" placeholder="옷 프롬을 적어주세요"></textarea>
-    <label>바리에이션 (색 버튼으로 프롬이 바뀌는 타일 — 비워두면 그냥 타일 하나)</label>
+    </div>
+    <div id="tileVariantRow" style="display:none">
+    <label>바리에이션</label>
     <div id="variantEditor"></div>
     <button type="button" class="btn-variant-add" onclick="addVariantRow()">＋ 바리에이션 추가</button>
+    </div>
     <label>대표 이미지 (선택, 올리면 자동으로 400px JPEG로 줄여서 저장돼요)</label>
     <input type="file" id="tileImage" accept="image/*">
     <img id="tileImagePreview" class="img-preview" alt="">
@@ -738,6 +745,12 @@ window.copyTile = async function(id, ev){
   function collectVariants(){
     return variantRows.filter(v=>v && (v.prompt || '').trim()).map(v=>({label:(v.label||'').trim(), color:v.color || '#999999', prompt:v.prompt.trim()}));
   }
+  window.toggleVariantMode = function(){
+    const on = document.getElementById('tileUseVariants').checked;
+    document.getElementById('tilePromptRow').style.display = on ? 'none' : '';
+    document.getElementById('tileVariantRow').style.display = on ? '' : 'none';
+    if (on && !variantRows.length) addVariantRow();
+  };
   window.openTileModal = function(id){
     editId = id || null;
     pendingImage = null;
@@ -762,8 +775,11 @@ window.copyTile = async function(id, ev){
       document.getElementById('tileName').value = '';
       document.getElementById('tilePrompt').value = '';
     }
-    variantRows = (editId && et0 && Array.isArray(et0.variants)) ? et0.variants.map(v=>({label:v.label||'', color:v.color||'#999999', prompt:v.prompt||''})) : [];
+    const hasVars = editId && et0 && Array.isArray(et0.variants) && et0.variants.some(v=>v && (v.prompt||'').trim());
+    variantRows = hasVars ? et0.variants.map(v=>({label:v.label||'', color:v.color||'#999999', prompt:v.prompt||''})) : [];
     renderVariantEditor();
+    document.getElementById('tileUseVariants').checked = !!hasVars;
+    toggleVariantMode();
     document.getElementById('tileModal').classList.add('show');
     setTimeout(()=>document.getElementById('tileName').focus(), 100);
   };
@@ -799,17 +815,20 @@ window.copyTile = async function(id, ev){
   window.saveTile = async function(){
     const name = document.getElementById('tileName').value.trim();
     const prompt = document.getElementById('tilePrompt').value.trim();
-    if (!name && !prompt) return;
+    const useVars = document.getElementById('tileUseVariants').checked;
+    const savePrompt = useVars ? '' : prompt;
+    const saveVariants = useVars ? collectVariants() : [];
+    if (!name && !savePrompt && !saveVariants.length) return;
     setSyncDot('syncing');
     const existing = editId ? tiles.find(x=>x.id===editId) : null;
     const saveCat = existing ? tileCat(existing) : currentCat;
     const saveTags = saveCat === 'outfit' ? [...document.querySelectorAll('#tileTagChecks input:checked')].map(c=>c.value) : (existing ? tileTags(existing) : []);
     if (editId){
-      const data = { name: name || '이름 없음', prompt, cat: saveCat, tags: saveTags, variants: collectVariants() };
+      const data = { name: name || '이름 없음', prompt: savePrompt, cat: saveCat, tags: saveTags, variants: saveVariants };
       if (pendingImage) data.img = pendingImage;
       await updateDoc(doc(db, 'atelierTiles', editId), data);
     } else {
-      const data = { name: name || '이름 없음', prompt, img: pendingImage || '', cat: saveCat, tags: saveTags, variants: collectVariants(), sub: '', themes: [], createdAt: serverTimestamp() };
+      const data = { name: name || '이름 없음', prompt: savePrompt, img: pendingImage || '', cat: saveCat, tags: saveTags, variants: saveVariants, sub: '', themes: [], createdAt: serverTimestamp() };
       await addDoc(collection(db, 'atelierTiles'), data);
     }
     closeTileModal();
